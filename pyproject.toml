@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sightline"
+version = "0.1.0"
+description = "Advisory video perception pipeline: person detection, tracking and corridor events with honest degraded states."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Huda Mueen" }]
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "opencv-python-headless>=4.9",
+    "pyyaml>=6.0",
+    "motmetrics>=1.4.0",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+# the detector is optional so tests and replay-from-cache run without torch
+detector = ["torch>=2.4", "torchvision>=0.19"]
+dev = ["pytest>=8.0", "torch>=2.4", "torchvision>=0.19"]
+
+[tool.setuptools.packages.find]
+include = ["sightline*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

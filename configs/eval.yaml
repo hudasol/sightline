@@ -1,0 +1,29 @@
+# Evaluation constants. These define what the LABELS mean. They are fixed in
+# advance and are never tuned against the system's results.
+
+detection:
+  iou: 0.5
+
+tracking:
+  iou: 0.5
+
+gt_events:
+  # rule used to derive event labels from ground-truth boxes (MOT17 clips)
+  min_frames: 3
+  merge_gap: 5
+
+bar:
+  # the acceptance bar from the Task 03 brief
+  min_heldout_clips: 12
+  min_difficult_conditions: 3
+  detection_precision: 0.80
+  detection_recall: 0.80
+  idf1: 0.65
+  event_precision: 0.85
+  event_recall: 0.85
+  max_false_events_per_5min_negative: 1.0
+  median_event_latency_frames: 5
+  min_fps: 10.0
+
+conditions:
+  difficult: [occlusion_crowding, camera_motion_blur, low_light_compression]

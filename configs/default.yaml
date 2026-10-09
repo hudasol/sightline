@@ -1,0 +1,53 @@
+# Default parameters. These are STARTING values. The real values come from
+# `python -m sightline tune --split val` and are written to results/frozen_config.yaml.
+# Never edit frozen_config.yaml by hand after the held-out manifest is locked.
+
+detector:
+  name: fasterrcnn_mobilenet_v3_large_320_fpn
+  score_threshold: 0.5      # FROZEN-ON-VAL
+  min_score: 0.1
+  input_short_side: 320
+  device: cpu
+
+tracker:
+  kind: bytetrack
+  new_track_score: 0.6
+  match_iou: 0.3
+  low_match_iou: 0.5
+  tentative_match_iou: 0.5
+  max_age: 30               # FROZEN-ON-VAL
+  min_hits: 3               # FROZEN-ON-VAL
+  trajectory_len: 30
+
+events:
+  n_open: 3                 # FROZEN-ON-VAL
+  m_close: 5                # FROZEN-ON-VAL
+  cooldown: 15
+  edge_margin_frac: 0.05
+
+health:
+  min_fps: 10.0
+  gap_factor: 3.0
+  stall_seconds: 2.0
+  k_corrupt: 5
+  corrupt_window: 30
+  recover_frames: 15
+  min_luminance: 35.0       # FROZEN-ON-VAL
+  min_sharpness: 25.0       # FROZEN-ON-VAL
+  low_conf_window: 30
+  low_conf_mean: 0.35       # FROZEN-ON-VAL
+  fps_window: 30
+  warmup_frames: 5
+
+pipeline:
+  frame_stride: 1           # anything else is a recorded sampling policy
+  declared_width: 640
+  declared_height: 360
+
+# the baseline tracker is tuned on the same grid as the chosen one
+baseline_tracker:
+  kind: iou
+  new_track_score: 0.6
+  match_iou: 0.3
+  max_age: 30
+  min_hits: 3

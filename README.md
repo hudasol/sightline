@@ -88,22 +88,41 @@ python -m sightline ingest data/own/ --out results/ingest      # a folder
 Writes `<clip>.ingest.json` with fps, frame count, resolution, codec, and a
 timestamp per frame. Corrupt or non-monotonic frames are recorded, not hidden.
 
-## Tune (validation only)
+## Try it with no data and no model
 
 ```bash
-python -m sightline detect-eval --split val          # detector P/R/F1 vs threshold
-python -m sightline tune --split val                 # tracker + event parameters
+python -m sightline demo          # generated clip, both trackers, writes outputs/demo
+python -m pytest                  # unit + end-to-end tests
 ```
 
-`tune` writes `results/frozen_config.yaml`. After the held-out manifest is
-locked nothing may change it.
+The demo is synthetic. It checks the code, not real-world performance.
 
-## Evaluate (held-out, run once)
+## Splits, tuning, evaluation (order matters)
 
 ```bash
-python -m sightline evaluate --split test --config results/frozen_config.yaml
-python -m sightline plots                            # all plots from saved results
+python -m sightline split-check --val configs/manifests/val.json --test configs/manifests/test.json
+python -m sightline lock-manifest configs/manifests/test.json      # BEFORE tuning
+python -m sightline detect-eval --manifest configs/manifests/val.json   # detector P/R/F1 vs threshold
+python -m sightline tune                                           # val only -> results/frozen_config.yaml
+python -m sightline evaluate                                       # locked held-out set, once
+python -m sightline benchmark <clips> --corridor <corridor.yaml>   # fps / latency on THIS machine
+python -m sightline stress                                         # blur/compression/low light/shake, no retuning
+python -m sightline errors                                         # picks failures worst-first; you write the "why"
+python -m sightline plots                                          # all plots from saved results
 ```
+
+`tune` refuses to run without a locked held-out manifest and writes
+`results/frozen_config.yaml` with provenance. `evaluate` refuses if the lock or
+config provenance does not match, and a second run needs `--allow-rerun` (logged).
+
+## Replay one clip
+
+```bash
+python -m sightline replay clip.mp4 --corridor configs/corridors/<yours>.yaml --config results/frozen_config.yaml --overlay
+```
+
+Exit code 2 means UNAVAILABLE (bad config, unreadable video, no detector); the
+system says so instead of reporting a clear corridor.
 
 Outputs, all under `results/`: detection metrics, IDF1 / ID switches for the
 baseline and chosen tracker, event precision / recall / latency, false events
@@ -164,7 +183,8 @@ tests/
 | Item | State |
 |---|---|
 | `docs/PLAN.md` | done |
-| Pipeline code and tests | in progress |
+| Pipeline code and tests (synthetic + unit) | done, passing |
+| Real detector run (needs torch + weights) | not run yet |
 | Real datasets assembled and annotated | not started (needs footage) |
 | Held-out evaluation | not run |
 | Demo video, retrospective, `v1.0.0` | not started |
