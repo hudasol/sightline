@@ -1,0 +1,118 @@
+{
+ "what": "detector candidates on VAL: detection quality vs end-to-end speed; built from saved files only",
+ "rule": "fastest candidate with P>=0.8 and R>=0.8 at some threshold on val AND >=10.0 fps (PLAN.md s5)",
+ "rows": [
+  {
+   "candidate": "mbv3_320fpn_640x360",
+   "timing": {
+    "fps": 4.988410220346415,
+    "frames_timed": 750,
+    "inference_ms_p50_frame_weighted": 179.5743399998173,
+    "max_frames_per_clip": 150,
+    "files": [
+     "results/runtime/candidates/mbv3_320fpn_640x360/MOT17-02.json",
+     "results/runtime/candidates/mbv3_320fpn_640x360/MOT17-04.json",
+     "results/runtime/candidates/mbv3_320fpn_640x360/MOT17-05.json",
+     "results/runtime/candidates/mbv3_320fpn_640x360/MOT17-11.json",
+     "results/runtime/candidates/mbv3_320fpn_640x360/MOT17-13.json"
+    ]
+   },
+   "detector": "fasterrcnn_mobilenet_v3_large_320_fpn",
+   "input_size": [
+    640,
+    360
+   ],
+   "frames_evaluated": 4137,
+   "best_f1": {
+    "tp": 26511,
+    "fp": 16404,
+    "fn": 67622,
+    "precision": 0.6177560293603636,
+    "recall": 0.2816334335461528,
+    "f1": 0.38688634638958613,
+    "threshold": 0.3
+   },
+   "at_default_threshold": {
+    "tp": 23227,
+    "fp": 7962,
+    "fn": 70906,
+    "precision": 0.744717688928789,
+    "recall": 0.24674662445688547,
+    "f1": 0.3706771356984408,
+    "threshold": 0.5
+   },
+   "max_recall": 0.2816334335461528,
+   "thresholds_meeting_pr_bar": [],
+   "detect_eval_file": "results/detector_selection/detect_eval_val_mbv3_320fpn_640x360.json",
+   "meets_pr_bar": false,
+   "meets_fps_bar": false
+  },
+  {
+   "candidate": "mbv3_320fpn_960x540",
+   "timing": {
+    "fps": 3.255394526640157,
+    "frames_timed": 750,
+    "inference_ms_p50_frame_weighted": 290.97076000180095,
+    "max_frames_per_clip": 150,
+    "files": [
+     "results/runtime/candidates/mbv3_320fpn_960x540/MOT17-02.json",
+     "results/runtime/candidates/mbv3_320fpn_960x540/MOT17-04.json",
+     "results/runtime/candidates/mbv3_320fpn_960x540/MOT17-05.json",
+     "results/runtime/candidates/mbv3_320fpn_960x540/MOT17-11.json",
+     "results/runtime/candidates/mbv3_320fpn_960x540/MOT17-13.json"
+    ]
+   },
+   "detector": "fasterrcnn_mobilenet_v3_large_320_fpn",
+   "input_size": [
+    960,
+    540
+   ],
+   "frames_evaluated": 4137,
+   "best_f1": {
+    "tp": 39013,
+    "fp": 16724,
+    "fn": 55120,
+    "precision": 0.6999479699302079,
+    "recall": 0.4144455185747825,
+    "f1": 0.5206245412690998,
+    "threshold": 0.35
+   },
+   "at_default_threshold": {
+    "tp": 36234,
+    "fp": 10145,
+    "fn": 57899,
+    "precision": 0.781258759352293,
+    "recall": 0.3849234593606918,
+    "f1": 0.5157424276930084,
+    "threshold": 0.5
+   },
+   "max_recall": 0.4231672208470993,
+   "thresholds_meeting_pr_bar": [],
+   "detect_eval_file": "results/detector_selection/detect_eval_val_mbv3_320fpn_960x540.json",
+   "meets_pr_bar": false,
+   "meets_fps_bar": false
+  },
+  {
+   "candidate": "resnet50_fpn_v2_960x540",
+   "timing": {
+    "fps": 0.19135025592545715,
+    "frames_timed": 750,
+    "inference_ms_p50_frame_weighted": 3734.1925400076434,
+    "max_frames_per_clip": 150,
+    "files": [
+     "results/runtime/candidates/resnet50_fpn_v2_960x540/MOT17-02.json",
+     "results/runtime/candidates/resnet50_fpn_v2_960x540/MOT17-04.json",
+     "results/runtime/candidates/resnet50_fpn_v2_960x540/MOT17-05.json",
+     "results/runtime/candidates/resnet50_fpn_v2_960x540/MOT17-11.json",
+     "results/runtime/candidates/resnet50_fpn_v2_960x540/MOT17-13.json"
+    ]
+   },
+   "detect_eval_file": null,
+   "pending": "no detect-eval result saved yet",
+   "meets_pr_bar": null,
+   "meets_fps_bar": false
+  }
+ ],
+ "choice": null,
+ "verdict": "NO candidate meets the rule; per PLAN.md s5 document a frame-sampling strategy and measure its effect on event recall and latency instead of lowering the bar"
+}
