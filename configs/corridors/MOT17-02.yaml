@@ -1,0 +1,7 @@
+# DRAFT corridor for MOT17-02: image-space floor band, original pixels.
+# Placed on 2026-10-12 from the first frame and the ground-truth foot traces only
+# (no detector/tracker output existed). MOT17 event labels are DERIVED from this
+# polygon, so it is hashed into the held-out lock and must not change after locking.
+name: MOT17-02
+frame_size: [1920, 1080]
+polygon: [[600, 660], [1400, 660], [1450, 950], [550, 950]]
