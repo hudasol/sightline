@@ -57,6 +57,8 @@ class TorchvisionPersonDetector:
             ) from exc
         if cfg.name not in _TORCHVISION_MODELS:
             raise DetectorUnavailable(f"unknown detector {cfg.name!r}; choose from {sorted(_TORCHVISION_MODELS)}")
+        if cfg.torch_threads:
+            torch.set_num_threads(cfg.torch_threads)
         self._torch = torch
         self.cfg = cfg
         self.name = cfg.name
@@ -91,7 +93,9 @@ class TorchvisionPersonDetector:
 
     def info(self) -> dict:
         return {"detector": self.name, "weights": self._weights_name, "min_score": self.cfg.min_score,
-                "input_short_side": self.cfg.input_short_side, "device": self.cfg.device, **self._versions}
+                "input_short_side": self.cfg.input_short_side, "device": self.cfg.device,
+                "torch_threads": self._torch.get_num_threads(),
+                "torch_interop_threads": self._torch.get_num_interop_threads(), **self._versions}
 
 
 # -- detection cache ---------------------------------------------------------------

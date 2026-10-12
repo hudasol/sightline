@@ -22,6 +22,7 @@ def test_default_config_loads_and_is_stable(cfg):
     {"health": {"min_fps": 0}},
     {"health": {"gap_factor": 0.5}},
     {"pipeline": {"frame_stride": 0}},
+    {"detector": {"torch_threads": 0}},
 ])
 def test_invalid_config_is_rejected(patch):
     with pytest.raises(ConfigError):

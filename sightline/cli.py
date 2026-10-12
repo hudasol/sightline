@@ -267,6 +267,8 @@ def cmd_benchmark(a) -> int:
         detector = TorchvisionPersonDetector(cfg.detector)
     except (ConfigError, DetectorUnavailable) as exc:
         return _unavailable(None, str(exc))
+    di = detector.info()
+    _p(f"detector={di['detector']} torch_threads={di['torch_threads']} interop_threads={di['torch_interop_threads']}")
     all_lat, summaries = None, []
     for src in a.sources:
         run = run_clip(src, cfg, corridor, detector=detector, fps_override=a.fps, realtime=a.realtime)
@@ -286,6 +288,48 @@ def cmd_benchmark(a) -> int:
             "note": "latency_ms_p95 is the worst p95 over clips; p50s are frame-weighted"}
     report = {"summary": best, "per_clip": summaries, "machine": machine_info(), "detector": detector.info(),
               "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height]}
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(a.out).write_text(json.dumps(report, indent=1))
+    _p(f"wrote {a.out}")
+    return 0
+
+
+def cmd_threads(a) -> int:
+    """Time detect() at several torch thread counts on real frames. Evidence for detector.torch_threads."""
+    import statistics
+    from itertools import islice
+
+    import torch
+
+    from sightline.ingest import iter_frames
+    from sightline.runtime import machine_info
+
+    try:
+        cfg = load_config(a.config)
+        detector = TorchvisionPersonDetector(cfg.detector)
+        frames = [f.image for f in islice(iter_frames(a.source), a.frames) if f.valid]
+    except (ConfigError, DetectorUnavailable, IngestError) as exc:
+        return _unavailable(None, str(exc))
+    _p(f"torch default: intra={torch.get_num_threads()} interop={torch.get_num_interop_threads()}; "
+       f"{len(frames)} frames of {a.source}")
+    rows = []
+    for n in a.threads:
+        torch.set_num_threads(n)
+        for img in frames[:3]:  # warm-up at this thread count, excluded
+            detector.detect(img)
+        ms = []
+        for img in frames:
+            t0 = time.perf_counter()
+            detector.detect(img)
+            ms.append((time.perf_counter() - t0) * 1000)
+        row = {"torch_threads": n, "detect_ms_p50": statistics.median(ms), "detect_ms_mean": statistics.fmean(ms),
+               "detect_fps_p50": 1000 / statistics.median(ms), "frames": len(ms)}
+        rows.append(row)
+        _p(f"threads={n:3d}  detect p50={row['detect_ms_p50']:.1f} ms  mean={row['detect_ms_mean']:.1f} ms")
+    best = min(rows, key=lambda r: r["detect_ms_p50"])
+    _p(f"fastest: torch_threads={best['torch_threads']} ({best['detect_ms_p50']:.1f} ms p50)")
+    report = {"what": "detect() time per frame vs torch intra-op threads; warm-up excluded", "source": a.source,
+              "rows": rows, "fastest": best["torch_threads"], "detector": detector.info(), "machine": machine_info()}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, indent=1))
     _p(f"wrote {a.out}")
@@ -417,6 +461,13 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--out", default="results/runtime_report.json")
     sp.add_argument("--fps", type=float)
     sp.add_argument("--realtime", action="store_true")
+
+    sp = add("threads", cmd_threads, "time the detector at several torch thread counts on THIS machine")
+    sp.add_argument("source", help="a val clip or image sequence")
+    sp.add_argument("--config", default="configs/default.yaml")
+    sp.add_argument("--frames", type=int, default=40)
+    sp.add_argument("--threads", type=int, nargs="+", default=[1, 2, 4, 6, 8, 12, 16])
+    sp.add_argument("--out", default="results/runtime/torch_threads.json")
 
     sp = add("stress", cmd_stress, "degrade held-out clips and measure the frozen system")
     sp.add_argument("--lock", default="results/heldout_manifest.json")

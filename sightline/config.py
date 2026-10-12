@@ -29,6 +29,8 @@ class DetectorConfig:
     min_score: float = 0.1
     input_short_side: int = 320
     device: str = "cpu"
+    # intra-op CPU threads for torch; None keeps torch's default. Measured with `sightline threads`.
+    torch_threads: int | None = None
 
 
 @dataclass
@@ -89,6 +91,8 @@ class Config:
         _validate_tracker(self.baseline_tracker, "baseline_tracker")
         _check(0.0 < d.min_score < d.score_threshold <= 1.0, "detector: need 0 < min_score < score_threshold <= 1")
         _check(d.input_short_side > 0, "detector.input_short_side must be positive")
+        _check(d.torch_threads is None or (isinstance(d.torch_threads, int) and d.torch_threads >= 1),
+               "detector.torch_threads must be null or an integer >= 1")
         _validate_tracker(t, "tracker")
         _check(e.n_open >= 1, "events.n_open must be >= 1")
         _check(e.m_close >= 1, "events.m_close must be >= 1")
