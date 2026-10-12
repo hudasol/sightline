@@ -1,0 +1,82 @@
+{
+ "what": "detect() time per frame vs torch intra-op threads; warm-up excluded",
+ "source": "data\\mot17\\MOT17-02-FRCNN",
+ "rows": [
+  {
+   "torch_threads": 1,
+   "detect_ms_p50": 404.109499999322,
+   "detect_ms_mean": 406.8810400014627,
+   "detect_fps_p50": 2.4745768164363318,
+   "frames": 40
+  },
+  {
+   "torch_threads": 2,
+   "detect_ms_p50": 258.6777999822516,
+   "detect_ms_mean": 260.62220750172855,
+   "detect_fps_p50": 3.8658129923349125,
+   "frames": 40
+  },
+  {
+   "torch_threads": 4,
+   "detect_ms_p50": 202.2796500241384,
+   "detect_ms_mean": 226.07462749729166,
+   "detect_fps_p50": 4.943651029061343,
+   "frames": 40
+  },
+  {
+   "torch_threads": 6,
+   "detect_ms_p50": 188.739249977516,
+   "detect_ms_mean": 196.9690074911341,
+   "detect_fps_p50": 5.298315004002227,
+   "frames": 40
+  },
+  {
+   "torch_threads": 8,
+   "detect_ms_p50": 176.74630001420155,
+   "detect_ms_mean": 176.77229750552215,
+   "detect_fps_p50": 5.657827065797983,
+   "frames": 40
+  },
+  {
+   "torch_threads": 12,
+   "detect_ms_p50": 245.83515000995249,
+   "detect_ms_mean": 310.247847501887,
+   "detect_fps_p50": 4.067766549899457,
+   "frames": 40
+  },
+  {
+   "torch_threads": 16,
+   "detect_ms_p50": 228.87054999591783,
+   "detect_ms_mean": 235.39261999976588,
+   "detect_fps_p50": 4.369282111734499,
+   "frames": 40
+  }
+ ],
+ "fastest": 8,
+ "detector": {
+  "detector": "fasterrcnn_mobilenet_v3_large_320_fpn",
+  "weights": "FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.DEFAULT",
+  "min_score": 0.1,
+  "input_size": [
+   640,
+   360
+  ],
+  "resize": "fit inside input_size, aspect kept, no upscaling",
+  "device": "cpu",
+  "torch_threads": 16,
+  "torch_interop_threads": 8,
+  "torch": "2.14.1+cpu",
+  "torchvision": "0.29.1+cpu"
+ },
+ "machine": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "cpu_count_logical": 16,
+  "python": "3.13.0",
+  "opencv": "5.0.0",
+  "torch": "2.14.1+cpu",
+  "cuda_available": false,
+  "torch_threads": 16
+ }
+}
