@@ -10,6 +10,11 @@ data/
 runs/
 outputs/
 
+# raw per-frame detector/tracker output: large, regenerable from data/ + code.
+# Only the metric files computed from them are tracked.
+results/detections/
+results/tracks/
+
 # python
 __pycache__/
 *.pyc
