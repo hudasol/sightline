@@ -23,7 +23,7 @@ from sightline.evaluation.events import (EventMatch, GTEvent, derive_gt_events, 
                                          match_events)
 from sightline.evaluation.gt import GTFrames, IgnoreFrames, load_mot_gt
 from sightline.ingest import SourceInfo, iter_frames, probe
-from sightline.manifest import Clip
+from sightline.manifest import METRICS, Clip
 from sightline.runner import ClipRun, run_clip
 from sightline.types import Detection
 
@@ -115,27 +115,39 @@ def evaluate_clip(cd: ClipData, cfg: Config, dets: dict[int, list[Detection]], e
 
 
 def aggregate(results: list[ClipResult], trackers: tuple[str, ...] = TRACKERS) -> dict:
-    """Pool over clips: overall and per condition tag. Counts are pooled, never averaged ratios."""
+    """Pool over clips: overall and per condition tag. Counts are pooled, never averaged ratios.
+
+    Each metric family only pools the clips the manifest scores on it (Clip.metrics): a
+    moving-camera clip counts for detection and tracking but never for events or safety.
+    """
     tags = sorted({t for r in results for t in r.cd.tags})
     groups = {"ALL": results, **{t: [r for r in results if t in r.cd.tags] for t in tags}}
     out: dict = {"n_clips": len(results), "clips": [r.cd.clip.id for r in results],
+                 "scope": {m: [r.cd.clip.id for r in results if r.cd.clip.scored_on(m)] for m in METRICS},
                  "detection": {}, "tracking": {k: {} for k in trackers}, "events": {k: {} for k in trackers},
                  "safety": {}}
-    for gname, rs in groups.items():
-        tp = sum(r.det_counts["tp"] for r in rs)
-        fp = sum(r.det_counts["fp"] for r in rs)
-        fn = sum(r.det_counts["fn"] for r in rs)
-        out["detection"][gname] = {**det_eval.counts_to_metrics(tp, fp, fn), "n_clips": len(rs)}
+    for gname, group in groups.items():
+        rs = [r for r in group if r.cd.clip.scored_on("detection")]
+        if rs:
+            tp = sum(r.det_counts["tp"] for r in rs)
+            fp = sum(r.det_counts["fp"] for r in rs)
+            fn = sum(r.det_counts["fn"] for r in rs)
+            out["detection"][gname] = {**det_eval.counts_to_metrics(tp, fp, fn), "n_clips": len(rs)}
+        rs_trk = [r for r in group if r.cd.clip.scored_on("tracking")]
+        rs_ev = [r for r in group if r.cd.clip.scored_on("events")]
         for k in trackers:
-            summ = trk_eval.summarize({r.cd.clip.id: r.accs[k] for r in rs}, with_overall=True)
-            out["tracking"][k][gname] = {**summ.get("OVERALL", {}), "n_clips": len(rs)}
+            if rs_trk:
+                summ = trk_eval.summarize({r.cd.clip.id: r.accs[k] for r in rs_trk}, with_overall=True)
+                out["tracking"][k][gname] = {**summ.get("OVERALL", {}), "n_clips": len(rs_trk)}
+            if not rs_ev:
+                continue
             if k == trackers[-1]:
-                out["safety"][gname] = safety_metrics(rs, k)
+                out["safety"][gname] = safety_metrics(rs_ev, k)
             out["events"][k][gname] = {
-                **{kk: v for kk, v in event_metrics([r.matches[k] for r in rs], [r.cd.clip.negative for r in rs],
-                                                    [r.cd.info.frame_count_reported / r.cd.info.fps if r.cd.info.fps else 0.0 for r in rs]).items()
+                **{kk: v for kk, v in event_metrics([r.matches[k] for r in rs_ev], [r.cd.clip.negative for r in rs_ev],
+                                                    [r.cd.info.frame_count_reported / r.cd.info.fps if r.cd.info.fps else 0.0 for r in rs_ev]).items()
                    if kk != "latency_frames_all"},
-                "n_clips": len(rs),
+                "n_clips": len(rs_ev),
             }
     return out
 
@@ -208,8 +220,9 @@ def bar_check(agg: dict, coverage: dict, eval_cfg: dict, tracker: str = "bytetra
               runtime: dict | None = None) -> dict:
     """The acceptance bar from the brief, evaluated mechanically from saved numbers."""
     b = eval_cfg["bar"]
-    det, trk, evn = agg["detection"]["ALL"], agg["tracking"][tracker]["ALL"], agg["events"][tracker]["ALL"]
-    base = agg["tracking"][baseline]["ALL"]
+    # a family with no clips in scope has no ALL row: its checks fail rather than crash or pass
+    det, trk = agg["detection"].get("ALL", {}), agg["tracking"][tracker].get("ALL", {})
+    evn, base = agg["events"][tracker].get("ALL", {}), agg["tracking"][baseline].get("ALL", {})
     idf1, base_idf1 = trk.get("idf1"), base.get("idf1")
     idsw, base_idsw = trk.get("num_switches"), base.get("num_switches")
     beats = ((idf1 is not None and base_idf1 is not None and idf1 > base_idf1)
@@ -222,15 +235,15 @@ def bar_check(agg: dict, coverage: dict, eval_cfg: dict, tracker: str = "bytetra
         "heldout_clips>=12": coverage["meets_min_clips"],
         "three_difficult_conditions": coverage["meets_three_difficult"],
         "negative_corridor_set": coverage["has_negative_set"],
-        "detection_precision>=0.80": ge(det["precision"], b["detection_precision"]),
-        "detection_recall>=0.80": ge(det["recall"], b["detection_recall"]),
+        "detection_precision>=0.80": ge(det.get("precision"), b["detection_precision"]),
+        "detection_recall>=0.80": ge(det.get("recall"), b["detection_recall"]),
         "idf1>=0.65": ge(idf1, b["idf1"]),
         "tracker_beats_baseline": bool(beats),
-        "event_precision>=0.85": ge(evn["event_precision"], b["event_precision"]),
-        "event_recall>=0.85": ge(evn["event_recall"], b["event_recall"]),
-        "false_events_per_5min_negative<=1": (evn["false_events_per_5min_negative"] is not None
+        "event_precision>=0.85": ge(evn.get("event_precision"), b["event_precision"]),
+        "event_recall>=0.85": ge(evn.get("event_recall"), b["event_recall"]),
+        "false_events_per_5min_negative<=1": (evn.get("false_events_per_5min_negative") is not None
                                               and evn["false_events_per_5min_negative"] <= b["max_false_events_per_5min_negative"]),
-        "median_event_latency<=5_frames": (evn["latency_frames_median"] is not None
+        "median_event_latency<=5_frames": (evn.get("latency_frames_median") is not None
                                            and evn["latency_frames_median"] <= b["median_event_latency_frames"]),
     }
     if runtime is not None:
