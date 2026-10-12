@@ -19,6 +19,28 @@ Your own corridor clips must close them:
 - at least one **negative** test clip (`"negative": true`): people visible, nobody
   enters the corridor
 
+## What a clip is scored on: `metrics`
+
+`"metrics"` lists the metric families a clip counts for: any non-empty subset of
+`["detection", "tracking", "events"]`. Leave it out for the default, all three.
+
+The corridor is an image-space polygon, so it only stays on the floor while the
+camera stays still. On a moving camera the system's corridor events, and the
+event labels derived from the polygon, mean nothing. Those clips therefore carry
+`"metrics": ["detection", "tracking"]` plus a `metrics_note` saying why. Today that
+is MOT17-05, 11 and 13 (val) and MOT17-10 (test).
+
+- `aggregate`, `tune` and `stride-eval` pool each family only over its own clips.
+  The false-CLEAR safety figure follows events.
+- `split-check` reports clips per family, and which difficult conditions the
+  **event** metrics actually rest on (`results/split/split_check.json`).
+- A negative clip must include `events`.
+- The field is part of the clip entry, so it is hashed into the lock.
+
+A handheld own clip has a moving camera too, so it cannot count for events either.
+Event coverage of `camera_motion_blur` would need a static camera on a blurred
+scene, or a ground-plane corridor.
+
 ## Adding an own corridor clip
 
 1. Put the video at `data/own/<id>.mp4` (git-ignored). Use an id like
@@ -57,9 +79,14 @@ annotate it, never after seeing results.
 ## Order (do not change)
 
 1. `split-check` passes.
-2. `lock-manifest configs/manifests/test.json` once the held-out set is **complete**.
-   The lock hashes clips, labels, corridor polygons and `configs/eval.yaml`.
-3. Only then `detect-eval` / `tune` on val.
+2. Val-only measurements may run before the lock: `detect-eval`, `stride-eval`,
+   `threads` and `benchmark` on val clips. They read no test clip and freeze nothing.
+3. `lock-manifest configs/manifests/test.json` once the held-out set is **complete**.
+   The lock hashes clips, labels, corridor polygons, `metrics` and `configs/eval.yaml`.
+   It records `status: final` only when coverage meets the bar (>=12 clips, three
+   difficult conditions, a negative set); otherwise `status: draft`.
+4. Only then `tune`. `tune` refuses a missing, draft or changed lock, and
+   `evaluate` refuses a draft lock.
 
 Re-locking is harmless before tuning. After `tune` has run, any change to the
 held-out set means `evaluate` refuses the frozen config, which is the point.
