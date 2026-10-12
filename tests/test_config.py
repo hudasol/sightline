@@ -29,6 +29,17 @@ def test_invalid_config_is_rejected(patch):
         config_from_dict(patch)
 
 
+def test_cli_detector_overrides_are_applied_and_validated():
+    from argparse import Namespace
+
+    from sightline.cli import _load_cfg
+
+    cfg = _load_cfg(Namespace(config="configs/default.yaml", detector="fasterrcnn_resnet50_fpn_v2", input_size=[960, 540]))
+    assert (cfg.detector.name, cfg.detector.input_size) == ("fasterrcnn_resnet50_fpn_v2", [960, 540])
+    with pytest.raises(ConfigError):
+        _load_cfg(Namespace(config="configs/default.yaml", detector=None, input_size=[8, 8]))
+
+
 def test_unknown_keys_are_rejected_not_ignored():
     with pytest.raises(ConfigError, match="unknown"):
         config_from_dict({"detector": {"scor_threshold": 0.4}})  # typo must not silently use defaults

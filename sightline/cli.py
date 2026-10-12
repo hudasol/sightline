@@ -38,6 +38,21 @@ def _unavailable(out: str | None, reason: str) -> int:
     return 2
 
 
+def _load_cfg(a) -> Config:
+    """Load --config, then apply --detector / --input-size overrides (candidate comparison)."""
+    cfg = load_config(a.config)
+    if getattr(a, "detector", None):
+        cfg.detector.name = a.detector
+    if getattr(a, "input_size", None):
+        cfg.detector.input_size = list(a.input_size)
+    return cfg.validate()
+
+
+def _add_detector_overrides(sp) -> None:
+    sp.add_argument("--detector", help="override detector.name (e.g. fasterrcnn_resnet50_fpn_v2)")
+    sp.add_argument("--input-size", type=int, nargs=2, metavar=("W", "H"), help="override detector.input_size")
+
+
 def _detector_factory(cfg: Config):
     def make():
         return TorchvisionPersonDetector(cfg.detector)
@@ -158,16 +173,18 @@ def cmd_detect_eval(a) -> int:
     from sightline.evaluation.detection import sweep_thresholds
     from sightline.evaluation.run import get_detections, load_eval_config, prepare_clip, write_json
 
-    cfg, eval_cfg, root = load_config(a.config), load_eval_config(a.eval_config), Path(a.root)
+    cfg, eval_cfg, root = _load_cfg(a), load_eval_config(a.eval_config), Path(a.root)
     man = load_manifest(a.manifest)
-    rows_all = []
+    rows_all, per_clip, n_frames = [], {}, 0
     ths = [round(0.30 + 0.05 * i, 2) for i in range(13)]
     tot = {t: [0, 0, 0] for t in ths}
     for c in man.clips:
         cd = prepare_clip(c, root, eval_cfg)
         dets = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
         frames = list(range(1, cd.n_frames + 1, cfg.pipeline.frame_stride))
-        for r in sweep_thresholds(cd.gt, cd.ignore, dets, ths, frames):
+        n_frames += len(frames)
+        per_clip[c.id] = sweep_thresholds(cd.gt, cd.ignore, dets, ths, frames)
+        for r in per_clip[c.id]:
             for k, i in zip(("tp", "fp", "fn"), range(3)):
                 tot[r["threshold"]][i] += r[k]
     from sightline.evaluation.detection import counts_to_metrics
@@ -176,7 +193,13 @@ def cmd_detect_eval(a) -> int:
         rows_all.append(m)
         _p(f"thr={t:.2f} P={m['precision']:.3f} R={m['recall']:.3f} F1={m['f1']:.3f}")
     if a.out:
-        write_json(a.out, rows_all)
+        write_json(a.out, {
+            "what": f"person detection P/R/F1 at IoU {eval_cfg['detection']['iou']} vs score threshold, pooled over clips",
+            "manifest": a.manifest, "detector": cfg.detector.name, "input_size": list(cfg.detector.input_size),
+            "min_score": cfg.detector.min_score, "frame_stride": cfg.pipeline.frame_stride,
+            "clips": [c.id for c in man.clips], "frames_evaluated": n_frames,
+            "overall": rows_all, "per_clip": per_clip,
+        })
     return 0
 
 
@@ -262,7 +285,7 @@ def cmd_benchmark(a) -> int:
     from sightline.runtime import machine_info
 
     try:
-        cfg = load_config(a.config)
+        cfg = _load_cfg(a)
         corridor = load_corridor(a.corridor)
         detector = TorchvisionPersonDetector(cfg.detector)
     except (ConfigError, DetectorUnavailable) as exc:
@@ -308,7 +331,7 @@ def cmd_threads(a) -> int:
     from sightline.runtime import machine_info
 
     try:
-        cfg = load_config(a.config)
+        cfg = _load_cfg(a)
         detector = TorchvisionPersonDetector(cfg.detector)
         frames = [f.image for f in islice(iter_frames(a.source), a.frames) if f.valid]
     except (ConfigError, DetectorUnavailable, IngestError) as exc:
@@ -442,6 +465,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("detect-eval", cmd_detect_eval, "detector P/R/F1 vs threshold on a manifest (use val)")
     sp.add_argument("--manifest", default="configs/manifests/val.json")
     sp.add_argument("--out")
+    _add_detector_overrides(sp)
     common(sp)
 
     sp = add("tune", cmd_tune, "tune on VAL only, then freeze")
@@ -466,6 +490,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--fps", type=float)
     sp.add_argument("--realtime", action="store_true")
     sp.add_argument("--max-frames", type=int, help="time only the first N frames of each clip (recorded in the report)")
+    _add_detector_overrides(sp)
 
     sp = add("threads", cmd_threads, "time the detector at several torch thread counts on THIS machine")
     sp.add_argument("source", help="a val clip or image sequence")
@@ -473,6 +498,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--frames", type=int, default=40)
     sp.add_argument("--threads", type=int, nargs="+", default=[1, 2, 4, 6, 8, 12, 16])
     sp.add_argument("--out", default="results/runtime/torch_threads.json")
+    _add_detector_overrides(sp)
 
     sp = add("stress", cmd_stress, "degrade held-out clips and measure the frozen system")
     sp.add_argument("--lock", default="results/heldout_manifest.json")
