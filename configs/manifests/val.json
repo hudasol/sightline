@@ -1,0 +1,71 @@
+{
+ "split": "val",
+ "note": "Tuning set. Every threshold is chosen here and only here. MOT17 base scenes 02, 04, 05, 11, 13 (FRCNN copy only). Own val clips must come from a different camera position AND recording session than any own test clip. Condition tags for MOT17 come from the official MOTChallenge sequence descriptions and are to be confirmed by looking at the frames.",
+ "clips": [
+  {
+   "id": "MOT17-02-FRCNN",
+   "source": "data/mot17/MOT17-02-FRCNN",
+   "scene": "MOT17-02",
+   "camera": "mot17-02",
+   "session": "mot17-02",
+   "conditions": ["occlusion_crowding"],
+   "conditions_source": "MOTChallenge: 'People walking around a large square.' static camera, 600 frames @ 30 fps, 1920x1080, density 31.0",
+   "corridor": "configs/corridors/MOT17-02.yaml",
+   "gt": "data/mot17/MOT17-02-FRCNN/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false
+  },
+  {
+   "id": "MOT17-04-FRCNN",
+   "source": "data/mot17/MOT17-04-FRCNN",
+   "scene": "MOT17-04",
+   "camera": "mot17-04",
+   "session": "mot17-04",
+   "conditions": ["occlusion_crowding", "low_light_compression"],
+   "conditions_source": "MOTChallenge: 'Pedestrian street at night, elevated viewpoint', 1050 frames @ 30 fps, 1920x1080, density 45.3",
+   "corridor": "configs/corridors/MOT17-04.yaml",
+   "gt": "data/mot17/MOT17-04-FRCNN/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false
+  },
+  {
+   "id": "MOT17-05-FRCNN",
+   "source": "data/mot17/MOT17-05-FRCNN",
+   "scene": "MOT17-05",
+   "camera": "mot17-05",
+   "session": "mot17-05",
+   "conditions": ["camera_motion_blur"],
+   "conditions_source": "MOTChallenge: 'Street scene from a moving platform', 837 frames @ 14 fps, 640x480",
+   "corridor": "configs/corridors/MOT17-05.yaml",
+   "gt": "data/mot17/MOT17-05-FRCNN/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false
+  },
+  {
+   "id": "MOT17-11-FRCNN",
+   "source": "data/mot17/MOT17-11-FRCNN",
+   "scene": "MOT17-11",
+   "camera": "mot17-11",
+   "session": "mot17-11",
+   "conditions": ["camera_motion_blur"],
+   "conditions_source": "MOTChallenge: 'Forward moving camera in a busy shopping mall', 900 frames @ 30 fps, 1920x1080",
+   "corridor": "configs/corridors/MOT17-11.yaml",
+   "gt": "data/mot17/MOT17-11-FRCNN/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false
+  },
+  {
+   "id": "MOT17-13-FRCNN",
+   "source": "data/mot17/MOT17-13-FRCNN",
+   "scene": "MOT17-13",
+   "camera": "mot17-13",
+   "session": "mot17-13",
+   "conditions": ["camera_motion_blur", "occlusion_crowding"],
+   "conditions_source": "MOTChallenge: 'Filmed from a bus on a busy intersection', 750 frames @ 25 fps, 1920x1080",
+   "corridor": "configs/corridors/MOT17-13.yaml",
+   "gt": "data/mot17/MOT17-13-FRCNN/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false
+  }
+ ]
+}
