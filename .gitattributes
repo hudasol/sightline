@@ -1,0 +1,4 @@
+# Files whose bytes are hashed into the held-out lock (corridors, eval rules,
+# manifests, labels) must not change with the checkout platform's line endings.
+configs/** text eol=lf
+annotations/** text eol=lf
