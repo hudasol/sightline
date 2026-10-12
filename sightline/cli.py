@@ -138,6 +138,14 @@ def cmd_split_check(a) -> int:
     cov = coverage_check(test)
     _p(f"val clips={len(val.clips)} test clips={len(test.clips)}")
     _p(f"coverage: {json.dumps(cov)}")
+    if a.out:
+        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.out).write_text(json.dumps({
+            "val": a.val, "test": a.test, "leakage_problems": problems,
+            "val_clips_scored_on": coverage_check(val)["clips_scored_on"],
+            "val_event_clips": [c.id for c in val.clips if c.scored_on("events")],
+            "test_coverage": cov, "test_event_clips": [c.id for c in test.clips if c.scored_on("events")],
+            "checked_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, indent=1))
     if problems:
         for pr in problems:
             _p(f"LEAK: {pr}")
@@ -468,6 +476,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("split-check", cmd_split_check, "fail if val and test leak")
     sp.add_argument("--val", required=True)
     sp.add_argument("--test", required=True)
+    sp.add_argument("--out", help="also save the leakage result and coverage as JSON")
 
     sp = add("lock-manifest", cmd_lock, "hash and lock the held-out manifest")
     sp.add_argument("manifest")
