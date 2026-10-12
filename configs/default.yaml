@@ -8,6 +8,7 @@ detector:
   min_score: 0.1
   input_size: null          # [w, h] frames are resized to fit inside; null = pipeline declared size
   device: cpu
+  torch_threads: 8          # fastest for this detector at 640x360: results/runtime/torch_threads_mbv3_320fpn_640x360.json
 
 tracker:
   kind: bytetrack
