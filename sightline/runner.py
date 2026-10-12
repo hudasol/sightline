@@ -11,6 +11,7 @@ import json
 import time
 from collections import Counter
 from collections.abc import Callable, Iterable
+from itertools import islice
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -72,6 +73,7 @@ def run_clip(
     info: SourceInfo | None = None,
     keep_results: bool = False,
     clock: Callable[[], float] = time.perf_counter,
+    max_frames: int | None = None,
 ) -> ClipRun:
     """frames/info let a caller inject a stream (tests, stress suite); otherwise `source` is read."""
     name = Path(str(source)).name
@@ -94,6 +96,9 @@ def run_clip(
 
     if frames is None:
         frames = iter_frames(source, fps_override, stride=stride, info=info)
+        if max_frames:
+            frames = islice(frames, max_frames)
+            run.policy["max_frames"] = max_frames  # a truncated run: say so in every output
         if cfg.pipeline.decode_thread:
             frames = prefetch(frames, cfg.pipeline.decode_queue)
     run.policy["decode_thread"] = cfg.pipeline.decode_thread

@@ -271,7 +271,8 @@ def cmd_benchmark(a) -> int:
     _p(f"detector={di['detector']} torch_threads={di['torch_threads']} interop_threads={di['torch_interop_threads']}")
     all_lat, summaries = None, []
     for src in a.sources:
-        run = run_clip(src, cfg, corridor, detector=detector, fps_override=a.fps, realtime=a.realtime)
+        run = run_clip(src, cfg, corridor, detector=detector, fps_override=a.fps, realtime=a.realtime,
+                       max_frames=a.max_frames)
         summaries.append({"clip": run.clip, **run.runtime})
         rt = run.runtime
         _p(f"{run.clip}: fps={rt.get('throughput_fps')} p50={rt.get('latency_ms_p50')} p95={rt.get('latency_ms_p95')} "
@@ -288,7 +289,8 @@ def cmd_benchmark(a) -> int:
             "note": "latency_ms_p95 is the worst p95 over clips; p50s are frame-weighted"}
     report = {"summary": best, "per_clip": summaries, "machine": machine_info(), "detector": detector.info(),
               "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height],
-              "detector_input_size": list(cfg.detector.input_size), "decode_thread": cfg.pipeline.decode_thread}
+              "detector_input_size": list(cfg.detector.input_size), "decode_thread": cfg.pipeline.decode_thread,
+              "max_frames_per_clip": a.max_frames}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, indent=1))
     _p(f"wrote {a.out}")
@@ -463,6 +465,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--out", default="results/runtime_report.json")
     sp.add_argument("--fps", type=float)
     sp.add_argument("--realtime", action="store_true")
+    sp.add_argument("--max-frames", type=int, help="time only the first N frames of each clip (recorded in the report)")
 
     sp = add("threads", cmd_threads, "time the detector at several torch thread counts on THIS machine")
     sp.add_argument("source", help="a val clip or image sequence")
