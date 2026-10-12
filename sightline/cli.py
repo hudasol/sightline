@@ -206,6 +206,23 @@ def cmd_detect_eval(a) -> int:
     return 0
 
 
+def cmd_stride_eval(a) -> int:
+    from sightline.evaluation.run import load_eval_config, write_json
+    from sightline.evaluation.stride import stride_sweep
+
+    try:
+        cfg = _load_cfg(a)
+        man = load_manifest(a.manifest)
+    except (ConfigError, ManifestError) as exc:
+        return _unavailable(None, str(exc))
+    out = stride_sweep(man, cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache), _detector_factory(cfg),
+                       a.strides, progress=_p)
+    if a.out:
+        write_json(a.out, out)
+        _p(f"wrote {a.out}")
+    return 0
+
+
 def cmd_tune(a) -> int:
     from sightline.evaluation.run import load_eval_config
     from sightline.tune import tune
@@ -469,6 +486,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = add("detect-eval", cmd_detect_eval, "detector P/R/F1 vs threshold on a manifest (use val)")
     sp.add_argument("--manifest", default="configs/manifests/val.json")
+    sp.add_argument("--out")
+    _add_detector_overrides(sp)
+    common(sp)
+
+    sp = add("stride-eval", cmd_stride_eval, "event recall/latency vs frame_stride on a manifest (use val); tunes nothing")
+    sp.add_argument("--manifest", default="configs/manifests/val.json")
+    sp.add_argument("--strides", type=int, nargs="+", default=[1, 2, 3])
     sp.add_argument("--out")
     _add_detector_overrides(sp)
     common(sp)
