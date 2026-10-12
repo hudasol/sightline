@@ -362,6 +362,22 @@ def cmd_threads(a) -> int:
     return 0
 
 
+def cmd_detector_summary(a) -> int:
+    from sightline.evaluation.run import load_eval_config, write_json
+    from sightline.selection import build_table, to_markdown
+
+    bar = load_eval_config(a.eval_config)["bar"]
+    cfg = load_config(a.config)
+    t = build_table(Path(a.results), a.candidates, bar["detection_precision"], bar["detection_recall"], bar["min_fps"],
+                    cfg.detector.score_threshold)
+    out = Path(a.results) / "detector_selection"
+    write_json(out / "summary.json", t)
+    (out / "summary.md").write_text(to_markdown(t))
+    _p(to_markdown(t))
+    _p(f"wrote {out / 'summary.json'} and summary.md")
+    return 0
+
+
 def _wavg(summaries: list[dict], key: str):
     w = [(s[key], s["frames_processed"]) for s in summaries if s.get(key) is not None]
     tot = sum(n for _v, n in w)
@@ -491,6 +507,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--realtime", action="store_true")
     sp.add_argument("--max-frames", type=int, help="time only the first N frames of each clip (recorded in the report)")
     _add_detector_overrides(sp)
+
+    sp = add("detector-summary", cmd_detector_summary, "P/R/F1 vs fps table for detector candidates, from saved results")
+    sp.add_argument("candidates", nargs="+", help="tags used in results/detector_selection/detect_eval_val_<tag>.json")
+    sp.add_argument("--results", default="results")
+    sp.add_argument("--config", default="configs/default.yaml")
+    sp.add_argument("--eval-config", default="configs/eval.yaml")
 
     sp = add("threads", cmd_threads, "time the detector at several torch thread counts on THIS machine")
     sp.add_argument("source", help="a val clip or image sequence")
