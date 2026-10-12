@@ -6,7 +6,7 @@ detector:
   name: fasterrcnn_mobilenet_v3_large_320_fpn
   score_threshold: 0.5      # FROZEN-ON-VAL
   min_score: 0.1
-  input_short_side: 320
+  input_size: null          # [w, h] frames are resized to fit inside; null = pipeline declared size
   device: cpu
 
 tracker:

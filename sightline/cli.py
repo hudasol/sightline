@@ -287,7 +287,8 @@ def cmd_benchmark(a) -> int:
             "frames_late": sum(s["frames_late"] for s in summaries),
             "note": "latency_ms_p95 is the worst p95 over clips; p50s are frame-weighted"}
     report = {"summary": best, "per_clip": summaries, "machine": machine_info(), "detector": detector.info(),
-              "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height]}
+              "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height],
+              "detector_input_size": list(cfg.detector.input_size), "decode_thread": cfg.pipeline.decode_thread}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, indent=1))
     _p(f"wrote {a.out}")
@@ -366,9 +367,10 @@ def cmd_stress(a) -> int:
 
 def cmd_errors(a) -> int:
     from sightline.errors import analyze
+    from sightline.evaluation.run import detector_tag
 
     cfg = load_config(a.config)
-    out = analyze(Path(a.results), Path(a.root), Path(a.lock), Path(a.cache), cfg.detector.name, cfg.detector.score_threshold, a.per_type)
+    out = analyze(Path(a.results), Path(a.root), Path(a.lock), Path(a.cache), detector_tag(cfg), cfg.detector.score_threshold, a.per_type)
     _p(f"error analysis written to {out}: open INDEX.md and write the 'why' for each failure after looking at it")
     return 0
 
