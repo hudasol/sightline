@@ -16,11 +16,15 @@ METRICS = ["idf1", "idp", "idr", "recall", "precision", "num_unique_objects", "m
            "num_fragmentations", "mota", "num_objects"]
 
 
-def _xywh(boxes: list) -> np.ndarray:
-    a = np.array(boxes, dtype=float).reshape(-1, 4)
-    a[:, 2] -= a[:, 0]
-    a[:, 3] -= a[:, 1]
-    return a
+def iou_distance(gt_boxes: list, hyp_boxes: list, iou_thr: float) -> np.ndarray:
+    """py-motmetrics' distance convention: 1 - IoU, and NaN (match not allowed) where IoU < iou_thr.
+
+    Computed here instead of mm.distances.iou_matrix, which in motmetrics 1.4.0 calls
+    np.asfarray, removed in NumPy 2.0.
+    """
+    d = 1.0 - iou_matrix(np.array(gt_boxes, dtype=float), np.array(hyp_boxes, dtype=float))
+    d[d > 1.0 - iou_thr] = np.nan
+    return d
 
 
 def build_accumulator(gt: GTFrames, ignore: IgnoreFrames, hyp_rows: list[tuple], frames: Iterable[int],
@@ -43,7 +47,7 @@ def build_accumulator(gt: GTFrames, ignore: IgnoreFrames, hyp_rows: list[tuple],
         g_ids = [i for i, _b in g]
         h_ids = [i for i, _b in h]
         if g and h:
-            dist = mm.distances.iou_matrix(_xywh([b for _i, b in g]), _xywh([b for _i, b in h]), max_iou=1.0 - iou_thr)
+            dist = iou_distance([b for _i, b in g], [b for _i, b in h], iou_thr)
         else:
             dist = np.empty((len(g), len(h)))
         acc.update(g_ids, h_ids, dist, frameid=f)
