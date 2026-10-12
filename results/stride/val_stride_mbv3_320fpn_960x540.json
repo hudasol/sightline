@@ -1,0 +1,226 @@
+{
+ "what": "event recall/precision and latency vs pipeline.frame_stride, on cached detections; nothing tuned",
+ "manifest": "configs\\manifests\\val.json",
+ "event_clips": [
+  "MOT17-02-FRCNN",
+  "MOT17-04-FRCNN"
+ ],
+ "excluded_not_scored_on_events": [
+  "MOT17-05-FRCNN",
+  "MOT17-11-FRCNN",
+  "MOT17-13-FRCNN"
+ ],
+ "detector": "fasterrcnn_mobilenet_v3_large_320_fpn",
+ "input_size": [
+  960,
+  540
+ ],
+ "score_threshold": 0.5,
+ "tracker": "bytetrack",
+ "tracker_params": {
+  "kind": "bytetrack",
+  "new_track_score": 0.6,
+  "match_iou": 0.3,
+  "low_match_iou": 0.5,
+  "tentative_match_iou": 0.5,
+  "max_age": 30,
+  "min_hits": 3,
+  "trajectory_len": 30
+ },
+ "event_params": {
+  "n_open": 3,
+  "m_close": 5,
+  "cooldown": 15,
+  "edge_margin_frac": 0.05
+ },
+ "note": "tracker/event parameters count processed frames and were NOT rescaled for stride",
+ "rows": [
+  {
+   "frame_stride": 1,
+   "event_recall": 1.0,
+   "event_precision": 0.4878048780487805,
+   "events_tp": 20,
+   "events_fp": 21,
+   "events_fn": 0,
+   "events_unresolved": 23,
+   "latency_frames": {
+    "median": 11.0,
+    "p95": 159.60000000000005,
+    "n": 20
+   },
+   "latency_ms": {
+    "median": 366.66666666666663,
+    "p95": 5320.000000000002,
+    "n": 20
+   },
+   "per_clip": [
+    {
+     "clip": "MOT17-02-FRCNN",
+     "source_fps": 30.0,
+     "required_processing_fps": 30.0,
+     "gt_events": 11,
+     "tp": 11,
+     "fp": 18,
+     "fn": 0,
+     "latencies_frames": [
+      5,
+      228,
+      21,
+      51,
+      -73,
+      3,
+      -73,
+      53,
+      63,
+      44,
+      2
+     ]
+    },
+    {
+     "clip": "MOT17-04-FRCNN",
+     "source_fps": 30.0,
+     "required_processing_fps": 30.0,
+     "gt_events": 9,
+     "tp": 9,
+     "fp": 3,
+     "fn": 0,
+     "latencies_frames": [
+      29,
+      -1,
+      5,
+      2,
+      30,
+      17,
+      -2,
+      0,
+      156
+     ]
+    }
+   ]
+  },
+  {
+   "frame_stride": 2,
+   "event_recall": 0.95,
+   "event_precision": 0.6551724137931034,
+   "events_tp": 19,
+   "events_fp": 10,
+   "events_fn": 1,
+   "events_unresolved": 15,
+   "latency_frames": {
+    "median": 9,
+    "p95": 102.40000000000009,
+    "n": 19
+   },
+   "latency_ms": {
+    "median": 300.0,
+    "p95": 3413.333333333336,
+    "n": 19
+   },
+   "per_clip": [
+    {
+     "clip": "MOT17-02-FRCNN",
+     "source_fps": 30.0,
+     "required_processing_fps": 15.0,
+     "gt_events": 11,
+     "tp": 11,
+     "fp": 8,
+     "fn": 0,
+     "latencies_frames": [
+      160,
+      7,
+      0,
+      22,
+      -44,
+      38,
+      -71,
+      -41,
+      51,
+      65,
+      4
+     ]
+    },
+    {
+     "clip": "MOT17-04-FRCNN",
+     "source_fps": 30.0,
+     "required_processing_fps": 15.0,
+     "gt_events": 9,
+     "tp": 8,
+     "fp": 2,
+     "fn": 1,
+     "latencies_frames": [
+      32,
+      1,
+      8,
+      96,
+      19,
+      20,
+      9,
+      3
+     ]
+    }
+   ]
+  },
+  {
+   "frame_stride": 3,
+   "event_recall": 0.95,
+   "event_precision": 0.7037037037037037,
+   "events_tp": 19,
+   "events_fp": 8,
+   "events_fn": 1,
+   "events_unresolved": 12,
+   "latency_frames": {
+    "median": 24,
+    "p95": 88.20000000000006,
+    "n": 19
+   },
+   "latency_ms": {
+    "median": 800.0,
+    "p95": 2940.000000000002,
+    "n": 19
+   },
+   "per_clip": [
+    {
+     "clip": "MOT17-02-FRCNN",
+     "source_fps": 30.0,
+     "required_processing_fps": 10.0,
+     "gt_events": 11,
+     "tp": 11,
+     "fp": 6,
+     "fn": 0,
+     "latencies_frames": [
+      48,
+      126,
+      26,
+      58,
+      5,
+      40,
+      -69,
+      56,
+      46,
+      36,
+      7
+     ]
+    },
+    {
+     "clip": "MOT17-04-FRCNN",
+     "source_fps": 30.0,
+     "required_processing_fps": 10.0,
+     "gt_events": 9,
+     "tp": 8,
+     "fp": 2,
+     "fn": 1,
+     "latencies_frames": [
+      6,
+      4,
+      7,
+      84,
+      -30,
+      24,
+      12,
+      4
+     ]
+    }
+   ]
+  }
+ ]
+}
