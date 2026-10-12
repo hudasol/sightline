@@ -1,0 +1,44 @@
+{
+ "what": "detect() timing on full-resolution frames vs frames pre-resized to the declared input; diagnostic only",
+ "sequence": "data\\mot17\\MOT17-02-FRCNN",
+ "frame_shape": [
+  1080,
+  1920,
+  3
+ ],
+ "declared_input": [
+  640,
+  360
+ ],
+ "jpeg_decode_ms_mean": 29.690720001235604,
+ "full_resolution": {
+  "ms_p50": 232.4174000241328,
+  "ms_mean": 244.6553100036302,
+  "n": 30
+ },
+ "resize_then_detect": {
+  "ms_p50": 152.65454998007044,
+  "ms_mean": 157.27390666143037,
+  "n": 30
+ },
+ "detector": {
+  "detector": "fasterrcnn_mobilenet_v3_large_320_fpn",
+  "weights": "FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.DEFAULT",
+  "min_score": 0.1,
+  "input_short_side": 320,
+  "device": "cpu",
+  "torch": "2.14.1+cpu",
+  "torchvision": "0.29.1+cpu"
+ },
+ "machine": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "cpu_count_logical": 16,
+  "python": "3.13.0",
+  "opencv": "5.0.0",
+  "torch": "2.14.1+cpu",
+  "cuda_available": false,
+  "torch_threads": 8
+ }
+}

@@ -1,0 +1,70 @@
+{
+ "summary": {
+  "frames_processed": 1050,
+  "throughput_fps": 3.630770660180928,
+  "latency_ms_p50": 246.10079999547452,
+  "latency_ms_p95": 315.22595998831093,
+  "inference_ms_p50": 238.4213000186719,
+  "inference_ms_p95": 306.1153799993917,
+  "frames_dropped_lagging": 0,
+  "frames_skipped_by_policy": 0,
+  "frames_late": 1045,
+  "note": "latency_ms_p95 is the worst p95 over clips; p50s are frame-weighted"
+ },
+ "per_clip": [
+  {
+   "clip": "MOT17-04-FRCNN",
+   "frames_processed": 1050,
+   "frames_dropped_lagging": 0,
+   "frames_skipped_by_policy": 0,
+   "frames_invalid": 0,
+   "frames_late": 1045,
+   "late_budget_ms": 100.0,
+   "warmup_frames_excluded_from_latency": 5,
+   "wall_seconds": 289.19480140000815,
+   "throughput_fps": 3.630770660180928,
+   "latency_ms_p50": 246.10079999547452,
+   "latency_ms_p95": 315.22595998831093,
+   "latency_ms_max": 554.8478999990039,
+   "inference_ms_p50": 238.4213000186719,
+   "inference_ms_p95": 306.1153799993917,
+   "dropped_frame_indices": [],
+   "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "cpu_count_logical": 16,
+    "python": "3.13.0",
+    "opencv": "5.0.0",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "torch_threads": 8
+   }
+  }
+ ],
+ "machine": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "cpu_count_logical": 16,
+  "python": "3.13.0",
+  "opencv": "5.0.0",
+  "torch": "2.14.1+cpu",
+  "cuda_available": false,
+  "torch_threads": 8
+ },
+ "detector": {
+  "detector": "fasterrcnn_mobilenet_v3_large_320_fpn",
+  "weights": "FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.DEFAULT",
+  "min_score": 0.1,
+  "input_short_side": 320,
+  "device": "cpu",
+  "torch": "2.14.1+cpu",
+  "torchvision": "0.29.1+cpu"
+ },
+ "realtime_emulation": false,
+ "declared_input": [
+  640,
+  360
+ ]
+}
