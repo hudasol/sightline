@@ -135,7 +135,7 @@ def cmd_lock(a) -> int:
     try:
         man = load_manifest(a.manifest)
         cov = coverage_check(man)
-        locked = lock_manifest(a.manifest, a.out, a.root)
+        locked = lock_manifest(a.manifest, a.out, a.root, eval_config=a.eval_config)
     except (ManifestError, FileNotFoundError) as exc:
         return _unavailable(None, f"cannot lock: {exc}")
     _p(f"locked {len(locked['clips'])} clips -> {a.out}  sha256={locked['manifest_sha256'][:16]}  git={locked['git_commit']}")
@@ -380,6 +380,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("manifest")
     sp.add_argument("--out", default="results/heldout_manifest.json")
     sp.add_argument("--root", default=".")
+    sp.add_argument("--eval-config", default="configs/eval.yaml", help="label rules and bar; hashed into the lock")
 
     sp = add("verify-lock", cmd_verify_lock, "check the held-out set is unchanged since locking")
     sp.add_argument("lock", nargs="?", default="results/heldout_manifest.json")
