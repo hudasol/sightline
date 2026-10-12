@@ -29,7 +29,7 @@ from sightline.evaluation import tracking as trk_eval
 from sightline.evaluation.events import event_metrics, match_events
 from sightline.evaluation.run import ClipData, ClipResult, evaluate_clip, get_detections, prepare_clip, write_json
 from sightline.ingest import iter_frames
-from sightline.manifest import ManifestError, load_manifest, split_check
+from sightline.manifest import ManifestError, load_manifest, require_final_lock, split_check
 from sightline.quality import measure_quality
 
 
@@ -51,9 +51,7 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
          cache_dir: Path, detector_factory, out_path: Path, tuning_dir: Path, progress=print) -> dict:
     root = Path(root)
     lock_path = Path(locked_test)
-    if not lock_path.is_file():
-        raise ManifestError(f"locked held-out manifest {lock_path} does not exist: run `lock-manifest` BEFORE tuning")
-    locked = json.loads(lock_path.read_text())
+    locked = require_final_lock(lock_path, root)  # refuses a missing, draft or changed lock
     val = load_manifest(val_manifest)
     test = load_manifest(lock_path)
     problems = split_check(val, test)

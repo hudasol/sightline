@@ -153,7 +153,10 @@ def cmd_lock(a) -> int:
         locked = lock_manifest(a.manifest, a.out, a.root, eval_config=a.eval_config)
     except (ManifestError, FileNotFoundError) as exc:
         return _unavailable(None, f"cannot lock: {exc}")
-    _p(f"locked {len(locked['clips'])} clips -> {a.out}  sha256={locked['manifest_sha256'][:16]}  git={locked['git_commit']}")
+    _p(f"locked {len(locked['clips'])} clips -> {a.out}  status={locked['status'].upper()}  "
+       f"sha256={locked['manifest_sha256'][:16]}  git={locked['git_commit']}")
+    if locked["status"] != "final":
+        _p("DRAFT lock: the held-out set does not meet the coverage bar yet; `tune` will refuse it")
     _p(f"coverage vs the bar: {json.dumps(cov)}")
     return 0
 
@@ -232,7 +235,9 @@ def cmd_evaluate(a) -> int:
     except (ConfigError, ManifestError, FileNotFoundError, json.JSONDecodeError) as exc:
         return _unavailable(None, f"cannot start evaluation: {exc}")
 
-    # the held-out set must be locked, unchanged, and fixed BEFORE the config was tuned
+    # the held-out set must be locked, complete, unchanged, and fixed BEFORE the config was tuned
+    if lock.get("status") != "final":
+        return _unavailable(None, f"{a.lock} is a draft lock; the held-out set is incomplete")
     if not prov.get("frozen") or prov.get("locked_test_manifest_sha256") != lock["manifest_sha256"]:
         return _unavailable(None, "frozen config was not tuned against THIS locked manifest (provenance mismatch)")
     problems = verify_lock(a.lock, root)

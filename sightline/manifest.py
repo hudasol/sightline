@@ -159,7 +159,11 @@ def lock_manifest(manifest_path: str | Path, out_path: str | Path, root: str | P
         if c.gt_events:
             entry["gt_events_sha256"] = sha256_file(root / c.gt_events)
         entries.append(entry)
-    body = {"version": 1, "split": man.split, "clips": entries}
+    coverage = coverage_check(man)
+    complete = coverage["meets_min_clips"] and coverage["meets_three_difficult"] and coverage["has_negative_set"]
+    # a DRAFT lock is allowed (it exercises the protocol early) but `tune` refuses it
+    body = {"version": 1, "split": man.split, "clips": entries, "coverage": coverage,
+            "status": "final" if complete else "draft"}
     if eval_config is not None:
         body["eval_config"] = str(eval_config)
         body["eval_config_sha256"] = sha256_file(root / eval_config)
@@ -169,6 +173,24 @@ def lock_manifest(manifest_path: str | Path, out_path: str | Path, root: str | P
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(locked, indent=1))
+    return locked
+
+
+def require_final_lock(lock_path: str | Path, root: str | Path = ".") -> dict:
+    """The locked held-out set tuning may rely on: complete (status final) and unchanged since locking."""
+    lp = Path(lock_path)
+    if not lp.is_file():
+        raise ManifestError(f"locked held-out manifest {lp} does not exist: run `lock-manifest` BEFORE tuning")
+    locked = json.loads(lp.read_text())
+    if locked.get("status") != "final":
+        cov = locked.get("coverage") or {}
+        raise ManifestError(
+            f"{lp} is a DRAFT lock (status={locked.get('status', 'missing')!r}, coverage={json.dumps(cov)}). "
+            "Complete the held-out set (>=12 clips, 3 difficult conditions, a negative set), re-run "
+            "`lock-manifest`, and only then tune.")
+    problems = verify_lock(lp, root)
+    if problems:
+        raise ManifestError("held-out set changed since locking, refusing:\n  " + "\n  ".join(problems))
     return locked
 
 
