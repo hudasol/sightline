@@ -74,6 +74,8 @@ class PipelineConfig:
     frame_stride: int = 1  # 1 = process every frame. Anything else is a recorded sampling policy.
     declared_width: int = 640
     declared_height: int = 360
+    decode_thread: bool = True  # decode frames in a background thread so decoding overlaps inference
+    decode_queue: int = 4  # frames decoded ahead; order kept, nothing dropped
 
 
 @dataclass
@@ -108,6 +110,7 @@ class Config:
         _check(0.0 <= h.low_conf_mean <= 1.0, "health.low_conf_mean must be in [0, 1]")
         _check(p.frame_stride >= 1, "pipeline.frame_stride must be >= 1")
         _check(p.declared_width > 0 and p.declared_height > 0, "pipeline declared size must be positive")
+        _check(p.decode_queue >= 1, "pipeline.decode_queue must be >= 1")
         return self
 
     def to_dict(self) -> dict[str, Any]:

@@ -18,7 +18,9 @@ import configparser
 import hashlib
 import json
 import math
-from collections.abc import Iterator
+import queue
+import threading
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -185,6 +187,56 @@ def iter_frames(
                 yield FrameData(index, ts, frame, valid=True)
     finally:
         cap.release()
+
+
+_DONE = object()
+
+
+def prefetch(frames: Iterable[FrameData], depth: int = 4) -> Iterator[FrameData]:
+    """Decode up to `depth` frames ahead in a background thread.
+
+    OpenCV releases the GIL while decoding, so decoding overlaps inference. Order is
+    preserved and nothing is dropped; an exception in the decoder is re-raised here.
+    Closing the iterator early stops the thread.
+    """
+    q: queue.Queue = queue.Queue(maxsize=depth)
+    stop = threading.Event()
+
+    def put(item) -> bool:
+        while not stop.is_set():
+            try:
+                q.put(item, timeout=0.1)
+                return True
+            except queue.Full:
+                continue
+        return False
+
+    def work() -> None:
+        try:
+            for fr in frames:
+                if not put(fr):
+                    return
+            put(_DONE)
+        except BaseException as exc:  # handed to the consumer, never swallowed
+            put(exc)
+        finally:
+            close = getattr(frames, "close", None)
+            if close is not None:
+                close()  # releases the video capture when the consumer stops early
+
+    t = threading.Thread(target=work, name="sightline-decode", daemon=True)
+    t.start()
+    try:
+        while True:
+            item = q.get()
+            if item is _DONE:
+                return
+            if isinstance(item, BaseException):
+                raise item
+            yield item
+    finally:
+        stop.set()
+        t.join(timeout=5)
 
 
 def ingest(path: str | Path, out_dir: str | Path | None = None, fps_override: float | None = None) -> dict:

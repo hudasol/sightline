@@ -17,7 +17,7 @@ from pathlib import Path
 from sightline.config import Config, CorridorConfig
 from sightline.detector import Detector
 from sightline.events import Event
-from sightline.ingest import IngestError, SourceInfo, iter_frames, probe
+from sightline.ingest import IngestError, SourceInfo, iter_frames, prefetch, probe
 from sightline.overlay import OverlayWriter
 from sightline.pipeline import FrameResult, Pipeline
 from sightline.runtime import RuntimeRecorder, machine_info
@@ -94,6 +94,9 @@ def run_clip(
 
     if frames is None:
         frames = iter_frames(source, fps_override, stride=stride, info=info)
+        if cfg.pipeline.decode_thread:
+            frames = prefetch(frames, cfg.pipeline.decode_queue)
+    run.policy["decode_thread"] = cfg.pipeline.decode_thread
 
     pipe = Pipeline(cfg, corridor, detector, (info.width, info.height), nominal_fps=info.fps / stride, clock=clock)
     rec = RuntimeRecorder(warmup=cfg.health.warmup_frames, budget_s=1.0 / cfg.health.min_fps)
@@ -156,6 +159,9 @@ def run_clip(
                 run.results.append(res)
     finally:
         rec.stop()
+        close = getattr(frames, "close", None)
+        if close is not None:
+            close()  # stops the decode thread if the loop ended early
         if writer is not None:
             writer.close()
 
