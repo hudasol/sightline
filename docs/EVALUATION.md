@@ -91,11 +91,13 @@ defaults (score threshold 0.5, A3 time-based settings).
 
 - Twenty events is far too few to tune on. Recall moves in 5-point steps, and the
   medians are noisy.
-- Event precision is below the 0.85 bar for every row at k <= 3. Many events end
-  UNRESOLVED (10-16 per row for YOLOX-s, 14-22 for MobileNet, in the same files),
-  which points to fragmented tracks re-opening events. That has not yet been
-  checked frame by frame (`sightline errors`). Tracker tuning on val, after the
-  held-out set is locked, is where it gets addressed.
+- Event precision is below the 0.85 bar for every row at k <= 3.
+- Many events end UNRESOLVED: 10-16 per row for YOLOX-s and 14-22 for MobileNet, in
+  the same files. Not all of these are failures. For YOLOX-s at k = 2, 6 of the 11
+  are tracks lost while the event was open; the other 5 were still open when the clip
+  ended (`stream_end`). See the error analysis below.
+- Why tracks are lost is not yet written up. Tracker tuning on val, after the held-out
+  set is locked, is where it gets addressed.
 - `rests_on_prediction` was 0 in every row shown, and 1 at k = 4 and 6 for
   YOLOX-s: almost every event had at least one detector frame inside the
   corridor.
@@ -130,3 +132,12 @@ What this does and does not show:
 
 ## Error analysis
 `sightline errors` selects failures worst-first from saved results. The "why" column is written by a human after looking at the frames; it is not generated.
+
+- **Unresolved events on val** (YOLOX-s @640, k = 2, untuned):
+  `results/error_analysis/val_unresolved_yolox_s_640x640_k2/INDEX.md`.
+  - 10 were requested and 6 met the rule (track lost while the event was open).
+    These are the same 6 `track_lost` events behind the interval run's 11
+    unresolved.
+  - The "why" column is still TODO for a human.
+  - No setting was changed from these strips. The frame images stay out of git
+    because they show faces.
