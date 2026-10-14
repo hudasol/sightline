@@ -498,6 +498,25 @@ def cmd_detector_summary(a) -> int:
     return 0
 
 
+def cmd_runtime_summary(a) -> int:
+    from sightline.runtime import summarize_runs
+
+    s = summarize_runs(Path(a.parent))
+    if not s:
+        _p(f"no <config>_run<N> folders with benchmark reports in {a.parent}")
+        return 1
+    _p("| Config | Runs | Throughput fps, median (min-max) | Worst clip p95 ms | Max latency ms | Dropped | Det. skipped busy |")
+    _p("|---|---|---|---|---|---|---|")
+    for name, g in s.items():
+        f = lambda k, nd=1: f"{g[k]['median']:.{nd}f} ({g[k]['min']:.{nd}f}-{g[k]['max']:.{nd}f})"  # noqa: E731
+        _p(f"| {name} | {g['runs']} | {f('throughput_fps', 2)} | {f('worst_clip_latency_ms_p95', 0)} | "
+           f"{f('latency_ms_max', 0)} | {f('frames_dropped', 0)} | {f('detections_skipped_worker_busy', 0)} |")
+    out = Path(a.out or Path(a.parent) / "summary.json")
+    out.write_text(json.dumps(s, indent=1))
+    _p(f"wrote {out}")
+    return 0
+
+
 def _wavg(summaries: list[dict], key: str):
     w = [(s[key], s["frames_processed"]) for s in summaries if s.get(key) is not None]
     tot = sum(n for _v, n in w)
@@ -660,6 +679,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--detect-every", type=int, help="override pipeline.detect_every (PLAN.md A2)")
     sp.add_argument("--async-detection", action="store_true", help="run the detector on a worker thread")
     _add_detector_overrides(sp)
+
+    sp = add("runtime-summary", cmd_runtime_summary,
+             "median and range over repeated benchmark runs (<config>_run<N> folders), PLAN.md A4")
+    sp.add_argument("parent")
+    sp.add_argument("--out", help="default: <parent>/summary.json")
 
     sp = add("detector-summary", cmd_detector_summary, "P/R/F1 vs fps table for detector candidates, from saved results")
     sp.add_argument("candidates", nargs="+", help="tags used in results/detector_selection/detect_eval_val_<tag>.json")

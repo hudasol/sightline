@@ -8,6 +8,7 @@ import platform
 import sys
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 
@@ -37,6 +38,49 @@ def machine_info() -> dict:
     except Exception:
         info["torch"] = None
     return info
+
+
+def summarize_runs(parent: Path) -> dict:
+    """Median and range over repeated benchmark runs (PLAN.md amendment A4).
+
+    `parent` holds one folder per run, named <config>_run<N>, each with one benchmark report
+    per clip. Per run: throughput = frames processed / wall time over all clips; latency is
+    the WORST per-clip p95 and the overall maximum (the reports keep percentiles, not every
+    latency, so no pooled p95 is invented). Per config: the median of the runs and min-max.
+    """
+    import json
+    import re
+    import statistics
+
+    groups: dict[str, list[dict]] = {}
+    for run_dir in sorted(d for d in Path(parent).iterdir() if d.is_dir()):
+        m = re.fullmatch(r"(.+)_run(\d+)", run_dir.name)
+        if not m:
+            continue
+        reports = [json.loads(f.read_text()) for f in sorted(run_dir.glob("*.json"))]
+        clips = [c for r in reports for c in r["per_clip"]]
+        if not clips:
+            continue
+        frames = sum(c["frames_processed"] for c in clips)
+        wall = sum(c["wall_seconds"] for c in clips)
+        groups.setdefault(m.group(1), []).append({
+            "run": int(m.group(2)), "clips": len(clips), "frames_processed": frames,
+            "frames_dropped": sum(c["frames_dropped_lagging"] for c in clips),
+            "throughput_fps": frames / wall if wall else None,
+            "worst_clip_latency_ms_p95": max(c["latency_ms_p95"] for c in clips),
+            "latency_ms_max": max(c["latency_ms_max"] for c in clips),
+            "detections_skipped_worker_busy": sum(c.get("detections_skipped_worker_busy", 0) for c in clips),
+            "async_detection": reports[0].get("async_detection", False),
+            "realtime_emulation": reports[0].get("realtime_emulation"),
+        })
+    out = {}
+    keys = ("throughput_fps", "frames_dropped", "worst_clip_latency_ms_p95", "latency_ms_max",
+            "detections_skipped_worker_busy")
+    for name, runs in groups.items():
+        out[name] = {"runs": len(runs), "per_run": sorted(runs, key=lambda r: r["run"]),
+                     **{k: {"median": statistics.median(r[k] for r in runs), "min": min(r[k] for r in runs),
+                            "max": max(r[k] for r in runs)} for k in keys}}
+    return out
 
 
 @dataclass
