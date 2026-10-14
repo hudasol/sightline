@@ -7,6 +7,7 @@ logic with a scripted fake, so nothing here needs a display to be tested.
 
 from __future__ import annotations
 
+import json
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -14,8 +15,9 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from sightline.config import load_corridor
 from sightline.geometry import GeometryError, Polygon
-from sightline.ingest import IngestError, probe, read_frame
+from sightline.ingest import IngestError, SourceInfo, _sequence_files, probe, read_frame, sha256_file
 
 KEY_ENTER, KEY_ESC, KEY_BACKSPACE = (13, 10), 27, 8
 
@@ -124,4 +126,124 @@ def draw_corridor(source: str | Path, out: str | Path, name: str | None = None, 
             elif key in (KEY_ESC, ord("q")):
                 return None
     finally:
+        ui.close()
+
+
+# -- (b) label corridor events --------------------------------------------------------------------
+
+LABEL_HELP = "d/a frame +-1 | D/A +-10 | i first inside | l left (1-9: which open event) | u undo | Enter save | Esc quit"
+
+
+class FrameReader:
+    """Random access that stays cheap when stepping forward: one capture kept open, seek only on jumps."""
+
+    def __init__(self, source: str | Path, info: SourceInfo, cache: int = 64) -> None:
+        self.source, self.info, self.limit = Path(source), info, cache
+        self._cache: dict[int, np.ndarray | None] = {}
+        self._files = _sequence_files(self.source) if info.kind == "image_sequence" else None
+        self._cap = cv2.VideoCapture(str(self.source)) if self._files is None else None
+        self._next = 1  # index the capture will return on its next read
+
+    def get(self, index: int) -> np.ndarray | None:
+        if index in self._cache:
+            return self._cache[index]
+        if self._files is not None:
+            img = cv2.imread(str(self._files[index - 1])) if 1 <= index <= len(self._files) else None
+        else:
+            if index != self._next:
+                self._cap.set(cv2.CAP_PROP_POS_FRAMES, index - 1)
+            ok, img = self._cap.read()
+            img = img if ok else None
+            self._next = index + 1
+        if len(self._cache) >= self.limit:
+            self._cache.pop(next(iter(self._cache)))
+        self._cache[index] = img
+        return img
+
+    def close(self) -> None:
+        if self._cap is not None:
+            self._cap.release()
+
+
+def label_events(source: str | Path, corridor_path: str | Path, out: str | Path, ui=None) -> dict | None:
+    """Step through the clip with the corridor drawn and mark each event's first-inside and left frames.
+
+    "i" marks the first frame on which the person's feet are inside the polygon. "l" marks the
+    first frame on which they are no longer inside, so last_inside_frame = that frame - 1.
+    Several people can be open at once; "l" closes the oldest, 1-9 close that numbered one.
+    Writes the events.json list read by evaluation (first_inside_frame / last_inside_frame) and
+    a provenance file next to it. Returns None if quit without saving.
+    """
+    info = probe(source)
+    corridor = load_corridor(corridor_path)
+    if corridor.frame_size and tuple(corridor.frame_size) != (info.width, info.height):
+        raise IngestError(f"corridor {corridor_path} was drawn on {corridor.frame_size}, the clip is "
+                          f"{info.width}x{info.height}")
+    n = info.frame_count_reported
+    reader = FrameReader(source, info)
+    ui = ui or CvUI(f"label-events: {Path(source).name}")
+    ui.on_click(lambda _x, _y: None)
+    poly = np.array(corridor.polygon.vertices, dtype=np.int32)
+    cur, opened, done, history = 1, [], [], []
+    message = "mark each person's first inside frame (i) and the frame they have left (l)"
+
+    def close(k: int) -> str:
+        first = opened[k]
+        if cur - 1 < first:
+            return f"not closed: 'left' on frame {cur} is not after first-inside frame {first}"
+        ev = {"first_inside_frame": first, "last_inside_frame": cur - 1}
+        done.append(ev)
+        history.append(("close", ev, k))
+        opened.pop(k)
+        return f"event {first}-{cur - 1} recorded"
+
+    try:
+        while True:
+            img = reader.get(cur)
+            img = np.zeros((info.height, info.width, 3), np.uint8) if img is None else img.copy()
+            cv2.polylines(img, [poly], True, (0, 255, 0), max(2, info.width // 640))
+            open_txt = ", ".join(f"#{i + 1} from {f}" for i, f in enumerate(opened)) or "none"
+            _text(img, [f"frame {cur}/{n}   events {len(done)}   open: {open_txt}", LABEL_HELP, message])
+            ui.show(img)
+            key = ui.wait_key(30)
+            step = {ord("d"): 1, ord("a"): -1, ord("D"): 10, ord("A"): -10}.get(key)
+            if step:
+                cur = min(max(cur + step, 1), n)
+            elif key == ord("i"):
+                if cur in opened:
+                    message = f"frame {cur} is already an open first-inside frame"
+                else:
+                    opened.append(cur)
+                    history.append(("open", cur, len(opened) - 1))
+                    message = f"opened at frame {cur}"
+            elif key == ord("l") or (ord("1") <= key <= ord("9")):
+                k = 0 if key == ord("l") else key - ord("1")
+                message = close(k) if k < len(opened) else "no such open event"
+            elif key == ord("u") and history:
+                kind, item, k = history.pop()
+                if kind == "open":
+                    opened.pop(k)
+                else:
+                    done.remove(item)
+                    opened.insert(k, item["first_inside_frame"])
+                message = "undone"
+            elif key in KEY_ENTER:
+                rows = sorted(done + [{"first_inside_frame": f, "last_inside_frame": n, "still_inside_at_end": True}
+                                      for f in opened], key=lambda e: (e["first_inside_frame"], e["last_inside_frame"]))
+                out_p = Path(out)
+                out_p.parent.mkdir(parents=True, exist_ok=True)
+                out_p.write_text(json.dumps(rows, indent=1) + "\n", newline="\n")  # LF: the lock hashes it
+                prov = {"tool": "sightline label-events", "labelled_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                        "clip": Path(source).as_posix(),
+                        "clip_sha256": sha256_file(Path(source)) if Path(source).is_file() else None,
+                        "corridor": Path(corridor_path).as_posix(), "corridor_sha256": sha256_file(Path(corridor_path)),
+                        "rule": "first_inside_frame = first frame with the feet inside; last_inside_frame = the "
+                                "'left' frame minus 1; still_inside_at_end = closed at the last frame",
+                        "events": len(rows)}
+                (out_p.parent / f"{out_p.stem}.provenance.json").write_text(json.dumps(prov, indent=1) + "\n", newline="\n")
+                return {"events": rows, "out": out_p.as_posix()}
+            elif key == KEY_ESC:
+                return None
+    finally:
+        reader.close()
         ui.close()

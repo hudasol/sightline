@@ -90,6 +90,22 @@ def cmd_draw_corridor(a) -> int:
     return 0
 
 
+def cmd_label_events(a) -> int:
+    from sightline.config import ConfigError
+    from sightline.footage import GuiUnavailable, label_events
+
+    try:
+        res = label_events(a.clip, a.corridor, a.out)
+    except (IngestError, GuiUnavailable, ConfigError) as exc:
+        return _unavailable(None, str(exc))
+    if res is None:
+        _p("quit without saving: nothing written")
+        return 1
+    still = sum(1 for e in res["events"] if e.get("still_inside_at_end"))
+    _p(f"wrote {res['out']}: {len(res['events'])} events ({still} still inside at the end of the clip)")
+    return 0
+
+
 def cmd_import_cvat(a) -> int:
     from sightline.annotations import AnnotationError, import_cvat_mot
 
@@ -526,6 +542,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("clip")
     sp.add_argument("--out", required=True, help="e.g. configs/corridors/own-corridorA-tripod1.yaml")
     sp.add_argument("--name", help="corridor name (default: the file stem)")
+
+    sp = add("label-events", cmd_label_events, "step through a clip and mark ground-truth corridor events")
+    sp.add_argument("clip")
+    sp.add_argument("--corridor", required=True)
+    sp.add_argument("--out", required=True, help="e.g. annotations/<clip id>/events.json")
 
     sp = add("import-cvat", cmd_import_cvat, "convert a CVAT 'MOT 1.1' export into annotations/<clip>/")
     sp.add_argument("export", help="the exported .zip, or its unpacked folder")
