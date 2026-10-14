@@ -1,5 +1,5 @@
 # Default parameters. These are STARTING values. The real values come from
-# `python -m sightline tune --split val` and are written to results/frozen_config.yaml.
+# `python -m sightline tune` (val only, after a final lock) and are written to results/frozen_config.yaml.
 # Never edit frozen_config.yaml by hand after the held-out manifest is locked.
 
 detector:

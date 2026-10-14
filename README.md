@@ -170,48 +170,51 @@ Detectors (`--detector`):
 `benchmark --max-frames N` times only the first N frames of each clip and says so
 in the report. `threads <clip>` times the detector at several torch thread counts.
 
+`benchmark --async-detection` runs the detector on a worker thread, so other frames
+never wait for it (`pipeline.async_detection`). It is off by default, and its effect on
+accuracy is not yet measured (`docs/EVALUATION.md`). `runtime-summary <folder>` gives
+the median and range over repeated benchmark runs (PLAN.md A4).
+
 `tune` refuses to run unless the held-out lock is **final** (coverage met) and
 unchanged, and writes `results/frozen_config.yaml` with provenance. `evaluate` refuses if the lock or
 config provenance does not match, and a second run needs `--allow-rerun` (logged).
+None of this has run yet. Once it has, `evaluate` writes under `results/`: detection
+metrics, IDF1 / ID switches for the baseline and the chosen tracker, event precision,
+recall and latency, false events per 5 minutes of negative footage, per-condition
+tables and the runtime report.
 
 ## Replay one clip
 
 ```bash
-python -m sightline replay clip.mp4 --corridor configs/corridors/<yours>.yaml --config results/frozen_config.yaml --overlay
+python -m sightline replay data/own/clip_01.mp4 --corridor configs/corridors/<yours>.yaml --config configs/default.yaml --tracker bytetrack --out outputs/replay --overlay
 ```
 
-Exit code 2 means UNAVAILABLE (bad config, unreadable video, no detector); the
+This writes an overlay video, `events.jsonl`, `tracks.jsonl`, `health.jsonl` and a
+runtime report to `--out`. Use `--tracker iou` to run the baseline on the same
+clip. Once a frozen config exists, pass `--config results/frozen_config.yaml`.
+
+Exit code 2 means UNAVAILABLE (bad config, unreadable video, no detector). The
 system says so instead of reporting a clear corridor.
-
-Outputs, all under `results/`: detection metrics, IDF1 / ID switches for the
-baseline and chosen tracker, event precision / recall / latency, false events
-per 5 minutes of negative footage, per-condition tables, runtime report.
-
-## Replay one clip
-
-```bash
-python -m sightline replay data/own/clip_01.mp4 \
-    --config results/frozen_config.yaml --tracker bytetrack --out outputs/replay
-```
-
-Writes an overlay video, `events.jsonl`, `tracks.jsonl`, `health.jsonl` and a
-runtime report. Use `--tracker iou` to run the baseline on the same clip.
 
 ## Break it on purpose
 
 ```bash
-python -m sightline replay does_not_exist.mp4 --config results/frozen_config.yaml
-python -m sightline replay data/own/clip_01.mp4 --config configs/invalid.yaml
+python -m sightline replay does_not_exist.mp4 --corridor configs/corridors/synthetic.yaml --config configs/default.yaml
 ```
 
-Both must end in `UNAVAILABLE`, never `clear`. A stalled stream and a
-corrupt file are covered by `tests/test_health.py` and the end-to-end test.
+This ends in `UNAVAILABLE` (exit 2), never `clear`. An invalid config does the
+same. For example, write `detector: {scor_threshold: 0.4}` (a typo in a key) to
+`bad.yaml` and pass `--config bad.yaml`: unknown keys are rejected, not ignored.
+A stalled stream and a corrupt file are covered by `tests/test_health.py` and the
+end-to-end tests.
 
 ## Stress suite
 
 ```bash
-python -m sightline stress --split test --config results/frozen_config.yaml
+python -m sightline stress --lock results/heldout_manifest.json --config results/frozen_config.yaml
 ```
+
+This needs the locked held-out manifest and the frozen config, so it cannot run yet.
 
 Degrades held-out clips (blur, compression, low light, shake) at several
 levels using the **frozen** config and plots the degradation curve. It does not

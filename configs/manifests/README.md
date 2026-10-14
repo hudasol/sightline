@@ -93,8 +93,9 @@ annotate it, never after seeing results.
 ## Order (do not change)
 
 1. `split-check` passes.
-2. Val-only measurements may run before the lock: `detect-eval`, `stride-eval`,
-   `threads` and `benchmark` on val clips. They read no test clip and freeze nothing.
+2. Val-only measurements may run before the lock: `detect-eval`, `interval-eval`,
+   `threads`, `benchmark`, `runtime-summary` and `errors --manifest` on val clips.
+   They read no test clip and freeze nothing.
 3. `lock-manifest configs/manifests/test.json` once the held-out set is **complete**.
    The lock hashes clips, labels, corridor polygons, `metrics` and `configs/eval.yaml`.
    It records `status: final` only when coverage meets the bar (>=12 clips, three
