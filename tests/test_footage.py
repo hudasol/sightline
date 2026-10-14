@@ -112,6 +112,30 @@ def test_label_events_refuses_a_corridor_drawn_on_another_frame_size(clip, tmp_p
         label_events(clip.video, other, tmp_path / "e.json", ui=FakeUI([]))
 
 
+def test_check_clip_passes_a_clean_constant_rate_video(clip):
+    from sightline.footage import check_clip
+
+    r = check_clip(clip.video)
+    assert r["ok"] and not r["problems"] and r["frames"] == clip.n_frames
+    assert any("1920x1080" in w for w in r["warnings"])  # the synthetic clip is 640x360
+
+
+def test_clip_findings_flag_what_breaks_ingest():
+    from sightline.footage import clip_findings
+
+    good = {"kind": "video", "frames_decoded": 300, "frames_invalid": 0, "invalid_frame_indices": [],
+            "variable_frame_rate_suspected": False, "container_timestamps_non_monotonic": 0,
+            "frame_count_matches_container": True, "fps_source": "container", "width": 1920, "height": 1080,
+            "fps": 30.0, "codec": "avc1", "duration_s": 10.0, "frames_total": 300, "frame_count_reported": 300}
+    assert clip_findings(good) == ([], [])
+    phone = {**good, "variable_frame_rate_suspected": True, "fps": 29.42, "codec": "hvc1",
+             "frame_count_matches_container": False, "frames_total": 297}
+    problems, warnings = clip_findings(phone, rotation=90)
+    assert any("variable frame rate" in p for p in problems) and any("300 frames" in p for p in problems)
+    assert any("rotation" in w for w in warnings) and any("hvc1" in w for w in warnings)
+    assert any("unusual fps" in w for w in warnings)
+
+
 def test_missing_clip_is_reported_not_crashed(tmp_path):
     from sightline.ingest import IngestError
 

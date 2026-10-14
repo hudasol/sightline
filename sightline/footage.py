@@ -247,3 +247,66 @@ def label_events(source: str | Path, corridor_path: str | Path, out: str | Path,
     finally:
         reader.close()
         ui.close()
+
+
+# -- (c) check a clip before using it -------------------------------------------------------------
+
+STANDARD_FPS = (15.0, 23.976, 24.0, 25.0, 29.97, 30.0, 50.0, 59.94, 60.0)
+FRAGILE_CODECS = ("hevc", "hev1", "hvc1", "h265", "av01", "vp09")
+
+
+def clip_findings(rec: dict, rotation: float | None = None) -> tuple[list[str], list[str]]:
+    """(problems that would break ingest or evaluation, warnings worth fixing) for an ingest record."""
+    problems, warnings = [], []
+    if rec["frames_decoded"] == 0:
+        problems.append("no frame could be decoded")
+    if rec["frames_invalid"]:
+        problems.append(f"{rec['frames_invalid']} undecodable frame(s), e.g. {rec['invalid_frame_indices'][:5]}")
+    if rec.get("variable_frame_rate_suspected"):
+        problems.append("variable frame rate: container timestamps do not follow 1/fps (phones do this); "
+                        "convert to constant 30 fps with the ffmpeg command in the README")
+    if rec.get("container_timestamps_non_monotonic"):
+        problems.append(f"{rec['container_timestamps_non_monotonic']} non-monotonic container timestamp(s)")
+    if rec.get("frame_count_matches_container") is False:
+        problems.append(f"container says {rec['frame_count_reported']} frames, {rec['frames_total']} were read")
+    if rec.get("fps_source") != "container" and rec.get("kind") == "video":
+        problems.append(f"fps did not come from the container ({rec.get('fps_source')})")
+    if rotation:
+        warnings.append(f"rotation metadata {rotation:g} deg: OpenCV may show the frame rotated; re-encode with "
+                        "ffmpeg (it applies the rotation) before drawing a corridor")
+    if (rec["width"], rec["height"]) != (1920, 1080):
+        warnings.append(f"resolution {rec['width']}x{rec['height']}, not 1920x1080 (corridors and timings are "
+                        "per resolution; keep one camera setting per session)")
+    if not any(abs(rec["fps"] - f) < 0.05 for f in STANDARD_FPS):
+        warnings.append(f"unusual fps {rec['fps']:.3f}")
+    elif abs(rec["fps"] - 30.0) > 0.05:
+        warnings.append(f"fps {rec['fps']:.2f}, not 30 (fine for evaluation; settings are in seconds, PLAN.md A3)")
+    if str(rec.get("codec", "")).lower() in FRAGILE_CODECS:
+        warnings.append(f"codec {rec['codec']}: decoding depends on the OpenCV/FFmpeg build; H.264 is the safe choice")
+    if rec["duration_s"] < 10:
+        warnings.append(f"only {rec['duration_s']:.1f} s long")
+    return problems, warnings
+
+
+def check_clip(path: str | Path) -> dict:
+    """Read the whole clip once (sightline.ingest) and report what would break or mislead evaluation."""
+    from sightline.ingest import ingest
+
+    rec = ingest(path)
+    rotation = None
+    if rec["kind"] == "video" and hasattr(cv2, "CAP_PROP_ORIENTATION_META"):
+        cap = cv2.VideoCapture(str(path))
+        try:
+            rotation = float(cap.get(cv2.CAP_PROP_ORIENTATION_META) or 0.0)
+        finally:
+            cap.release()
+    problems, warnings = clip_findings(rec, rotation)
+    deltas = [b - a for a, b in zip(rec["container_timestamps_s"], rec["container_timestamps_s"][1:])]
+    return {
+        "path": Path(path).as_posix(), "kind": rec["kind"], "codec": rec.get("codec"),
+        "resolution": [rec["width"], rec["height"]], "fps": rec["fps"], "fps_source": rec["fps_source"],
+        "frames": rec["frames_total"], "duration_s": rec["duration_s"], "rotation_deg": rotation,
+        "frame_interval_ms": ({"min": round(min(deltas) * 1000, 2), "max": round(max(deltas) * 1000, 2)} if deltas else None),
+        "variable_frame_rate_suspected": rec.get("variable_frame_rate_suspected"),
+        "sha256": rec["sha256"], "problems": problems, "warnings": warnings, "ok": not problems,
+    }

@@ -106,6 +106,30 @@ def cmd_label_events(a) -> int:
     return 0
 
 
+def cmd_check_clip(a) -> int:
+    from sightline.footage import check_clip
+
+    try:
+        r = check_clip(a.file)
+    except IngestError as exc:
+        return _unavailable(None, f"check-clip: {exc}")
+    iv = r["frame_interval_ms"]
+    _p(f"{r['path']}: {r['kind']} {r['codec']} {r['resolution'][0]}x{r['resolution'][1]} {r['fps']:.3f} fps "
+       f"({r['fps_source']}), {r['frames']} frames, {r['duration_s']:.1f} s, rotation {r['rotation_deg']}, "
+       f"frame interval {iv['min']}-{iv['max']} ms" if iv else
+       f"{r['path']}: {r['kind']} {r['resolution'][0]}x{r['resolution'][1]} {r['fps']:.3f} fps, {r['frames']} frames, "
+       f"{r['duration_s']:.1f} s")
+    for pr in r["problems"]:
+        _p(f"PROBLEM: {pr}")
+    for w in r["warnings"]:
+        _p(f"warning: {w}")
+    _p("ok: nothing here breaks ingest" if r["ok"] else "NOT OK: fix the problems above before using this clip")
+    if a.out:
+        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.out).write_text(json.dumps(r, indent=1))
+    return 0 if r["ok"] else 1
+
+
 def cmd_import_cvat(a) -> int:
     from sightline.annotations import AnnotationError, import_cvat_mot
 
@@ -547,6 +571,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("clip")
     sp.add_argument("--corridor", required=True)
     sp.add_argument("--out", required=True, help="e.g. annotations/<clip id>/events.json")
+
+    sp = add("check-clip", cmd_check_clip, "fps, variable frame rate, resolution, duration; warn on what would break ingest")
+    sp.add_argument("file")
+    sp.add_argument("--out", help="also save the report as JSON")
 
     sp = add("import-cvat", cmd_import_cvat, "convert a CVAT 'MOT 1.1' export into annotations/<clip>/")
     sp.add_argument("export", help="the exported .zip, or its unpacked folder")
