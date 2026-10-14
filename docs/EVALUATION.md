@@ -43,32 +43,44 @@ Consequences:
 - MOT17-10's 13 label-derived events are not lost evidence. Under a drifting polygon they were never valid labels.
 
 ## Val results so far (MOT17 only; untuned; held-out set not locked)
-These are **val** measurements on public MOT17 footage. They choose a configuration;
-they say nothing about the held-out set or the bar. Under PLAN.md amendment A1 the
-detection bar is judged on own corridor clips, none of which exist yet.
+These are **val** measurements on public MOT17 footage. They compare configurations;
+they do **not** select one. Under PLAN.md amendment A4 the detector and detection
+interval are chosen on own val clips, and MOT17 does not enter that choice. They say
+nothing about the held-out set or the bar. Under A1 the detection bar is judged on own
+corridor clips, none of which exist yet.
 
-**Detector F1 against speed.** Sources: `results/detector_selection/summary.md`
-(all 4137 val frames, IoU 0.5, thresholds 0.15-0.90) and
-`results/runtime/interval/*` (first 150 frames of each val scene, every frame
-processed, same session).
+**Detector F1 against speed.** Sources:
+- F1: `results/detector_selection/summary.md` (all 4137 val frames, IoU 0.5, thresholds 0.15-0.90).
+- Speed: `results/runtime/interval/*` (first 150 frames of each val scene, every frame processed). This is **one offline run per cell**: frames are not paced in real time, which is not yet the A4 protocol of a median of 3 runs.
+- Each cell gives fps / worst per-scene p95 latency / maximum latency, in ms.
 
-| Detector | Best F1 in scope (P / R) | Best F1, all boxes | fps, k = 1 | k = 2 | k = 3 |
+| Detector | Best F1 in scope (P / R) | Best F1, all boxes | k = 1 | k = 2 | k = 3 |
 |---|---|---|---|---|---|
-| MobileNetV3-320 @640x360 | 0.607 (0.745 / 0.512) | 0.389 | 5.83 | 11.41 | 16.53 |
-| YOLOX-tiny @416 | 0.778 (0.805 / 0.753) | 0.531 | 21.50 | 39.22 | not run |
-| **YOLOX-s @640** | **0.853 (0.842 / 0.863)** | 0.625 | 6.03 | **13.08** | 18.89 |
-| ResNet50-FPN-v2 @960x540 (reference) | 0.857 (0.824 / 0.891) | 0.673 | 0.19 (k = 1, earlier session) | not run | not run |
+| MobileNetV3-320 @640x360 | 0.607 (0.745 / 0.512) | 0.389 | 5.83 fps / 195 / 205 | 11.41 / 181 / 205 | 16.53 / 189 / 220 |
+| YOLOX-tiny @416 | 0.778 (0.805 / 0.753) | 0.531* | 21.50 / 52 / 123 | 39.22 / 51 / 63 | not run |
+| YOLOX-s @640 | 0.853 (0.842 / 0.863) | 0.625* | 6.03 / 245 / 291 | 13.08 / 158 / 179 | 18.89 / 167 / 194 |
+| ResNet50-FPN-v2 @960x540 (reference) | 0.857 (0.824 / 0.891) | 0.673 | 0.19 fps (earlier session, `results/runtime/candidates/`) | not run | not run |
 
-- YOLOX-s with `detect_every: 2` is the first setting whose detector reaches
-  P/R >= 0.80 in scope on val **and** whose pipeline sustains >= 10 fps.
-- Frames on which YOLOX-s runs still take up to 158-245 ms (worst per-scene p95).
-  Those frames individually miss the 100 ms budget; throughput is an average.
-- A MobileNet control re-timed in two sessions ran at 4.99 and 5.81 fps with the
-  same code, so expect about 15% run-to-run variation.
+\* At 0.15, the lowest threshold of the grid. A lower threshold might score higher. The grid was widened from 0.30 after one-stage best F1 values sat on the old floor (PLAN.md A5).
+
+- **What the table shows.** On MOT17 val, YOLOX-s at k = 2 is the only measured
+  setting whose detector reaches in-scope P and R >= 0.80 **and** whose pipeline
+  ran at >= 10 fps offline. That is one run, not paced in real time.
+- **Real time is different.** Paced in real time and synchronous, the same setting
+  ran at 6.25 fps and dropped most frames (worker-thread section below).
+- **Slow frames remain.** The frames on which YOLOX-s runs take up to 291 ms (k = 1)
+  and 179 ms (k = 2). They individually miss the 100 ms budget; throughput is an
+  average.
+- **Timing is noisy.** A MobileNet control re-timed in two sessions ran at 4.99 and
+  5.81 fps with the same code, so expect about 15% run-to-run variation.
 
 **Events against detection interval.** Source: `results/interval/*_time_params.json`.
 Event clips MOT17-02 and 04 only (20 GT events), cached detections, untuned
 defaults (score threshold 0.5, A3 time-based settings).
+- **Rows shown:** a selection. The files also hold k = 4 and 6 for each detector.
+  For example, YOLOX-s at k = 6 has precision 0.952 and recall 1.00, with 21 predicted events.
+- **Not shown:** the YOLOX-tiny results (`val_interval_yolox_tiny_416x416_time_params.json`)
+  and the frame-based settings (`*_frame_params.json`).
 
 | Detector | k | Event recall | Event precision | Median latency (frames) | Opened on prediction |
 |---|---|---|---|---|---|
@@ -84,8 +96,9 @@ defaults (score threshold 0.5, A3 time-based settings).
   which points to fragmented tracks re-opening events. That has not yet been
   checked frame by frame (`sightline errors`). Tracker tuning on val, after the
   held-out set is locked, is where it gets addressed.
-- `rests_on_prediction` was at most 1 event per row: almost every event had at
-  least one detector frame inside the corridor.
+- `rests_on_prediction` was 0 in every row shown, and 1 at k = 4 and 6 for
+  YOLOX-s: almost every event had at least one detector frame inside the
+  corridor.
 
 ## Detection on a worker thread: latency before and after
 Source: `results/runtime/async/{before_sync,after_sync,after_async}/summary.json`, produced by `sightline runtime-summary`.
