@@ -74,6 +74,21 @@ def cmd_ingest(a) -> int:
         return _unavailable(None, f"ingest: {exc}")
 
 
+def cmd_import_cvat(a) -> int:
+    from sightline.annotations import AnnotationError, import_cvat_mot
+
+    try:
+        rep = import_cvat_mot(a.export, a.out, a.frames, tuple(a.person_labels), tuple(a.ignore_labels))
+    except (AnnotationError, FileNotFoundError) as exc:
+        return _unavailable(None, f"import-cvat: {exc}")
+    _p(f"imported {rep['person_boxes']} person boxes ({rep['ignore_boxes']} ignore) on {rep['frames_with_boxes']} of "
+       f"{rep['annotated_frames']} annotated frames -> {a.out}; dropped labels: {rep['dropped_rows_by_label'] or 'none'}")
+    for w in rep["warnings"]:
+        _p(f"WARNING: {w}")
+    _p('manifest entry: "gt": "<out>/gt.txt", "annotated_frames": "<out>/annotated_frames.json" (plus hand-labelled gt_events)')
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -489,6 +504,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("path")
     sp.add_argument("--out", default="results/ingest")
     sp.add_argument("--fps", type=float)
+
+    sp = add("import-cvat", cmd_import_cvat, "convert a CVAT 'MOT 1.1' export into annotations/<clip>/")
+    sp.add_argument("export", help="the exported .zip, or its unpacked folder")
+    sp.add_argument("--out", required=True, help="e.g. annotations/own-corridorA-20261014-03")
+    sp.add_argument("--frames", required=True,
+                    help="which frames were annotated: 1-600, 1-600:10, comma-separated parts, or a file of frame numbers")
+    sp.add_argument("--person-labels", nargs="+", default=["person", "pedestrian"])
+    sp.add_argument("--ignore-labels", nargs="*", default=[], help="labels to keep as ignore regions (never scored)")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
