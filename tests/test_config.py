@@ -41,6 +41,8 @@ def test_cli_detector_overrides_are_applied_and_validated():
     assert (cfg.detector.name, cfg.detector.input_size) == ("fasterrcnn_resnet50_fpn_v2", [960, 540])
     with pytest.raises(ConfigError):
         _load_cfg(Namespace(config="configs/default.yaml", detector=None, input_size=[8, 8]))
+    k3 = _load_cfg(Namespace(config="configs/default.yaml", detector=None, input_size=None, detect_every=3))
+    assert k3.pipeline.detect_every == 3
 
 
 def test_time_based_settings_reproduce_the_frame_defaults_at_30fps(cfg):
