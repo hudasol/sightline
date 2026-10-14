@@ -1,27 +1,28 @@
 # Evaluation
 
-**No real-data results exist yet.** This file will be filled from `results/final_metrics.json` only; every number must trace to a saved file. Do not hand-type metrics.
+**No held-out or own-clip result exists yet.** Held-out numbers will come only from `results/final_metrics.json`. The MOT17 **val** sections below cite their own files under `results/`. Every number must trace to a saved file; do not hand-type metrics.
 
 ## Protocol
-1. Build `manifests/val.json` and `manifests/test.json`; `sightline split-check` must pass.
+1. Build `configs/manifests/val.json` and `configs/manifests/test.json`; `sightline split-check` must pass.
 2. `sightline lock-manifest` on the test manifest.
-3. `sightline detect-eval` and `sightline tune` on val only → `results/frozen_config.yaml` (with provenance).
+3. `sightline detect-eval` and `sightline tune` on val only, writing `results/frozen_config.yaml` (with provenance).
 4. `sightline evaluate` once on the locked held-out set. Re-runs require `--allow-rerun` and are logged in `final_run_log.jsonl`.
 5. `sightline benchmark` on the demo machine; `sightline stress` on the frozen config (no retuning); `sightline errors` and `plots`.
 
 ## Acceptance bar (from the brief)
 | Metric | Bar | Result |
 |---|---|---|
-| Detection precision / recall (IoU 0.5) | ≥ 0.80 / ≥ 0.80 | not run |
-| IDF1 | ≥ 0.65 and > baseline | not run |
-| Event precision / recall | ≥ 0.85 / ≥ 0.85 | not run |
-| False events per 5 min (negative footage) | ≤ 1 | not run |
-| Median event latency | ≤ 5 frames | not run |
-| Throughput | ≥ 10 fps | not run |
-| Held-out clips | ≥ 12 | 0 |
+| Detection precision / recall (IoU 0.5), own clips in scope (A1) | >= 0.80 / >= 0.80 | not run |
+| IDF1 | >= 0.65 and > baseline | not run |
+| Event precision / recall | >= 0.85 / >= 0.85 | not run |
+| False events per 5 min (negative footage) | <= 1 | not run |
+| Median event latency | <= 5 frames | not run |
+| Throughput | >= 10 fps | not run on the held-out set |
+| Held-out clips | >= 12 | 2 listed in `test.json` (MOT17-09, 10), 0 evaluated, not locked |
 
 ## What exists today
-Unit and end-to-end tests on a **synthetic** clip only (geometry, config validation, tracker expiry/re-entry, event state machine, health states, manifest locking, CLI failure paths). On that clip ByteTrack-style keeps 3 ids where the IoU baseline makes 4. This is a correctness check of the code, **not** a performance claim.
+- **Tests on a synthetic clip:** unit and end-to-end tests cover geometry, config validation, tracker expiry and re-entry, the event state machine, health states, manifest locking and CLI failure paths. On that clip, `tests/test_e2e.py` checks that the ByteTrack-style tracker uses no more ids than the IoU baseline. `sightline demo` prints both id lists. This is a correctness check of the code, **not** a performance claim, and no file saves those counts.
+- **MOT17 val measurements:** see the sections below.
 
 ## Scope: moving cameras count for detection and tracking only
 The corridor is an image-space polygon, so it means nothing once the camera moves. MOT17-05, 10, 11 and 13 are filmed from a moving platform. Their manifest entries say `"metrics": ["detection", "tracking"]`, and every event number (precision, recall, latency, false events, false CLEAR) pools only clips scored on events. Decided 2026-10-12, before any event metric was computed.
