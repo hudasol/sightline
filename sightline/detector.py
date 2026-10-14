@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 
 from sightline.config import DetectorConfig
+from sightline.ingest import sha256_file
 from sightline.types import Detection
 
 
@@ -31,12 +32,28 @@ class Detector(Protocol):
     def info(self) -> dict: ...
 
 
-# model name -> (torchvision builder, weights enum name)
+# model name -> (torchvision builder, weights enum name, family). Code BSD-3-Clause, weights COCO-trained.
+#   rcnn: aspect-preserving resize; we pin torchvision's resize to the size we feed it
+#   ssd:  always resized to a fixed square (aspect NOT kept, as in training); we feed exactly that square
 _TORCHVISION_MODELS = {
-    "fasterrcnn_mobilenet_v3_large_320_fpn": ("fasterrcnn_mobilenet_v3_large_320_fpn", "FasterRCNN_MobileNet_V3_Large_320_FPN_Weights"),
-    "fasterrcnn_mobilenet_v3_large_fpn": ("fasterrcnn_mobilenet_v3_large_fpn", "FasterRCNN_MobileNet_V3_Large_FPN_Weights"),
-    "fasterrcnn_resnet50_fpn_v2": ("fasterrcnn_resnet50_fpn_v2", "FasterRCNN_ResNet50_FPN_V2_Weights"),
+    "fasterrcnn_mobilenet_v3_large_320_fpn": ("fasterrcnn_mobilenet_v3_large_320_fpn", "FasterRCNN_MobileNet_V3_Large_320_FPN_Weights", "rcnn"),
+    "fasterrcnn_mobilenet_v3_large_fpn": ("fasterrcnn_mobilenet_v3_large_fpn", "FasterRCNN_MobileNet_V3_Large_FPN_Weights", "rcnn"),
+    "fasterrcnn_resnet50_fpn_v2": ("fasterrcnn_resnet50_fpn_v2", "FasterRCNN_ResNet50_FPN_V2_Weights", "rcnn"),
+    "ssdlite320_mobilenet_v3_large": ("ssdlite320_mobilenet_v3_large", "SSDLite320_MobileNet_V3_Large_Weights", "ssd"),
 }
+_SSD_SIZE = {"ssdlite320_mobilenet_v3_large": 320}
+
+# YOLOX ONNX exports, Apache-2.0, COCO-trained: github.com/Megvii-BaseDetection/YOLOX/releases/tag/0.1.1rc0
+_ONNX_YOLOX = ("yolox_nano", "yolox_tiny", "yolox_s")
+
+
+def make_detector(cfg: DetectorConfig) -> "Detector":
+    """The detector named by cfg.name. Raises DetectorUnavailable for an unknown name or missing runtime/weights."""
+    if cfg.name in _TORCHVISION_MODELS:
+        return TorchvisionPersonDetector(cfg)
+    if cfg.name in _ONNX_YOLOX:
+        return OnnxYoloxDetector(cfg)
+    raise DetectorUnavailable(f"unknown detector {cfg.name!r}; choose from {sorted([*_TORCHVISION_MODELS, *_ONNX_YOLOX])}")
 
 
 def fit_size(width: int, height: int, box_w: int, box_h: int) -> tuple[int, int]:
@@ -69,15 +86,21 @@ class TorchvisionPersonDetector:
         self._torch = torch
         self.cfg = cfg
         self.name = cfg.name
-        builder_name, weights_name = _TORCHVISION_MODELS[cfg.name]
+        builder_name, weights_name, self.family = _TORCHVISION_MODELS[cfg.name]
         builder = getattr(torchvision.models.detection, builder_name)
         weights = getattr(torchvision.models.detection, weights_name).DEFAULT if load_weights else None
         self._weights_name = f"{weights_name}.DEFAULT" if load_weights else "none (random init)"
         box_w, box_h = cfg.input_size
-        self.model = builder(
-            weights=weights, weights_backbone=None, box_score_thresh=cfg.min_score,
-            min_size=min(box_w, box_h), max_size=max(box_w, box_h),
-        )
+        if self.family == "ssd":
+            size = _SSD_SIZE[cfg.name]
+            if [box_w, box_h] != [size, size]:
+                raise DetectorUnavailable(f"{cfg.name} only runs at a fixed {size}x{size} input; set input_size [{size}, {size}]")
+            self.model = builder(weights=weights, weights_backbone=None, score_thresh=cfg.min_score)
+        else:
+            self.model = builder(
+                weights=weights, weights_backbone=None, box_score_thresh=cfg.min_score,
+                min_size=min(box_w, box_h), max_size=max(box_w, box_h),
+            )
         self.model.eval().to(cfg.device)
         self._versions = {"torch": torch.__version__, "torchvision": torchvision.__version__}
 
@@ -85,11 +108,14 @@ class TorchvisionPersonDetector:
         """Resize to fit cfg.input_size, detect, and return boxes in ORIGINAL frame pixels."""
         torch = self._torch
         h, w = image.shape[:2]
-        nw, nh = fit_size(w, h, *self.cfg.input_size)
+        if self.family == "ssd":  # the model's own fixed square; resizing here avoids a full-resolution tensor
+            nw, nh = self.cfg.input_size
+        else:
+            nw, nh = fit_size(w, h, *self.cfg.input_size)
+            # pin torchvision's own resize to this exact size so the frame is not resized a second time
+            self.model.transform.min_size = (min(nw, nh),)
+            self.model.transform.max_size = max(nw, nh)
         small = image if (nw, nh) == (w, h) else cv2.resize(image, (nw, nh), interpolation=cv2.INTER_AREA)
-        # pin torchvision's own resize to this exact size so the frame is not resized a second time
-        self.model.transform.min_size = (min(nw, nh),)
-        self.model.transform.max_size = max(nw, nh)
         rgb = small[:, :, ::-1]
         tensor = torch.from_numpy(np.ascontiguousarray(rgb)).permute(2, 0, 1).float().div_(255.0).to(self.cfg.device)
         with torch.inference_mode():
@@ -108,10 +134,117 @@ class TorchvisionPersonDetector:
 
     def info(self) -> dict:
         return {"detector": self.name, "weights": self._weights_name, "min_score": self.cfg.min_score,
-                "input_size": list(self.cfg.input_size), "resize": "fit inside input_size, aspect kept, no upscaling",
-                "device": self.cfg.device,
+                "input_size": list(self.cfg.input_size),
+                "resize": ("stretched to the fixed square input (aspect not kept, as in training)" if self.family == "ssd"
+                           else "fit inside input_size, aspect kept, no upscaling"),
+                "device": self.cfg.device, "backend": "torchvision",
                 "torch_threads": self._torch.get_num_threads(),
                 "torch_interop_threads": self._torch.get_num_interop_threads(), **self._versions}
+
+
+def _nms(boxes: np.ndarray, scores: np.ndarray, iou_thr: float) -> list[int]:
+    """Greedy NMS on xyxy boxes; returns kept indices, highest score first."""
+    order = scores.argsort()[::-1]
+    keep: list[int] = []
+    area = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    while order.size:
+        i = int(order[0])
+        keep.append(i)
+        rest = order[1:]
+        xx1 = np.maximum(boxes[i, 0], boxes[rest, 0])
+        yy1 = np.maximum(boxes[i, 1], boxes[rest, 1])
+        xx2 = np.minimum(boxes[i, 2], boxes[rest, 2])
+        yy2 = np.minimum(boxes[i, 3], boxes[rest, 3])
+        inter = np.clip(xx2 - xx1, 0, None) * np.clip(yy2 - yy1, 0, None)
+        iou = inter / np.maximum(area[i] + area[rest] - inter, 1e-12)
+        order = rest[iou <= iou_thr]
+    return keep
+
+
+def yolox_decode(raw: np.ndarray, input_hw: tuple[int, int], strides: tuple[int, ...] = (8, 16, 32)) -> np.ndarray:
+    """YOLOX head output (N, 5 + classes) on grid cells -> (cx, cy, w, h) in input pixels.
+
+    Same as yolox/utils/demo_utils.py demo_postprocess for the 0.1.1rc0 ONNX exports.
+    """
+    grids, expanded = [], []
+    for s in strides:
+        hs, ws = input_hw[0] // s, input_hw[1] // s
+        xv, yv = np.meshgrid(np.arange(ws), np.arange(hs))
+        g = np.stack((xv, yv), 2).reshape(-1, 2)
+        grids.append(g)
+        expanded.append(np.full((g.shape[0], 1), s))
+    grid, stride = np.concatenate(grids, 0), np.concatenate(expanded, 0)
+    out = raw.astype(np.float32).copy()
+    out[:, :2] = (out[:, :2] + grid) * stride
+    out[:, 2:4] = np.exp(out[:, 2:4]) * stride
+    return out
+
+
+class OnnxYoloxDetector:
+    """YOLOX (Apache-2.0) through ONNX Runtime (MIT), person class only (COCO index 0).
+
+    Preprocessing follows the official ONNX demo: letterbox into the model's fixed square
+    input (aspect kept, padded with 114), BGR, 0-255, no normalisation.
+    """
+
+    PERSON_INDEX = 0
+    NMS_IOU = 0.45  # the official demo's value
+
+    def __init__(self, cfg: DetectorConfig) -> None:
+        try:
+            import onnxruntime as ort
+        except ImportError as exc:
+            raise DetectorUnavailable("onnxruntime is not installed: pip install -e '.[onnx]'") from exc
+        path = Path(cfg.weights_path or f"weights/yolox/{cfg.name}.onnx")
+        if not path.is_file():
+            raise DetectorUnavailable(f"YOLOX weights not found at {path}; download {cfg.name}.onnx from the YOLOX 0.1.1rc0 release")
+        opts = ort.SessionOptions()
+        if cfg.torch_threads:  # the one intra-op thread setting, whichever runtime runs the model
+            opts.intra_op_num_threads = cfg.torch_threads
+        self.session = ort.InferenceSession(str(path), sess_options=opts, providers=["CPUExecutionProvider"])
+        inp = self.session.get_inputs()[0]
+        self._input_name = inp.name
+        self.input_hw = (int(inp.shape[2]), int(inp.shape[3]))
+        if [self.input_hw[1], self.input_hw[0]] != list(cfg.input_size):
+            raise DetectorUnavailable(f"{cfg.name} only runs at its fixed {self.input_hw[1]}x{self.input_hw[0]} input; "
+                                      f"set input_size [{self.input_hw[1]}, {self.input_hw[0]}]")
+        self.cfg = cfg
+        self.name = cfg.name
+        self._weights = {"path": path.as_posix(), "sha256": sha256_file(path)}
+        self._versions = {"onnxruntime": ort.__version__}
+        self._threads = opts.intra_op_num_threads
+
+    def detect(self, image: np.ndarray) -> list[Detection]:
+        h, w = image.shape[:2]
+        ih, iw = self.input_hw
+        r = min(ih / h, iw / w)
+        nw, nh = int(w * r), int(h * r)
+        padded = np.full((ih, iw, 3), 114, dtype=np.uint8)
+        padded[:nh, :nw] = cv2.resize(image, (nw, nh), interpolation=cv2.INTER_LINEAR)
+        blob = np.ascontiguousarray(padded.transpose(2, 0, 1)[None], dtype=np.float32)
+        raw = self.session.run(None, {self._input_name: blob})[0][0]
+        pred = yolox_decode(raw, self.input_hw)
+        scores = pred[:, 4] * pred[:, 5 + self.PERSON_INDEX]
+        keep = scores >= self.cfg.min_score
+        if not keep.any():
+            return []
+        cx, cy, bw, bh = (pred[keep, i] for i in range(4))
+        boxes = np.stack([cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2], 1) / r
+        scores = scores[keep]
+        dets = []
+        for i in _nms(boxes, scores, self.NMS_IOU):
+            x1, y1, x2, y2 = (float(v) for v in boxes[i])
+            x1, x2 = max(0.0, min(x1, w)), max(0.0, min(x2, w))
+            y1, y2 = max(0.0, min(y1, h)), max(0.0, min(y2, h))
+            if x2 - x1 >= 2 and y2 - y1 >= 2:
+                dets.append(Detection((x1, y1, x2, y2), float(scores[i])))
+        return dets
+
+    def info(self) -> dict:
+        return {"detector": self.name, "weights": self._weights, "min_score": self.cfg.min_score,
+                "input_size": list(self.cfg.input_size), "resize": "letterboxed into the fixed square input, aspect kept",
+                "device": "cpu", "backend": "onnxruntime", "intra_op_threads": self._threads,
+                "nms_iou": self.NMS_IOU, **self._versions}
 
 
 # -- detection cache ---------------------------------------------------------------
