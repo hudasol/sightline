@@ -17,7 +17,7 @@ import yaml
 
 from sightline import __version__
 from sightline.config import Config, ConfigError, load_config, load_corridor
-from sightline.detector import DetectorUnavailable, TorchvisionPersonDetector, read_detection_cache
+from sightline.detector import DetectorUnavailable, make_detector, read_detection_cache
 from sightline.ingest import IngestError, discover_sources, ingest
 from sightline.manifest import ManifestError, coverage_check, load_manifest, lock_manifest, split_check, verify_lock
 from sightline.runner import run_clip
@@ -55,7 +55,7 @@ def _add_detector_overrides(sp) -> None:
 
 def _detector_factory(cfg: Config):
     def make():
-        return TorchvisionPersonDetector(cfg.detector)
+        return make_detector(cfg.detector)
     return make
 
 
@@ -92,7 +92,7 @@ def cmd_replay(a) -> int:
             return _unavailable(a.out, f"detection cache unreadable: {exc}")
     else:
         try:
-            detector = TorchvisionPersonDetector(cfg.detector)
+            detector = make_detector(cfg.detector)
         except DetectorUnavailable as exc:
             return _unavailable(a.out, f"detector unavailable: {exc}")
 
@@ -186,10 +186,10 @@ def cmd_detect_eval(a) -> int:
 
     cfg, eval_cfg, root = _load_cfg(a), load_eval_config(a.eval_config), Path(a.root)
     man = load_manifest(a.manifest)
-    from sightline.evaluation.detection import counts_to_metrics
+    from sightline.evaluation.detection import THRESHOLDS, counts_to_metrics
 
     clips = [c for c in man.clips if c.scored_on("detection")]
-    ths = [round(0.30 + 0.05 * i, 2) for i in range(13)]
+    ths = THRESHOLDS
     views = {"all": {}, "in_scope": {}}  # view -> clip id -> sweep rows
     n_frames = 0
     for c in clips:
@@ -329,11 +329,12 @@ def cmd_benchmark(a) -> int:
     try:
         cfg = _load_cfg(a)
         corridor = load_corridor(a.corridor)
-        detector = TorchvisionPersonDetector(cfg.detector)
+        detector = make_detector(cfg.detector)
     except (ConfigError, DetectorUnavailable) as exc:
         return _unavailable(None, str(exc))
     di = detector.info()
-    _p(f"detector={di['detector']} torch_threads={di['torch_threads']} interop_threads={di['torch_interop_threads']}")
+    _p(f"detector={di['detector']} backend={di.get('backend')} "
+       f"threads={di.get('torch_threads', di.get('intra_op_threads'))} interop={di.get('torch_interop_threads', 'n/a')}")
     all_lat, summaries = None, []
     for src in a.sources:
         run = run_clip(src, cfg, corridor, detector=detector, fps_override=a.fps, realtime=a.realtime,
@@ -374,15 +375,18 @@ def cmd_threads(a) -> int:
 
     try:
         cfg = _load_cfg(a)
-        detector = TorchvisionPersonDetector(cfg.detector)
         frames = [f.image for f in islice(iter_frames(a.source), a.frames) if f.valid]
-    except (ConfigError, DetectorUnavailable, IngestError) as exc:
+    except (ConfigError, IngestError) as exc:
         return _unavailable(None, str(exc))
     _p(f"torch default: intra={torch.get_num_threads()} interop={torch.get_num_interop_threads()}; "
        f"{len(frames)} frames of {a.source}")
     rows = []
     for n in a.threads:
-        torch.set_num_threads(n)
+        cfg.detector.torch_threads = n  # rebuilt per count: applies to torch and to ONNX Runtime sessions
+        try:
+            detector = make_detector(cfg.detector)
+        except DetectorUnavailable as exc:
+            return _unavailable(None, str(exc))
         for img in frames[:3]:  # warm-up at this thread count, excluded
             detector.detect(img)
         ms = []
@@ -433,7 +437,7 @@ def cmd_stress(a) -> int:
     try:
         cfg = load_config(a.config)
         man = load_manifest(a.lock)
-        detector = TorchvisionPersonDetector(cfg.detector)
+        detector = make_detector(cfg.detector)
     except (ConfigError, ManifestError, DetectorUnavailable) as exc:
         return _unavailable(None, str(exc))
     problems = verify_lock(a.lock, a.root)

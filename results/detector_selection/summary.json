@@ -47,18 +47,18 @@
      "f1": 0.6050187894033976,
      "threshold": 0.5
     },
-    "max_recall": 0.5751633986928104,
+    "max_recall": 0.6126235618214227,
     "thresholds_meeting_pr_bar": []
    },
    "all_boxes": {
     "best_f1": {
-     "tp": 26510,
-     "fp": 16485,
-     "fn": 67623,
-     "precision": 0.616583323642284,
-     "recall": 0.2816228102790732,
-     "f1": 0.38664605332244323,
-     "threshold": 0.3
+     "tp": 28745,
+     "fp": 24904,
+     "fn": 65388,
+     "precision": 0.535797498555425,
+     "recall": 0.3053658122018846,
+     "f1": 0.3890189603605311,
+     "threshold": 0.2
     },
     "at_default_threshold": {
      "tp": 23228,
@@ -69,7 +69,7 @@
      "f1": 0.37058959611349984,
      "threshold": 0.5
     },
-    "max_recall": 0.2816228102790732,
+    "max_recall": 0.3191973059394686,
     "thresholds_meeting_pr_bar": []
    },
    "judged_view": "in_scope",
@@ -122,7 +122,7 @@
      "f1": 0.7667177934216908,
      "threshold": 0.5
     },
-    "max_recall": 0.8212337276508399,
+    "max_recall": 0.8319289148166154,
     "thresholds_meeting_pr_bar": []
    },
    "all_boxes": {
@@ -144,7 +144,7 @@
      "f1": 0.515701608943477,
      "threshold": 0.5
     },
-    "max_recall": 0.42317784411417886,
+    "max_recall": 0.44834436382565096,
     "thresholds_meeting_pr_bar": []
    },
    "judged_view": "in_scope",
@@ -197,7 +197,7 @@
      "f1": 0.7708873508046372,
      "threshold": 0.5
     },
-    "max_recall": 0.979743963701183,
+    "max_recall": 0.9832550099929779,
     "thresholds_meeting_pr_bar": [
      0.85,
      0.9
@@ -222,13 +222,321 @@
      "f1": 0.6700349380906304,
      "threshold": 0.5
     },
-    "max_recall": 0.6429201236548288,
+    "max_recall": 0.6636992340624436,
     "thresholds_meeting_pr_bar": []
    },
    "judged_view": "in_scope",
    "thresholds_meeting_pr_bar": [
     0.85,
     0.9
+   ],
+   "meets_pr_bar": true,
+   "meets_fps_bar": false
+  },
+  {
+   "candidate": "ssdlite320_320x320",
+   "timing": {
+    "fps": 12.153760412128738,
+    "frames_timed": 750,
+    "inference_ms_p50_frame_weighted": 75.20171999931335,
+    "max_frames_per_clip": 150,
+    "files": [
+     "results/runtime/candidates/ssdlite320_320x320/MOT17-02.json",
+     "results/runtime/candidates/ssdlite320_320x320/MOT17-04.json",
+     "results/runtime/candidates/ssdlite320_320x320/MOT17-05.json",
+     "results/runtime/candidates/ssdlite320_320x320/MOT17-11.json",
+     "results/runtime/candidates/ssdlite320_320x320/MOT17-13.json"
+    ]
+   },
+   "detector": "ssdlite320_mobilenet_v3_large",
+   "input_size": [
+    320,
+    320
+   ],
+   "frames_evaluated": 4137,
+   "detect_eval_file": "results/detector_selection/detect_eval_val_ssdlite320_320x320.json",
+   "in_scope_rule": {
+    "min_height_frac": 0.1,
+    "min_visibility": 0.65
+   },
+   "in_scope": {
+    "best_f1": {
+     "tp": 11671,
+     "fp": 5917,
+     "fn": 25355,
+     "precision": 0.6635774391630658,
+     "recall": 0.3152109328579917,
+     "f1": 0.4273995678763687,
+     "threshold": 0.2
+    },
+    "at_default_threshold": {
+     "tp": 6801,
+     "fp": 496,
+     "fn": 30225,
+     "precision": 0.93202686035357,
+     "recall": 0.183681737157673,
+     "f1": 0.306883559325858,
+     "threshold": 0.5
+    },
+    "max_recall": 0.3990979311834927,
+    "thresholds_meeting_pr_bar": []
+   },
+   "all_boxes": {
+    "best_f1": {
+     "tp": 19240,
+     "fp": 20031,
+     "fn": 74893,
+     "precision": 0.4899289552086782,
+     "recall": 0.20439165861068914,
+     "f1": 0.28844712302479686,
+     "threshold": 0.15
+    },
+    "at_default_threshold": {
+     "tp": 7937,
+     "fp": 509,
+     "fn": 86196,
+     "precision": 0.9397347856973716,
+     "recall": 0.08431687081044904,
+     "f1": 0.15474902270445218,
+     "threshold": 0.5
+    },
+    "max_recall": 0.20439165861068914,
+    "thresholds_meeting_pr_bar": []
+   },
+   "judged_view": "in_scope",
+   "thresholds_meeting_pr_bar": [],
+   "meets_pr_bar": false,
+   "meets_fps_bar": true
+  },
+  {
+   "candidate": "yolox_nano_416x416",
+   "timing": {
+    "fps": 41.62673714427702,
+    "frames_timed": 750,
+    "inference_ms_p50_frame_weighted": 17.643260001204908,
+    "max_frames_per_clip": 150,
+    "files": [
+     "results/runtime/candidates/yolox_nano_416x416/MOT17-02.json",
+     "results/runtime/candidates/yolox_nano_416x416/MOT17-04.json",
+     "results/runtime/candidates/yolox_nano_416x416/MOT17-05.json",
+     "results/runtime/candidates/yolox_nano_416x416/MOT17-11.json",
+     "results/runtime/candidates/yolox_nano_416x416/MOT17-13.json"
+    ]
+   },
+   "detector": "yolox_nano",
+   "input_size": [
+    416,
+    416
+   ],
+   "frames_evaluated": 4137,
+   "detect_eval_file": "results/detector_selection/detect_eval_val_yolox_nano_416x416.json",
+   "in_scope_rule": {
+    "min_height_frac": 0.1,
+    "min_visibility": 0.65
+   },
+   "in_scope": {
+    "best_f1": {
+     "tp": 24770,
+     "fp": 6544,
+     "fn": 12256,
+     "precision": 0.7910199910583126,
+     "recall": 0.6689893588289311,
+     "f1": 0.7249048873280657,
+     "threshold": 0.25
+    },
+    "at_default_threshold": {
+     "tp": 19717,
+     "fp": 2092,
+     "fn": 17309,
+     "precision": 0.9040762987757348,
+     "recall": 0.5325176902717009,
+     "f1": 0.6702473017761537,
+     "threshold": 0.5
+    },
+    "max_recall": 0.7298384918705775,
+    "thresholds_meeting_pr_bar": []
+   },
+   "all_boxes": {
+    "best_f1": {
+     "tp": 34098,
+     "fp": 13514,
+     "fn": 60035,
+     "precision": 0.716163992270856,
+     "recall": 0.36223216087875665,
+     "f1": 0.48111749973544043,
+     "threshold": 0.15
+    },
+    "at_default_threshold": {
+     "tp": 23390,
+     "fp": 2102,
+     "fn": 70743,
+     "precision": 0.9175427585124745,
+     "recall": 0.24847821699085337,
+     "f1": 0.39105538140020896,
+     "threshold": 0.5
+    },
+    "max_recall": 0.36223216087875665,
+    "thresholds_meeting_pr_bar": []
+   },
+   "judged_view": "in_scope",
+   "thresholds_meeting_pr_bar": [],
+   "meets_pr_bar": false,
+   "meets_fps_bar": true
+  },
+  {
+   "candidate": "yolox_tiny_416x416",
+   "timing": {
+    "fps": 19.631313308978488,
+    "frames_timed": 750,
+    "inference_ms_p50_frame_weighted": 42.26617998210713,
+    "max_frames_per_clip": 150,
+    "files": [
+     "results/runtime/candidates/yolox_tiny_416x416/MOT17-02.json",
+     "results/runtime/candidates/yolox_tiny_416x416/MOT17-04.json",
+     "results/runtime/candidates/yolox_tiny_416x416/MOT17-05.json",
+     "results/runtime/candidates/yolox_tiny_416x416/MOT17-11.json",
+     "results/runtime/candidates/yolox_tiny_416x416/MOT17-13.json"
+    ]
+   },
+   "detector": "yolox_tiny",
+   "input_size": [
+    416,
+    416
+   ],
+   "frames_evaluated": 4137,
+   "detect_eval_file": "results/detector_selection/detect_eval_val_yolox_tiny_416x416.json",
+   "in_scope_rule": {
+    "min_height_frac": 0.1,
+    "min_visibility": 0.65
+   },
+   "in_scope": {
+    "best_f1": {
+     "tp": 27887,
+     "fp": 6775,
+     "fn": 9139,
+     "precision": 0.8045409959032946,
+     "recall": 0.7531734456868147,
+     "f1": 0.7780102667113046,
+     "threshold": 0.2
+    },
+    "at_default_threshold": {
+     "tp": 21548,
+     "fp": 1836,
+     "fn": 15478,
+     "precision": 0.9214847759151557,
+     "recall": 0.5819694268892129,
+     "f1": 0.7133918225459361,
+     "threshold": 0.5
+    },
+    "max_recall": 0.7880948522659753,
+    "thresholds_meeting_pr_bar": []
+   },
+   "all_boxes": {
+    "best_f1": {
+     "tp": 37443,
+     "fp": 9528,
+     "fn": 56690,
+     "precision": 0.7971514338634477,
+     "recall": 0.39776698925987697,
+     "f1": 0.5307149336659485,
+     "threshold": 0.15
+    },
+    "at_default_threshold": {
+     "tp": 26200,
+     "fp": 1841,
+     "fn": 67933,
+     "precision": 0.9343461360151207,
+     "recall": 0.27832959748441033,
+     "f1": 0.4288964918886179,
+     "threshold": 0.5
+    },
+    "max_recall": 0.39776698925987697,
+    "thresholds_meeting_pr_bar": []
+   },
+   "judged_view": "in_scope",
+   "thresholds_meeting_pr_bar": [],
+   "meets_pr_bar": false,
+   "meets_fps_bar": true
+  },
+  {
+   "candidate": "yolox_s_640x640",
+   "timing": {
+    "fps": 6.461618133890463,
+    "frames_timed": 750,
+    "inference_ms_p50_frame_weighted": 143.88625998981297,
+    "max_frames_per_clip": 150,
+    "files": [
+     "results/runtime/candidates/yolox_s_640x640/MOT17-02.json",
+     "results/runtime/candidates/yolox_s_640x640/MOT17-04.json",
+     "results/runtime/candidates/yolox_s_640x640/MOT17-05.json",
+     "results/runtime/candidates/yolox_s_640x640/MOT17-11.json",
+     "results/runtime/candidates/yolox_s_640x640/MOT17-13.json"
+    ]
+   },
+   "detector": "yolox_s",
+   "input_size": [
+    640,
+    640
+   ],
+   "frames_evaluated": 4137,
+   "detect_eval_file": "results/detector_selection/detect_eval_val_yolox_s_640x640.json",
+   "in_scope_rule": {
+    "min_height_frac": 0.1,
+    "min_visibility": 0.65
+   },
+   "in_scope": {
+    "best_f1": {
+     "tp": 31952,
+     "fp": 5977,
+     "fn": 5074,
+     "precision": 0.8424160932268185,
+     "recall": 0.8629611624264031,
+     "f1": 0.8525648722566874,
+     "threshold": 0.3
+    },
+    "at_default_threshold": {
+     "tp": 26793,
+     "fp": 3141,
+     "fn": 10233,
+     "precision": 0.8950691521346963,
+     "recall": 0.7236266407389402,
+     "f1": 0.8002688172043011,
+     "threshold": 0.5
+    },
+    "max_recall": 0.933425160697888,
+    "thresholds_meeting_pr_bar": [
+     0.25,
+     0.3,
+     0.35
+    ]
+   },
+   "all_boxes": {
+    "best_f1": {
+     "tp": 48330,
+     "fp": 12189,
+     "fn": 45803,
+     "precision": 0.7985921776632132,
+     "recall": 0.513422497955021,
+     "f1": 0.6250161653260222,
+     "threshold": 0.15
+    },
+    "at_default_threshold": {
+     "tp": 33897,
+     "fp": 3148,
+     "fn": 60236,
+     "precision": 0.9150222702119044,
+     "recall": 0.3600968841957656,
+     "f1": 0.5168092210584092,
+     "threshold": 0.5
+    },
+    "max_recall": 0.513422497955021,
+    "thresholds_meeting_pr_bar": []
+   },
+   "judged_view": "in_scope",
+   "thresholds_meeting_pr_bar": [
+    0.25,
+    0.3,
+    0.35
    ],
    "meets_pr_bar": true,
    "meets_fps_bar": false

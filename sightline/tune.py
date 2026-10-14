@@ -72,7 +72,7 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
 
     # 1. detector operating threshold ---------------------------------------------------
     sweep = []
-    for t in [round(0.30 + 0.05 * i, 2) for i in range(13)]:
+    for t in det_eval.THRESHOLDS:
         tp = fp = fn = 0
         for cd in cds_det:
             frames = list(range(1, cd.n_frames + 1, cfg.pipeline.frame_stride))

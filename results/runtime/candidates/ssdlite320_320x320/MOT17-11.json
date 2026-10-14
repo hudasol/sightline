@@ -1,0 +1,83 @@
+{
+ "summary": {
+  "frames_processed": 150,
+  "throughput_fps": 12.233549619254996,
+  "latency_ms_p50": 76.80029998300597,
+  "latency_ms_p95": 105.03906001104039,
+  "inference_ms_p50": 71.54709997121245,
+  "inference_ms_p95": 99.11393998190759,
+  "frames_dropped_lagging": 0,
+  "frames_skipped_by_policy": 0,
+  "frames_late": 11,
+  "note": "latency_ms_p95 is the worst p95 over clips; p50s are frame-weighted"
+ },
+ "per_clip": [
+  {
+   "clip": "MOT17-11-FRCNN",
+   "frames_processed": 150,
+   "frames_dropped_lagging": 0,
+   "frames_skipped_by_policy": 0,
+   "frames_invalid": 0,
+   "frames_late": 11,
+   "late_budget_ms": 100.0,
+   "warmup_frames_excluded_from_latency": 5,
+   "wall_seconds": 12.261363599973265,
+   "throughput_fps": 12.233549619254996,
+   "latency_ms_p50": 76.80029998300597,
+   "latency_ms_p95": 105.03906001104039,
+   "latency_ms_max": 148.18740001646802,
+   "inference_ms_p50": 71.54709997121245,
+   "inference_ms_p95": 99.11393998190759,
+   "dropped_frame_indices": [],
+   "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "cpu_count_logical": 16,
+    "python": "3.13.0",
+    "opencv": "5.0.0",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "torch_threads": 8
+   }
+  }
+ ],
+ "machine": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "cpu_count_logical": 16,
+  "python": "3.13.0",
+  "opencv": "5.0.0",
+  "torch": "2.14.1+cpu",
+  "cuda_available": false,
+  "torch_threads": 8
+ },
+ "detector": {
+  "detector": "ssdlite320_mobilenet_v3_large",
+  "weights": "SSDLite320_MobileNet_V3_Large_Weights.DEFAULT",
+  "min_score": 0.1,
+  "input_size": [
+   320,
+   320
+  ],
+  "resize": "stretched to the fixed square input (aspect not kept, as in training)",
+  "device": "cpu",
+  "backend": "torchvision",
+  "torch_threads": 8,
+  "torch_interop_threads": 8,
+  "torch": "2.14.1+cpu",
+  "torchvision": "0.29.1+cpu"
+ },
+ "realtime_emulation": false,
+ "declared_input": [
+  640,
+  360
+ ],
+ "detector_input_size": [
+  320,
+  320
+ ],
+ "decode_thread": true,
+ "max_frames_per_clip": 150
+}

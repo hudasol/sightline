@@ -31,8 +31,11 @@ class DetectorConfig:
     # detection; boxes are mapped back to original pixels. None = the pipeline's declared size.
     input_size: list[int] | None = None
     device: str = "cpu"
-    # intra-op CPU threads for torch; None keeps torch's default. Measured with `sightline threads`.
+    # intra-op CPU threads (torch, or ONNX Runtime for ONNX models); None keeps the runtime's default.
+    # Measured with `sightline threads`.
     torch_threads: int | None = None
+    # ONNX models only: path to the .onnx file (default weights/yolox/<name>.onnx). Git-ignored.
+    weights_path: str | None = None
 
 
 @dataclass

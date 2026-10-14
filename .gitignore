@@ -7,6 +7,7 @@ data/
 *.pt
 *.pth
 *.onnx
+weights/
 runs/
 outputs/
 

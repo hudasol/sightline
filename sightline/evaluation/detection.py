@@ -11,6 +11,12 @@ from sightline.geometry import iou_matrix
 from sightline.types import Detection
 
 
+# Score thresholds swept on val. Starts just above the 0.10 detection floor: one-stage detectors
+# (SSDLite, YOLOX) score lower than Faster R-CNN, and a grid starting at 0.30 cut their recall short.
+# 0.10 itself is excluded because the operating threshold must stay above detector.min_score.
+THRESHOLDS = [round(0.15 + 0.05 * i, 2) for i in range(16)]  # 0.15 ... 0.90
+
+
 def match_frame(gt_boxes: list, dets: list[Detection], ignore: list, iou_thr: float) -> tuple[int, list[Detection], list]:
     """Returns (tp, false-positive detections, missed ground-truth (id, box) pairs)."""
     dets = sorted(dets, key=lambda d: -d.score)
