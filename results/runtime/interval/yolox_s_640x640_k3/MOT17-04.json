@@ -1,0 +1,87 @@
+{
+ "summary": {
+  "frames_processed": 150,
+  "throughput_fps": 18.44060264680219,
+  "latency_ms_p50": 4.909399955067784,
+  "latency_ms_p95": 151.24886002158746,
+  "inference_ms_p50": 143.30759999575093,
+  "inference_ms_p95": 144.61647998541594,
+  "frames_dropped_lagging": 0,
+  "frames_skipped_by_policy": 0,
+  "frames_late": 48,
+  "note": "latency_ms_p95 is the worst p95 over clips; p50s are frame-weighted"
+ },
+ "per_clip": [
+  {
+   "clip": "MOT17-04-FRCNN",
+   "frames_processed": 150,
+   "detector_frames": 50,
+   "frames_dropped_lagging": 0,
+   "frames_skipped_by_policy": 0,
+   "frames_invalid": 0,
+   "frames_late": 48,
+   "late_budget_ms": 100.0,
+   "warmup_frames_excluded_from_latency": 5,
+   "wall_seconds": 8.134224399982486,
+   "throughput_fps": 18.44060264680219,
+   "latency_ms_p50": 4.909399955067784,
+   "latency_ms_p95": 151.24886002158746,
+   "latency_ms_max": 160.61329998774454,
+   "inference_ms_p50": 143.30759999575093,
+   "inference_ms_p95": 144.61647998541594,
+   "dropped_frame_indices": [],
+   "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "cpu_count_logical": 16,
+    "python": "3.13.0",
+    "opencv": "5.0.0",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "torch_threads": 8
+   }
+  }
+ ],
+ "machine": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "cpu_count_logical": 16,
+  "python": "3.13.0",
+  "opencv": "5.0.0",
+  "torch": "2.14.1+cpu",
+  "cuda_available": false,
+  "torch_threads": 8
+ },
+ "detector": {
+  "detector": "yolox_s",
+  "weights": {
+   "path": "weights/yolox/yolox_s.onnx",
+   "sha256": "c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063"
+  },
+  "min_score": 0.1,
+  "input_size": [
+   640,
+   640
+  ],
+  "resize": "letterboxed into the fixed square input, aspect kept",
+  "device": "cpu",
+  "backend": "onnxruntime",
+  "intra_op_threads": 8,
+  "nms_iou": 0.45,
+  "onnxruntime": "1.31.0"
+ },
+ "realtime_emulation": false,
+ "declared_input": [
+  640,
+  360
+ ],
+ "detector_input_size": [
+  640,
+  640
+ ],
+ "decode_thread": true,
+ "detect_every": 3,
+ "max_frames_per_clip": 150
+}

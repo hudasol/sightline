@@ -4,7 +4,7 @@ Reads results/detector_selection/detect_eval_val_<tag>.json (P/R/F1 vs threshold
 and results/runtime/candidates/<tag>/*.json (end-to-end timing on the same val scenes),
 then applies PLAN.md section 5: pick the FASTEST candidate that reaches precision and
 recall >= the bar on val at some threshold AND sustains >= min_fps. If none qualifies,
-say so: the fallback is a documented frame-sampling strategy, not a lower bar.
+say so: the fallback is a documented detection interval (PLAN.md A2), not a lower bar.
 """
 
 from __future__ import annotations
@@ -75,8 +75,9 @@ def build_table(results: Path, tags: list[str], bar_p: float, bar_r: float, min_
                      "own corridor clips."),
             "rows": rows, "choice": choice,
             "verdict": (f"chosen: {choice}" if choice else
-                        "NO candidate meets the rule; per PLAN.md s5 document a frame-sampling strategy and "
-                        "measure its effect on event recall and latency instead of lowering the bar")}
+                        "NO candidate meets the rule with the detector on every frame; per PLAN.md s5 and A2 choose a "
+                        "detection interval and measure its effect on fps, event recall and latency instead of "
+                        "lowering the bar")}
 
 
 def to_markdown(t: dict) -> str:

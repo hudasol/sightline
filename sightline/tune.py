@@ -75,7 +75,7 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
     for t in det_eval.THRESHOLDS:
         tp = fp = fn = 0
         for cd in cds_det:
-            frames = list(range(1, cd.n_frames + 1))  # the detector itself, on every frame
+            frames = cd.scored(range(1, cd.n_frames + 1))  # the detector itself, on every annotated frame
             # the bar is judged in scope (PLAN.md amendment A1), so the threshold is chosen in scope too
             m = det_eval.evaluate_detections(*in_scope_view(cd), dets[cd.clip.id], t, frames, eval_cfg["detection"]["iou"])
             tp, fp, fn = tp + m["tp"], fp + m["fp"], fn + m["fn"]
@@ -176,6 +176,8 @@ def _quality_vs_recall(cds: list[ClipData], dets: dict, cfg: Config, root: Path)
     for cd in cds:
         for fr in iter_frames(root / cd.clip.source, cd.clip.fps, info=cd.info):
             if not fr.valid or fr.image is None:
+                continue
+            if not cd.scored([fr.index]):
                 continue
             gt = cd.gt.get(fr.index, [])
             if not gt:

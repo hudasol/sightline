@@ -45,6 +45,8 @@ def _load_cfg(a) -> Config:
         cfg.detector.name = a.detector
     if getattr(a, "input_size", None):
         cfg.detector.input_size = list(a.input_size)
+    if getattr(a, "detect_every", None):
+        cfg.pipeline.detect_every = a.detect_every
     return cfg.validate()
 
 
@@ -72,6 +74,21 @@ def cmd_ingest(a) -> int:
         return 0
     except IngestError as exc:
         return _unavailable(None, f"ingest: {exc}")
+
+
+def cmd_import_cvat(a) -> int:
+    from sightline.annotations import AnnotationError, import_cvat_mot
+
+    try:
+        rep = import_cvat_mot(a.export, a.out, a.frames, tuple(a.person_labels), tuple(a.ignore_labels))
+    except (AnnotationError, FileNotFoundError) as exc:
+        return _unavailable(None, f"import-cvat: {exc}")
+    _p(f"imported {rep['person_boxes']} person boxes ({rep['ignore_boxes']} ignore) on {rep['frames_with_boxes']} of "
+       f"{rep['annotated_frames']} annotated frames -> {a.out}; dropped labels: {rep['dropped_rows_by_label'] or 'none'}")
+    for w in rep["warnings"]:
+        _p(f"WARNING: {w}")
+    _p('manifest entry: "gt": "<out>/gt.txt", "annotated_frames": "<out>/annotated_frames.json" (plus hand-labelled gt_events)')
+    return 0
 
 
 def cmd_replay(a) -> int:
@@ -195,7 +212,7 @@ def cmd_detect_eval(a) -> int:
     for c in clips:
         cd = prepare_clip(c, root, eval_cfg)
         dets = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
-        frames = list(range(1, cd.n_frames + 1))  # the detector itself, on every frame
+        frames = cd.scored(range(1, cd.n_frames + 1))  # the detector itself, on every annotated frame
         n_frames += len(frames)
         views["all"][c.id] = sweep_thresholds(cd.gt, cd.ignore, dets, ths, frames)
         views["in_scope"][c.id] = sweep_thresholds(*in_scope_view(cd), dets, ths, frames)
@@ -356,6 +373,7 @@ def cmd_benchmark(a) -> int:
     report = {"summary": best, "per_clip": summaries, "machine": machine_info(), "detector": detector.info(),
               "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height],
               "detector_input_size": list(cfg.detector.input_size), "decode_thread": cfg.pipeline.decode_thread,
+              "detect_every": cfg.pipeline.detect_every,
               "max_frames_per_clip": a.max_frames}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, indent=1))
@@ -490,6 +508,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--out", default="results/ingest")
     sp.add_argument("--fps", type=float)
 
+    sp = add("import-cvat", cmd_import_cvat, "convert a CVAT 'MOT 1.1' export into annotations/<clip>/")
+    sp.add_argument("export", help="the exported .zip, or its unpacked folder")
+    sp.add_argument("--out", required=True, help="e.g. annotations/own-corridorA-20261014-03")
+    sp.add_argument("--frames", required=True,
+                    help="which frames were annotated: 1-600, 1-600:10, comma-separated parts, or a file of frame numbers")
+    sp.add_argument("--person-labels", nargs="+", default=["person", "pedestrian"])
+    sp.add_argument("--ignore-labels", nargs="*", default=[], help="labels to keep as ignore regions (never scored)")
+
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
     sp.add_argument("--config", default="configs/default.yaml")
@@ -561,6 +587,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--fps", type=float)
     sp.add_argument("--realtime", action="store_true")
     sp.add_argument("--max-frames", type=int, help="time only the first N frames of each clip (recorded in the report)")
+    sp.add_argument("--detect-every", type=int, help="override pipeline.detect_every (PLAN.md A2)")
     _add_detector_overrides(sp)
 
     sp = add("detector-summary", cmd_detector_summary, "P/R/F1 vs fps table for detector candidates, from saved results")
