@@ -76,7 +76,9 @@ class HealthConfig:
 
 @dataclass
 class PipelineConfig:
-    frame_stride: int = 1  # 1 = process every frame. Anything else is a recorded sampling policy.
+    # PLAN.md A2: the detector runs on every k-th frame; the tracker predicts in between.
+    # Every frame is still processed. k > 1 is a recorded sampling policy.
+    detect_every: int = 1
     declared_width: int = 640
     declared_height: int = 360
     decode_thread: bool = True  # decode frames in a background thread so decoding overlaps inference
@@ -119,7 +121,7 @@ class Config:
         _check(0 <= h.min_luminance <= 255, "health.min_luminance must be in [0, 255]")
         _check(h.min_sharpness >= 0, "health.min_sharpness must be >= 0")
         _check(0.0 <= h.low_conf_mean <= 1.0, "health.low_conf_mean must be in [0, 1]")
-        _check(p.frame_stride >= 1, "pipeline.frame_stride must be >= 1")
+        _check(isinstance(p.detect_every, int) and p.detect_every >= 1, "pipeline.detect_every must be an integer >= 1")
         _check(p.decode_queue >= 1, "pipeline.decode_queue must be >= 1")
         return self
 

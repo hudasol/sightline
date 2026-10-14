@@ -24,6 +24,15 @@ from sightline.tracking import make_tracker
 from sightline.types import CorridorStatus, Detection, FrameData, HealthState, TrackState, TrackView
 
 
+def is_detector_frame(frame_index: int, detect_every: int) -> bool:
+    """PLAN.md A2: the detector runs on source frames 1, 1+k, 1+2k, ... Evaluation uses the same rule."""
+    return (frame_index - 1) % detect_every == 0
+
+
+def detector_frames(n_frames: int, detect_every: int) -> list[int]:
+    return list(range(1, n_frames + 1, detect_every))
+
+
 @dataclass
 class FrameResult:
     frame_index: int
@@ -37,12 +46,14 @@ class FrameResult:
     processed: bool = True
     latency_s: float = 0.0
     infer_s: float = 0.0
+    detector_ran: bool = True  # False on frames pipeline.detect_every skipped (tracks were predicted)
 
     def to_dict(self) -> dict:
         return {
             "frame": self.frame_index,
             "ts": round(self.timestamp, 4),
             "processed": self.processed,
+            "detector_ran": self.detector_ran,
             "health": self.health.to_dict(),
             "corridor": self.corridor.value,
             "n_detections": len(self.detections),
@@ -80,6 +91,7 @@ class Pipeline:
 
         detections: pre-computed detections (cached evaluation). When given, the detector is
         not called and the runtime numbers are NOT valid evidence of real inference cost.
+        On frames pipeline.detect_every skips they are ignored and the tracker predicts.
         arrival: wall-clock time the frame became available (live replay), so latency
         includes any queueing delay.
         """
@@ -96,20 +108,24 @@ class Pipeline:
 
         quality = measure_quality(frame.image)
         infer_s = 0.0
-        if detections is None:
-            if self.detector is None:
-                raise RuntimeError("no detector and no cached detections supplied")
-            t_inf = self.clock()
-            detections = self.detector.detect(frame.image)
-            infer_s = self.clock() - t_inf
-
-        out = self.tracker.update(detections, frame.index, frame.timestamp)
+        detector_ran = is_detector_frame(frame.index, self.cfg.pipeline.detect_every)
+        if not detector_ran:
+            detections = []
+            out = self.tracker.predict(frame.index, frame.timestamp)
+        else:
+            if detections is None:
+                if self.detector is None:
+                    raise RuntimeError("no detector and no cached detections supplied")
+                t_inf = self.clock()
+                detections = self.detector.detect(frame.image)
+                infer_s = self.clock() - t_inf
+            out = self.tracker.update(detections, frame.index, frame.timestamp)
         records = self.engine.update(frame.index, frame.timestamp, out.tracks, out.expired)
 
         done = self.clock()
         health = self.monitor.observe(
             valid=True, ts=frame.timestamp, quality=quality, proc_time_s=done - t0,
-            det_scores=[d.score for d in detections], wall=t0,
+            det_scores=[d.score for d in detections] if detector_ran else None, wall=t0,
         )
 
         tentative_inside = any(
@@ -123,7 +139,7 @@ class Pipeline:
             reported_tracks=[t.view() for t in out.reported],
             lost_tracks=[t.view() for t in out.tracks if t.state == TrackState.LOST],
             events=records, processed=True,
-            latency_s=self.clock() - arrival, infer_s=infer_s,
+            latency_s=self.clock() - arrival, infer_s=infer_s, detector_ran=detector_ran,
         )
 
     def _corridor_status(self, health: HealthReport, tentative_inside: bool) -> CorridorStatus:

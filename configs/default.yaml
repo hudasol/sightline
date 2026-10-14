@@ -41,7 +41,7 @@ health:
   warmup_frames: 5
 
 pipeline:
-  frame_stride: 1           # anything else is a recorded sampling policy
+  detect_every: 1           # detector on every k-th frame, tracker predicts between (PLAN.md A2)
   declared_width: 640
   declared_height: 360
   decode_thread: true       # decode ahead in a background thread; order kept, nothing dropped

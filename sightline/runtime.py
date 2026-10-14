@@ -57,9 +57,11 @@ class RuntimeRecorder:
     def stop(self) -> None:
         self._t1 = time.perf_counter()
 
-    def record(self, latency_s: float, infer_s: float) -> None:
+    def record(self, latency_s: float, infer_s: float | None) -> None:
+        """infer_s is None on frames where the detector did not run (PLAN.md A2)."""
         self.latencies.append(latency_s)
-        self.infer.append(infer_s)
+        if infer_s is not None:
+            self.infer.append(infer_s)
 
     def summary(self) -> dict:
         wall = ((self._t1 or time.perf_counter()) - self._t0) if self._t0 is not None else float("nan")
@@ -70,9 +72,11 @@ class RuntimeRecorder:
             return float(np.percentile(a, q) * 1000.0) if len(a) else None
 
         processed = len(self.latencies)
+        detector_frames = len(self.infer)
         late = int((lat > self.budget_s).sum()) if len(lat) else 0
         return {
             "frames_processed": processed,
+            "detector_frames": detector_frames,
             "frames_dropped_lagging": len(self.dropped),
             "frames_skipped_by_policy": len(self.skipped_policy),
             "frames_invalid": self.invalid,
