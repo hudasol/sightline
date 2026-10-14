@@ -256,3 +256,51 @@ redesign is partly present already through `UNRESOLVED`.
 3. **10 fps on a laptop CPU with a two-stage detector** may fail. Mitigation:
    the lighter detector, a lower declared input size, or documented sampling.
 4. **Rule-derived MOT17 event labels** are not independent. Stated in the report.
+
+---
+
+## Amendments
+
+Changes to this plan after it was committed. Each is dated, says what was already
+known when it was decided, and is in place **before the held-out manifest is
+locked and before any tuning**. Nothing above is edited; it is superseded here.
+
+### A1 (2026-10-14): where the detection bar is judged, and who is "in scope"
+
+**What was known.** Val-only detector measurements on MOT17 (scenes 02, 04, 05,
+11, 13) were already saved in `results/detector_selection/`. The best recall at
+any threshold was 0.282 / 0.423 for MobileNetV3-320 at 640x360 / 960x540, and
+0.643 for the ResNet50-FPN-v2 reference. **This amendment was decided after seeing
+those numbers**, and is reported as such. No own corridor clip had been recorded,
+so no held-out or own-clip number had been seen by anyone.
+
+1. **The detection bar (P >= 0.80, R >= 0.80 at IoU 0.5) is judged on the held-out
+   own corridor clips, on in-scope people.** Those clips are the deployment
+   domain: indoor, a static robot-height camera, people at corridor distances.
+   MOT17 is reported as a **harder public benchmark** with full numbers, in scope
+   and all boxes, failures included. MOT17 detection numbers neither pass nor
+   fail the bar, and they are never left out of the report.
+2. **In scope** = a scored pedestrian whose box height is **>= 10% of the source
+   frame height** and whose visibility is **>= 0.65**. This follows the Caltech
+   Pedestrian "Reasonable" subset (>= 50 px of a 480 px frame, >= 65% visible),
+   expressed relative to frame height so it means the same at 480p and 1080p.
+   It was taken from that precedent, not chosen from our results. No number per
+   height or visibility had been computed when it was fixed.
+   - For in-scope scoring, out-of-scope people become **ignore regions**. A
+     detection on one is neither a hit nor a false positive.
+   - Every detection and tracking result is reported twice: **in scope** and
+     **all boxes**.
+   - The two thresholds live in `configs/eval.yaml` under `in_scope`. That file is
+     hashed into the lock, so they cannot change after locking.
+   - Own-clip annotations must record visibility (see `docs/DATA_CARD.md`).
+3. **Ground-truth classes, confirmed on 2026-10-14 over all seven MOT17 scenes.**
+   Every class-1 (pedestrian) row has conf=1. Every row of classes 2-12 has conf=0.
+   - **Scored:** class 1 with conf=1.
+   - **Ignore regions:** the distractor classes 2 (person on vehicle), 7 (static
+     person), 8 (distractor) and 12 (reflection), plus any conf-0 pedestrian.
+   - **Dropped:** everything else (vehicles, bicycles, occluders). A detection on
+     one is a false positive.
+   - This matches the MOTChallenge protocol (TrackEval). A bug fixed the same day
+     had made *all* conf-0 rows ignore regions, so detections on vehicles and
+     occluders were excused. Every detection number saved before that fix is
+     re-scored from the cached detections.
