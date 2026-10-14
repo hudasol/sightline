@@ -1,0 +1,32 @@
+{
+ "split": "test",
+ "note": "Held-out set. MOT17 base scenes 09 and 10 chosen on 2026-10-12 before any detector, tracker or event metric existed. Own corridor clips are appended here (see configs/manifests/README.md) and the manifest is re-locked BEFORE tuning. Condition tags for MOT17 come from the official MOTChallenge sequence descriptions and are to be confirmed by looking at the frames.",
+ "clips": [
+  {
+   "id": "MOT17-09-FRCNN",
+   "source": "data/mot17/MOT17-09-FRCNN",
+   "scene": "MOT17-09",
+   "camera": "mot17-09",
+   "session": "mot17-09",
+   "conditions": ["clear"],
+   "conditions_source": "MOTChallenge: 'A pedestrian street scene filmed from a low angle.' static camera, 525 frames @ 30 fps, 1920x1080",
+   "corridor": "configs/corridors/MOT17-09.yaml",
+   "gt": "data/mot17/MOT17-09-FRCNN/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false
+  },
+  {
+   "id": "MOT17-10-FRCNN",
+   "source": "data/mot17/MOT17-10-FRCNN",
+   "scene": "MOT17-10",
+   "camera": "mot17-10",
+   "session": "mot17-10",
+   "conditions": ["camera_motion_blur", "low_light_compression"],
+   "conditions_source": "MOTChallenge: 'A pedestrian scene filmed at night by a moving camera', 654 frames @ 30 fps, 1920x1080",
+   "corridor": "configs/corridors/MOT17-10.yaml",
+   "gt": "data/mot17/MOT17-10-FRCNN/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false
+  }
+ ]
+}

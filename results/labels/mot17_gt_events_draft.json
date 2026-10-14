@@ -1,0 +1,59 @@
+{
+ "what": "ground-truth event counts derived from MOT17 GT boxes with the draft corridors; label statistics, NOT system output",
+ "rule": {
+  "min_frames": 3,
+  "merge_gap": 5
+ },
+ "at_utc": "2026-10-12T11:54:23Z",
+ "scenes": [
+  {
+   "scene": "MOT17-02",
+   "split": "val",
+   "corridor": "configs/corridors/MOT17-02.yaml",
+   "corridor_sha256": "5e75ffdfb7eb20ff1678f9fac13e6a5a73819636596869bd8feaec7e3fb54411",
+   "gt_events_derived": 11
+  },
+  {
+   "scene": "MOT17-04",
+   "split": "val",
+   "corridor": "configs/corridors/MOT17-04.yaml",
+   "corridor_sha256": "f244fc9de899052919174b868f21a88283a00347eb109dcd87a724f370e5889f",
+   "gt_events_derived": 9
+  },
+  {
+   "scene": "MOT17-05",
+   "split": "val",
+   "corridor": "configs/corridors/MOT17-05.yaml",
+   "corridor_sha256": "f49f45a5915c1e5659b51b240ecde996477b992aed4eaeee036c0f208a92f445",
+   "gt_events_derived": 53
+  },
+  {
+   "scene": "MOT17-09",
+   "split": "test",
+   "corridor": "configs/corridors/MOT17-09.yaml",
+   "corridor_sha256": "90d6b93c2bbbee8dd9c3afb1daf09840cab1fee76d05c22c2e9283ff7c4df4d7",
+   "gt_events_derived": 14
+  },
+  {
+   "scene": "MOT17-10",
+   "split": "test",
+   "corridor": "configs/corridors/MOT17-10.yaml",
+   "corridor_sha256": "b70e6b03d63acae74c96c4e4dea326fe9ac85c47ba9ba87dc9ff2b761e432793",
+   "gt_events_derived": 13
+  },
+  {
+   "scene": "MOT17-11",
+   "split": "val",
+   "corridor": "configs/corridors/MOT17-11.yaml",
+   "corridor_sha256": "600fb90f86d41e19c1fb6c50be722c0466b6ac946537585ced0b6a32afaec7ff",
+   "gt_events_derived": 40
+  },
+  {
+   "scene": "MOT17-13",
+   "split": "val",
+   "corridor": "configs/corridors/MOT17-13.yaml",
+   "corridor_sha256": "2a7ae68514c985be12426fdcca26609d2d6f952d6d75122725956c880dd381f9",
+   "gt_events_derived": 21
+  }
+ ]
+}

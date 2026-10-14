@@ -130,8 +130,20 @@ def _git_commit(root: Path) -> str | None:
         return None
 
 
-def lock_manifest(manifest_path: str | Path, out_path: str | Path, root: str | Path = ".") -> dict:
-    """Hash every clip and its labels and write the locked held-out manifest.
+_LOCK_META = ("manifest_sha256", "locked_at_utc", "git_commit")
+
+
+def _lock_body(locked: dict) -> dict:
+    return {k: v for k, v in locked.items() if k not in _LOCK_META}
+
+
+def lock_manifest(manifest_path: str | Path, out_path: str | Path, root: str | Path = ".",
+                  eval_config: str | Path | None = None) -> dict:
+    """Hash every clip, its labels and its corridor, and write the locked held-out manifest.
+
+    The corridor is hashed because MOT17 event labels are DERIVED from the polygon:
+    editing a test polygon after locking would silently change the labels. The
+    eval config (label rules and the bar) is hashed for the same reason.
 
     Tuning records the hash of this file, which is how an evaluation can prove the
     held-out set was fixed BEFORE the final tuning pass.
@@ -143,10 +155,14 @@ def lock_manifest(manifest_path: str | Path, out_path: str | Path, root: str | P
         entry = dict(c.raw)
         entry["source_sha256"] = hash_path(root / c.source)
         entry["gt_sha256"] = sha256_file(root / c.gt)
+        entry["corridor_sha256"] = sha256_file(root / c.corridor)
         if c.gt_events:
             entry["gt_events_sha256"] = sha256_file(root / c.gt_events)
         entries.append(entry)
     body = {"version": 1, "split": man.split, "clips": entries}
+    if eval_config is not None:
+        body["eval_config"] = str(eval_config)
+        body["eval_config_sha256"] = sha256_file(root / eval_config)
     digest = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
     locked = {**body, "manifest_sha256": digest, "locked_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
               "git_commit": _git_commit(root)}
@@ -164,15 +180,23 @@ def verify_lock(lock_path: str | Path, root: str | Path = ".") -> list[str]:
         raise ManifestError(f"locked manifest not found: {lp}")
     locked = json.loads(lp.read_text())
     problems = []
-    body = {k: locked[k] for k in ("version", "split", "clips")}
+    body = _lock_body(locked)
     if hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest() != locked.get("manifest_sha256"):
         problems.append("locked manifest content does not match its recorded hash")
+    if locked.get("eval_config"):
+        try:
+            if sha256_file(root / locked["eval_config"]) != locked.get("eval_config_sha256"):
+                problems.append(f"{locked['eval_config']}: evaluation rules changed since locking")
+        except FileNotFoundError as exc:
+            problems.append(f"eval config: {exc}")
     for c in locked["clips"]:
         try:
             if hash_path(root / c["source"]) != c["source_sha256"]:
                 problems.append(f"{c['id']}: clip data changed since locking")
             if sha256_file(root / c["gt"]) != c["gt_sha256"]:
                 problems.append(f"{c['id']}: labels changed since locking")
+            if "corridor_sha256" in c and sha256_file(root / c["corridor"]) != c["corridor_sha256"]:
+                problems.append(f"{c['id']}: corridor polygon changed since locking")
             if c.get("gt_events") and sha256_file(root / c["gt_events"]) != c.get("gt_events_sha256"):
                 problems.append(f"{c['id']}: event labels changed since locking")
         except (ManifestError, FileNotFoundError) as exc:

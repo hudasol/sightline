@@ -1,0 +1,65 @@
+# Manifests
+
+`val.json` (tuning) and `test.json` (held-out) are the source of truth for which
+clip is in which split. Paths are relative to the repo root.
+
+## Current split (decided 2026-10-12, before any metric existed)
+
+| Split | MOT17 base scenes (FRCNN copy only) |
+|---|---|
+| val | 02, 04, 05, 11, 13 |
+| test | 09, 10 |
+
+`split-check` on these two files passes but reports the held-out coverage gaps.
+Your own corridor clips must close them:
+
+- at least **10 more test clips** (the bar is 12, and MOT17 gives 2)
+- at least one test clip tagged **`occlusion_crowding`** (09 and 10 already give
+  `clear`, `camera_motion_blur` and `low_light_compression`)
+- at least one **negative** test clip (`"negative": true`): people visible, nobody
+  enters the corridor
+
+## Adding an own corridor clip
+
+1. Put the video at `data/own/<id>.mp4` (git-ignored). Use an id like
+   `own-<location>-<yyyymmdd>-<nn>`, e.g. `own-corridorA-20261014-03`.
+2. Run `python -m sightline ingest data/own/<id>.mp4` to record fps, frames and hash.
+3. Draw the corridor polygon on a frame and save it as `configs/corridors/<camera>.yaml`
+   (`name`, `frame_size: [w, h]`, `polygon: [[x, y], ...]`).
+4. Annotate person boxes in `annotations/<id>/gt.txt` in MOTChallenge format
+   (`frame,id,x,y,w,h,1,1,visibility`, frames 1-based).
+5. Hand-label events in `annotations/<id>/events.json`:
+   `[{"first_inside_frame": 41, "last_inside_frame": 97}, ...]` (feet inside the polygon).
+   A negative clip gets `[]`.
+6. Add an entry to `val.json` **or** `test.json`:
+
+```json
+{
+ "id": "own-corridorA-20261014-03",
+ "source": "data/own/own-corridorA-20261014-03.mp4",
+ "scene": "own-corridorA",
+ "camera": "own-corridorA-tripod1",
+ "session": "own-corridorA-20261014",
+ "conditions": ["occlusion_crowding"],
+ "corridor": "configs/corridors/own-corridorA-tripod1.yaml",
+ "gt": "annotations/own-corridorA-20261014-03/gt.txt",
+ "gt_events": "annotations/own-corridorA-20261014-03/events.json",
+ "license": "own footage, written consent on file",
+ "negative": false
+}
+```
+
+**Leakage rule:** `split-check` fails if val and test share a `scene`, `camera` or
+`session`. Every clip from one recording session, and every clip from one camera
+position, goes into the **same** split. Choose the split per session before you
+annotate it, never after seeing results.
+
+## Order (do not change)
+
+1. `split-check` passes.
+2. `lock-manifest configs/manifests/test.json` once the held-out set is **complete**.
+   The lock hashes clips, labels, corridor polygons and `configs/eval.yaml`.
+3. Only then `detect-eval` / `tune` on val.
+
+Re-locking is harmless before tuning. After `tune` has run, any change to the
+held-out set means `evaluate` refuses the frozen config, which is the point.
