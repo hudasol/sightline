@@ -33,6 +33,12 @@ def test_bytetrack_beats_baseline_on_id_stability(clip, cfg, corridor, cached):
     assert ids["bytetrack"] <= ids["iou"]
 
 
+def test_max_frames_truncates_and_is_recorded(clip, cfg, corridor, cached):
+    run = run_clip(clip.video, cfg, corridor, cached=cached, max_frames=20)
+    assert run.frames_seen == 20
+    assert run.policy["max_frames"] == 20
+
+
 def test_missing_source_is_unavailable(tmp_path, clip):
     rc = main(["replay", str(tmp_path / "nope.mp4"), "--config", CFG, "--corridor", CORR,
                "--detections-cache", str(clip.cache), "--out", str(tmp_path / "o")])

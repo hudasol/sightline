@@ -60,12 +60,18 @@ def prepare_clip(clip: Clip, root: Path, eval_cfg: dict) -> ClipData:
     return ClipData(clip, info, corridor, gt, ignore, gt_events, n, tags)
 
 
+def detector_tag(cfg: Config) -> str:
+    """Cache folder name: one per model AND input size, so sizes never overwrite each other."""
+    w, h = cfg.detector.input_size
+    return f"{cfg.detector.name}@{w}x{h}"
+
+
 def get_detections(cd: ClipData, cfg: Config, root: Path, cache_dir: Path,
                    detector_factory: Callable[[], Detector] | None) -> dict[int, list[Detection]]:
     """Cached detections if the cache was made by the same model and floor; else run the detector."""
-    path = cache_dir / cfg.detector.name / f"{cd.clip.id}.jsonl"
+    path = cache_dir / detector_tag(cfg) / f"{cd.clip.id}.jsonl"
     want = {"detector": cfg.detector.name, "min_score": cfg.detector.min_score,
-            "input_short_side": cfg.detector.input_short_side}
+            "input_size": list(cfg.detector.input_size)}
     if path.is_file():
         meta, frames = read_detection_cache(path)
         if all(meta.get(k) == v for k, v in want.items()):

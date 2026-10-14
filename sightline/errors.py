@@ -70,7 +70,7 @@ def select_failures(per_clip_dir: Path, results_dir: Path, per_type: int = 2) ->
     return items
 
 
-def render_failure(item: dict, root: Path, lock_path: Path, cache_dir: Path, detector_name: str,
+def render_failure(item: dict, root: Path, lock_path: Path, cache_dir: Path, detector_tag: str,
                    threshold: float, tracks_root: Path, out_png: Path) -> bool:
     man = load_manifest(lock_path)
     clip = next(c for c in man.clips if c.id == item["clip"])
@@ -82,7 +82,7 @@ def render_failure(item: dict, root: Path, lock_path: Path, cache_dir: Path, det
     gt, _ig = load_mot_gt(root / clip.gt)
     for gid, (x1, y1, x2, y2) in gt.get(item["frame"], []):
         cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (80, 190, 80), 2)
-    cache = cache_dir / detector_name / f"{clip.id}.jsonl"
+    cache = cache_dir / detector_tag / f"{clip.id}.jsonl"
     if cache.is_file():
         _m, dets = read_detection_cache(cache)
         for d in dets.get(item["frame"], []):
@@ -104,7 +104,7 @@ def render_failure(item: dict, root: Path, lock_path: Path, cache_dir: Path, det
     return True
 
 
-def analyze(results_dir: Path, root: Path, lock_path: Path, cache_dir: Path, detector_name: str, threshold: float,
+def analyze(results_dir: Path, root: Path, lock_path: Path, cache_dir: Path, detector_tag: str, threshold: float,
             per_type: int = 2) -> Path:
     out_dir = results_dir / "error_analysis"
     items = select_failures(results_dir / "per_clip", results_dir, per_type)
@@ -119,7 +119,7 @@ def analyze(results_dir: Path, root: Path, lock_path: Path, cache_dir: Path, det
     rows = []
     for n, it in enumerate(items, start=1):
         png = out_dir / f"{n:02d}_{it['type']}_{it['clip']}_f{it['frame']}.png"
-        rendered = render_failure(it, root, lock_path, cache_dir, detector_name, threshold, results_dir / "tracks", png)
+        rendered = render_failure(it, root, lock_path, cache_dir, detector_tag, threshold, results_dir / "tracks", png)
         rows.append({**{k: v for k, v in it.items() if k not in ("event",)}, "image": png.name if rendered else None})
     (out_dir / "index.json").write_text(json.dumps(rows, indent=1, default=str))
     md = ["# Error analysis index (auto-selected, worst first)", "",

@@ -11,13 +11,14 @@ import json
 import time
 from collections import Counter
 from collections.abc import Callable, Iterable
+from itertools import islice
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from sightline.config import Config, CorridorConfig
 from sightline.detector import Detector
 from sightline.events import Event
-from sightline.ingest import IngestError, SourceInfo, iter_frames, probe
+from sightline.ingest import IngestError, SourceInfo, iter_frames, prefetch, probe
 from sightline.overlay import OverlayWriter
 from sightline.pipeline import FrameResult, Pipeline
 from sightline.runtime import RuntimeRecorder, machine_info
@@ -72,6 +73,7 @@ def run_clip(
     info: SourceInfo | None = None,
     keep_results: bool = False,
     clock: Callable[[], float] = time.perf_counter,
+    max_frames: int | None = None,
 ) -> ClipRun:
     """frames/info let a caller inject a stream (tests, stress suite); otherwise `source` is read."""
     name = Path(str(source)).name
@@ -94,6 +96,12 @@ def run_clip(
 
     if frames is None:
         frames = iter_frames(source, fps_override, stride=stride, info=info)
+        if max_frames:
+            frames = islice(frames, max_frames)
+            run.policy["max_frames"] = max_frames  # a truncated run: say so in every output
+        if cfg.pipeline.decode_thread:
+            frames = prefetch(frames, cfg.pipeline.decode_queue)
+    run.policy["decode_thread"] = cfg.pipeline.decode_thread
 
     pipe = Pipeline(cfg, corridor, detector, (info.width, info.height), nominal_fps=info.fps / stride, clock=clock)
     rec = RuntimeRecorder(warmup=cfg.health.warmup_frames, budget_s=1.0 / cfg.health.min_fps)
@@ -156,6 +164,9 @@ def run_clip(
                 run.results.append(res)
     finally:
         rec.stop()
+        close = getattr(frames, "close", None)
+        if close is not None:
+            close()  # stops the decode thread if the loop ended early
         if writer is not None:
             writer.close()
 

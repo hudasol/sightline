@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 from typing import Protocol
 
+import cv2
 import numpy as np
 
 from sightline.config import DetectorConfig
@@ -38,6 +39,12 @@ _TORCHVISION_MODELS = {
 }
 
 
+def fit_size(width: int, height: int, box_w: int, box_h: int) -> tuple[int, int]:
+    """Largest (w, h) with the frame's aspect ratio that fits inside box_w x box_h. Never upscales."""
+    scale = min(box_w / width, box_h / height, 1.0)
+    return max(1, round(width * scale)), max(1, round(height * scale))
+
+
 class TorchvisionPersonDetector:
     """COCO-pretrained torchvision detector, person class only (COCO id 1).
 
@@ -57,6 +64,8 @@ class TorchvisionPersonDetector:
             ) from exc
         if cfg.name not in _TORCHVISION_MODELS:
             raise DetectorUnavailable(f"unknown detector {cfg.name!r}; choose from {sorted(_TORCHVISION_MODELS)}")
+        if cfg.torch_threads:
+            torch.set_num_threads(cfg.torch_threads)
         self._torch = torch
         self.cfg = cfg
         self.name = cfg.name
@@ -64,25 +73,33 @@ class TorchvisionPersonDetector:
         builder = getattr(torchvision.models.detection, builder_name)
         weights = getattr(torchvision.models.detection, weights_name).DEFAULT if load_weights else None
         self._weights_name = f"{weights_name}.DEFAULT" if load_weights else "none (random init)"
+        box_w, box_h = cfg.input_size
         self.model = builder(
             weights=weights, weights_backbone=None, box_score_thresh=cfg.min_score,
-            min_size=cfg.input_short_side, max_size=int(cfg.input_short_side * 16 / 9) + 1,
+            min_size=min(box_w, box_h), max_size=max(box_w, box_h),
         )
         self.model.eval().to(cfg.device)
         self._versions = {"torch": torch.__version__, "torchvision": torchvision.__version__}
 
     def detect(self, image: np.ndarray) -> list[Detection]:
+        """Resize to fit cfg.input_size, detect, and return boxes in ORIGINAL frame pixels."""
         torch = self._torch
-        rgb = image[:, :, ::-1]
+        h, w = image.shape[:2]
+        nw, nh = fit_size(w, h, *self.cfg.input_size)
+        small = image if (nw, nh) == (w, h) else cv2.resize(image, (nw, nh), interpolation=cv2.INTER_AREA)
+        # pin torchvision's own resize to this exact size so the frame is not resized a second time
+        self.model.transform.min_size = (min(nw, nh),)
+        self.model.transform.max_size = max(nw, nh)
+        rgb = small[:, :, ::-1]
         tensor = torch.from_numpy(np.ascontiguousarray(rgb)).permute(2, 0, 1).float().div_(255.0).to(self.cfg.device)
         with torch.inference_mode():
             out = self.model([tensor])[0]
-        h, w = image.shape[:2]
+        sx, sy = w / nw, h / nh
         dets = []
         for box, label, score in zip(out["boxes"].cpu().numpy(), out["labels"].cpu().numpy(), out["scores"].cpu().numpy()):
             if int(label) != self.PERSON_LABEL or float(score) < self.cfg.min_score:
                 continue
-            x1, y1, x2, y2 = (float(v) for v in box)
+            x1, y1, x2, y2 = float(box[0]) * sx, float(box[1]) * sy, float(box[2]) * sx, float(box[3]) * sy
             x1, x2 = max(0.0, min(x1, w)), max(0.0, min(x2, w))
             y1, y2 = max(0.0, min(y1, h)), max(0.0, min(y2, h))
             if x2 - x1 >= 2 and y2 - y1 >= 2:
@@ -91,7 +108,10 @@ class TorchvisionPersonDetector:
 
     def info(self) -> dict:
         return {"detector": self.name, "weights": self._weights_name, "min_score": self.cfg.min_score,
-                "input_short_side": self.cfg.input_short_side, "device": self.cfg.device, **self._versions}
+                "input_size": list(self.cfg.input_size), "resize": "fit inside input_size, aspect kept, no upscaling",
+                "device": self.cfg.device,
+                "torch_threads": self._torch.get_num_threads(),
+                "torch_interop_threads": self._torch.get_num_interop_threads(), **self._versions}
 
 
 # -- detection cache ---------------------------------------------------------------

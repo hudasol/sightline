@@ -27,8 +27,12 @@ class DetectorConfig:
     score_threshold: float = 0.5
     # floor: detections below this are never produced, so the tracker's low stage has something to use
     min_score: float = 0.1
-    input_short_side: int = 320
+    # [width, height] box every frame is resized to fit inside (aspect kept, never upscaled) before
+    # detection; boxes are mapped back to original pixels. None = the pipeline's declared size.
+    input_size: list[int] | None = None
     device: str = "cpu"
+    # intra-op CPU threads for torch; None keeps torch's default. Measured with `sightline threads`.
+    torch_threads: int | None = None
 
 
 @dataclass
@@ -72,6 +76,8 @@ class PipelineConfig:
     frame_stride: int = 1  # 1 = process every frame. Anything else is a recorded sampling policy.
     declared_width: int = 640
     declared_height: int = 360
+    decode_thread: bool = True  # decode frames in a background thread so decoding overlaps inference
+    decode_queue: int = 4  # frames decoded ahead; order kept, nothing dropped
 
 
 @dataclass
@@ -88,7 +94,15 @@ class Config:
         d, t, e, h, p = self.detector, self.tracker, self.events, self.health, self.pipeline
         _validate_tracker(self.baseline_tracker, "baseline_tracker")
         _check(0.0 < d.min_score < d.score_threshold <= 1.0, "detector: need 0 < min_score < score_threshold <= 1")
-        _check(d.input_short_side > 0, "detector.input_short_side must be positive")
+        _check(p.declared_width > 0 and p.declared_height > 0, "pipeline declared size must be positive")
+        if d.input_size is None:  # resolved here so every consumer (detector, cache, reports) sees one value
+            d.input_size = [p.declared_width, p.declared_height]
+        _check(isinstance(d.input_size, (list, tuple)) and len(d.input_size) == 2
+               and all(isinstance(v, int) and v >= 32 for v in d.input_size),
+               "detector.input_size must be null or [width, height] with integers >= 32")
+        d.input_size = [int(v) for v in d.input_size]
+        _check(d.torch_threads is None or (isinstance(d.torch_threads, int) and d.torch_threads >= 1),
+               "detector.torch_threads must be null or an integer >= 1")
         _validate_tracker(t, "tracker")
         _check(e.n_open >= 1, "events.n_open must be >= 1")
         _check(e.m_close >= 1, "events.m_close must be >= 1")
@@ -103,7 +117,7 @@ class Config:
         _check(h.min_sharpness >= 0, "health.min_sharpness must be >= 0")
         _check(0.0 <= h.low_conf_mean <= 1.0, "health.low_conf_mean must be in [0, 1]")
         _check(p.frame_stride >= 1, "pipeline.frame_stride must be >= 1")
-        _check(p.declared_width > 0 and p.declared_height > 0, "pipeline declared size must be positive")
+        _check(p.decode_queue >= 1, "pipeline.decode_queue must be >= 1")
         return self
 
     def to_dict(self) -> dict[str, Any]:

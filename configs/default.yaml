@@ -6,8 +6,9 @@ detector:
   name: fasterrcnn_mobilenet_v3_large_320_fpn
   score_threshold: 0.5      # FROZEN-ON-VAL
   min_score: 0.1
-  input_short_side: 320
+  input_size: null          # [w, h] frames are resized to fit inside; null = pipeline declared size
   device: cpu
+  torch_threads: 8          # fastest for this detector at 640x360: results/runtime/torch_threads_mbv3_320fpn_640x360.json
 
 tracker:
   kind: bytetrack
@@ -43,6 +44,8 @@ pipeline:
   frame_stride: 1           # anything else is a recorded sampling policy
   declared_width: 640
   declared_height: 360
+  decode_thread: true       # decode ahead in a background thread; order kept, nothing dropped
+  decode_queue: 4
 
 # the baseline tracker is tuned on the same grid as the chosen one
 baseline_tracker:
