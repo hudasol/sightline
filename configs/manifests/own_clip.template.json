@@ -1,0 +1,52 @@
+{
+ "_help": "Template for own corridor clips. Copy an entry into val.json OR test.json, replace every <...>, and delete the _help keys. One recording session and one camera position belong to ONE split. See docs/RECORDING_GUIDE.md and configs/manifests/README.md.",
+ "split": "<val|test>",
+ "clips": [
+  {
+   "_help": "An ordinary clip, every frame annotated (no annotated_frames key).",
+   "id": "own-<location>-<yyyymmdd>-<nn>",
+   "dataset": "own",
+   "source": "data/own/own-<location>-<yyyymmdd>-<nn>.mp4",
+   "scene": "own-<location>",
+   "camera": "own-<location>-<camera position, e.g. tripod1>",
+   "session": "own-<location>-<yyyymmdd>",
+   "conditions": ["<clear|occlusion_crowding|camera_motion_blur|low_light_compression>"],
+   "corridor": "configs/corridors/own-<location>-<camera position>.yaml",
+   "gt": "annotations/own-<location>-<yyyymmdd>-<nn>/gt.txt",
+   "gt_events": "annotations/own-<location>-<yyyymmdd>-<nn>/events.json",
+   "license": "own footage, written consent on file (<consent record id>)",
+   "negative": false
+  },
+  {
+   "_help": "A negative clip: people visible, nobody enters the corridor. events.json is [].",
+   "id": "own-<location>-<yyyymmdd>-<nn>",
+   "dataset": "own",
+   "source": "data/own/own-<location>-<yyyymmdd>-<nn>.mp4",
+   "scene": "own-<location>",
+   "camera": "own-<location>-<camera position>",
+   "session": "own-<location>-<yyyymmdd>",
+   "conditions": ["clear"],
+   "corridor": "configs/corridors/own-<location>-<camera position>.yaml",
+   "gt": "annotations/own-<location>-<yyyymmdd>-<nn>/gt.txt",
+   "gt_events": "annotations/own-<location>-<yyyymmdd>-<nn>/events.json",
+   "license": "own footage, written consent on file (<consent record id>)",
+   "negative": true
+  },
+  {
+   "_help": "A sparsely annotated clip (e.g. every 10th frame, from import-cvat). Only those frames are scored; hand-labelled gt_events are required.",
+   "id": "own-<location>-<yyyymmdd>-<nn>",
+   "dataset": "own",
+   "source": "data/own/own-<location>-<yyyymmdd>-<nn>.mp4",
+   "scene": "own-<location>",
+   "camera": "own-<location>-<camera position>",
+   "session": "own-<location>-<yyyymmdd>",
+   "conditions": ["occlusion_crowding"],
+   "corridor": "configs/corridors/own-<location>-<camera position>.yaml",
+   "gt": "annotations/own-<location>-<yyyymmdd>-<nn>/gt.txt",
+   "annotated_frames": "annotations/own-<location>-<yyyymmdd>-<nn>/annotated_frames.json",
+   "gt_events": "annotations/own-<location>-<yyyymmdd>-<nn>/events.json",
+   "license": "own footage, written consent on file (<consent record id>)",
+   "negative": false
+  }
+ ]
+}

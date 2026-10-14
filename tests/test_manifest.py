@@ -98,6 +98,23 @@ def test_final_lock_is_refused_once_its_files_change(tmp_path):
         require_final_lock(tmp_path / "lock.json", tmp_path)
 
 
+def test_own_clip_template_entries_are_complete(tmp_path):
+    """Copying an entry from the template must never produce an invalid manifest."""
+    from pathlib import Path
+
+    from sightline.manifest import REQUIRED_FIELDS
+
+    root = Path(__file__).resolve().parent.parent
+    t = json.loads((root / "configs" / "manifests" / "own_clip.template.json").read_text())
+    for c in t["clips"]:
+        assert all(k in c for k in REQUIRED_FIELDS) and c["dataset"] == "own"
+    # with placeholders filled in (unique ids and a valid condition), the template loads
+    clips = [{**c, "id": f"own-x-{i}", "conditions": ["clear"]} for i, c in enumerate(t["clips"])]
+    loaded = load_manifest(_write(tmp_path / "m.json", clips))
+    assert [c.negative for c in loaded.clips] == [False, True, False]
+    assert all(c.dataset == "own" for c in loaded.clips)
+
+
 def test_missing_file_rejected(tmp_path):
     with pytest.raises((ManifestError, FileNotFoundError)):
         load_manifest(tmp_path / "none.json")
