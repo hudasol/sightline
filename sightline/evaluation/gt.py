@@ -1,13 +1,20 @@
 """Ground-truth loading. MOTChallenge format: frame,id,x,y,w,h,flag,class,visibility.
 
-Pedestrians (class 1, flag 1) are scored. Rows with flag 0, or in distractor
-classes (person on vehicle, static person, reflection, ...), are IGNORE regions:
-a detection that lands on one is neither a hit nor a false positive.
+Follows the MOTChallenge protocol (TrackEval):
+  * SCORED: pedestrians (class 1) with flag (conf) 1.
+  * IGNORE regions: distractor classes (2 person on vehicle, 7 static person,
+    8 distractor, 12 reflection) whatever their flag, and pedestrians with flag 0.
+    A detection on one is neither a hit nor a false positive.
+  * DROPPED: every other class (cars, bicycles, motorbikes, occluders, ...). They
+    are not people, so a person detection on one is a false positive. (Before
+    2026-10-14 every flag-0 row became an ignore region, which excused detections
+    on vehicles and occluders and inflated precision.)
 """
 
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 
 Box = tuple[float, float, float, float]
@@ -18,8 +25,20 @@ PEDESTRIAN = 1
 DEFAULT_IGNORE_CLASSES = (2, 7, 8, 12)  # MOT17: person on vehicle, static person, distractor, reflection
 
 
+@dataclass(frozen=True)
+class InScope:
+    """PLAN.md amendment A1: who is "in scope". Out-of-scope people become ignore regions."""
+    min_height_frac: float
+    min_visibility: float
+    frame_height: int
+
+    def contains(self, box: Box, visibility: float) -> bool:
+        return (box[3] - box[1]) >= self.min_height_frac * self.frame_height and visibility >= self.min_visibility
+
+
 def load_mot_gt(path: str | Path, min_visibility: float = 0.0,
-                ignore_classes: tuple[int, ...] = DEFAULT_IGNORE_CLASSES) -> tuple[GTFrames, IgnoreFrames]:
+                ignore_classes: tuple[int, ...] = DEFAULT_IGNORE_CLASSES,
+                in_scope: InScope | None = None) -> tuple[GTFrames, IgnoreFrames]:
     p = Path(path)
     if not p.is_file():
         raise FileNotFoundError(f"ground truth not found: {p}")
@@ -37,10 +56,13 @@ def load_mot_gt(path: str | Path, min_visibility: float = 0.0,
         cls = int(float(parts[7])) if len(parts) > 7 else PEDESTRIAN
         vis = float(parts[8]) if len(parts) > 8 else 1.0
         box = (x, y, x + w, y + h)
-        if flag == 0 or cls in ignore_classes:
+        if cls in ignore_classes or (cls == PEDESTRIAN and flag == 0):
             ignore[frame].append(box)
+        elif cls == PEDESTRIAN and in_scope is not None and not in_scope.contains(box, vis):
+            ignore[frame].append(box)  # a real person, but out of scope: neither a hit nor a false positive
         elif cls == PEDESTRIAN and vis >= min_visibility:
             gt[frame].append((tid, box))
+        # any other class is not a person: dropped, so a detection on it counts as a false positive
     return dict(gt), dict(ignore)
 
 

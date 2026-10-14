@@ -42,6 +42,24 @@ def test_coverage_reports_what_events_rest_on(tmp_path):
     assert cov["event_difficult_conditions_present"] == []
 
 
+def test_detection_bar_is_judged_on_own_clips_in_scope(clip, cfg, cached):
+    from sightline.evaluation.run import bar_check
+
+    eval_cfg = load_eval_config(ROOT / "configs" / "eval.yaml")
+    corridor = str(ROOT / "configs" / "corridors" / "synthetic.yaml")
+    c = Clip(id="pub", source=str(clip.video), scene="MOT17-02", camera="c", session="s", conditions=["clear"],
+             corridor=corridor, gt=str(clip.gt), license="synthetic")
+    assert c.dataset == "mot17"
+    agg = aggregate([evaluate_clip(prepare_clip(c, Path("."), eval_cfg), cfg, cached, eval_cfg, Path("."))])
+    assert set(agg["detection_in_scope_by_dataset"]) == {"mot17"}
+    assert "ALL" in agg["detection_in_scope"] and "ALL" in agg["tracking_in_scope"]["bytetrack"]
+    cov = {"meets_min_clips": True, "meets_three_difficult": True, "has_negative_set": True}
+    bar = bar_check(agg, cov, eval_cfg)
+    # MOT17 is reported, never judged: with no own clips the detection checks cannot pass
+    assert bar["detection_judged_on"] == "own clips, in scope"
+    assert bar["checks"]["detection_precision>=0.80"] is False and bar["checks"]["detection_recall>=0.80"] is False
+
+
 def test_aggregate_keeps_moving_camera_clips_out_of_events(clip, cfg, cached):
     eval_cfg = load_eval_config(ROOT / "configs" / "eval.yaml")
     corridor = str(ROOT / "configs" / "corridors" / "synthetic.yaml")

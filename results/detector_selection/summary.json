@@ -1,6 +1,6 @@
 {
  "what": "detector candidates on VAL: detection quality vs end-to-end speed; built from saved files only",
- "rule": "fastest candidate with P>=0.8 and R>=0.8 at some threshold on val AND >=10.0 fps (PLAN.md s5)",
+ "rule": "fastest candidate with P>=0.8 and R>=0.8 at some threshold on val (in-scope boxes) AND >=10.0 fps (PLAN.md s5, A1). Val holds only MOT17 so far: the bar itself is judged on held-out own corridor clips.",
  "rows": [
   {
    "candidate": "mbv3_320fpn_640x360",
@@ -23,27 +23,57 @@
     360
    ],
    "frames_evaluated": 4137,
-   "best_f1": {
-    "tp": 26511,
-    "fp": 16404,
-    "fn": 67622,
-    "precision": 0.6177560293603636,
-    "recall": 0.2816334335461528,
-    "f1": 0.38688634638958613,
-    "threshold": 0.3
-   },
-   "at_default_threshold": {
-    "tp": 23227,
-    "fp": 7962,
-    "fn": 70906,
-    "precision": 0.744717688928789,
-    "recall": 0.24674662445688547,
-    "f1": 0.3706771356984408,
-    "threshold": 0.5
-   },
-   "max_recall": 0.2816334335461528,
-   "thresholds_meeting_pr_bar": [],
    "detect_eval_file": "results/detector_selection/detect_eval_val_mbv3_320fpn_640x360.json",
+   "in_scope_rule": {
+    "min_height_frac": 0.1,
+    "min_visibility": 0.65
+   },
+   "in_scope": {
+    "best_f1": {
+     "tp": 18945,
+     "fp": 6500,
+     "fn": 18081,
+     "precision": 0.7445470622912164,
+     "recall": 0.5116674769081186,
+     "f1": 0.6065214259416369,
+     "threshold": 0.55
+    },
+    "at_default_threshold": {
+     "tp": 19481,
+     "fp": 7891,
+     "fn": 17545,
+     "precision": 0.7117126991085782,
+     "recall": 0.5261437908496732,
+     "f1": 0.6050187894033976,
+     "threshold": 0.5
+    },
+    "max_recall": 0.5751633986928104,
+    "thresholds_meeting_pr_bar": []
+   },
+   "all_boxes": {
+    "best_f1": {
+     "tp": 26510,
+     "fp": 16485,
+     "fn": 67623,
+     "precision": 0.616583323642284,
+     "recall": 0.2816228102790732,
+     "f1": 0.38664605332244323,
+     "threshold": 0.3
+    },
+    "at_default_threshold": {
+     "tp": 23228,
+     "fp": 7996,
+     "fn": 70905,
+     "precision": 0.7439149372277735,
+     "recall": 0.24675724772396504,
+     "f1": 0.37058959611349984,
+     "threshold": 0.5
+    },
+    "max_recall": 0.2816228102790732,
+    "thresholds_meeting_pr_bar": []
+   },
+   "judged_view": "in_scope",
+   "thresholds_meeting_pr_bar": [],
    "meets_pr_bar": false,
    "meets_fps_bar": false
   },
@@ -68,27 +98,57 @@
     540
    ],
    "frames_evaluated": 4137,
-   "best_f1": {
-    "tp": 39013,
-    "fp": 16724,
-    "fn": 55120,
-    "precision": 0.6999479699302079,
-    "recall": 0.4144455185747825,
-    "f1": 0.5206245412690998,
-    "threshold": 0.35
-   },
-   "at_default_threshold": {
-    "tp": 36234,
-    "fp": 10145,
-    "fn": 57899,
-    "precision": 0.781258759352293,
-    "recall": 0.3849234593606918,
-    "f1": 0.5157424276930084,
-    "threshold": 0.5
-   },
-   "max_recall": 0.4231672208470993,
-   "thresholds_meeting_pr_bar": [],
    "detect_eval_file": "results/detector_selection/detect_eval_val_mbv3_320fpn_960x540.json",
+   "in_scope_rule": {
+    "min_height_frac": 0.1,
+    "min_visibility": 0.65
+   },
+   "in_scope": {
+    "best_f1": {
+     "tp": 27698,
+     "fp": 5958,
+     "fn": 9328,
+     "precision": 0.8229736154028999,
+     "recall": 0.7480689245395128,
+     "f1": 0.7837356045386378,
+     "threshold": 0.65
+    },
+    "at_default_threshold": {
+     "tp": 29243,
+     "fp": 10012,
+     "fn": 7783,
+     "precision": 0.7449496879378423,
+     "recall": 0.7897963593150759,
+     "f1": 0.7667177934216908,
+     "threshold": 0.5
+    },
+    "max_recall": 0.8212337276508399,
+    "thresholds_meeting_pr_bar": []
+   },
+   "all_boxes": {
+    "best_f1": {
+     "tp": 39014,
+     "fp": 16753,
+     "fn": 55119,
+     "precision": 0.6995893628848602,
+     "recall": 0.414456141841862,
+     "f1": 0.520533689126084,
+     "threshold": 0.35
+    },
+    "at_default_threshold": {
+     "tp": 36235,
+     "fp": 10159,
+     "fn": 57898,
+     "precision": 0.781027719101608,
+     "recall": 0.38493408262777135,
+     "f1": 0.515701608943477,
+     "threshold": 0.5
+    },
+    "max_recall": 0.42317784411417886,
+    "thresholds_meeting_pr_bar": []
+   },
+   "judged_view": "in_scope",
+   "thresholds_meeting_pr_bar": [],
    "meets_pr_bar": false,
    "meets_fps_bar": false
   },
@@ -113,28 +173,64 @@
     540
    ],
    "frames_evaluated": 4137,
-   "best_f1": {
-    "tp": 55986,
-    "fp": 16228,
-    "fn": 38147,
-    "precision": 0.7752790317666934,
-    "recall": 0.5947542307161144,
-    "f1": 0.673123050009919,
-    "threshold": 0.6
-   },
-   "at_default_threshold": {
-    "tp": 57822,
-    "fp": 20436,
-    "fn": 36311,
-    "precision": 0.7388637583378057,
-    "recall": 0.6142585490741823,
-    "f1": 0.6708238829173216,
-    "threshold": 0.5
-   },
-   "max_recall": 0.6429201236548288,
-   "thresholds_meeting_pr_bar": [],
    "detect_eval_file": "results/detector_selection/detect_eval_val_resnet50_fpn_v2_960x540.json",
-   "meets_pr_bar": false,
+   "in_scope_rule": {
+    "min_height_frac": 0.1,
+    "min_visibility": 0.65
+   },
+   "in_scope": {
+    "best_f1": {
+     "tp": 33000,
+     "fp": 7028,
+     "fn": 4026,
+     "precision": 0.824422903967223,
+     "recall": 0.8912655971479501,
+     "f1": 0.8565421652347704,
+     "threshold": 0.85
+    },
+    "at_default_threshold": {
+     "tp": 35975,
+     "fp": 20333,
+     "fn": 1051,
+     "precision": 0.6388967819847979,
+     "recall": 0.9716145411332577,
+     "f1": 0.7708873508046372,
+     "threshold": 0.5
+    },
+    "max_recall": 0.979743963701183,
+    "thresholds_meeting_pr_bar": [
+     0.85,
+     0.9
+    ]
+   },
+   "all_boxes": {
+    "best_f1": {
+     "tp": 55988,
+     "fp": 16341,
+     "fn": 38145,
+     "precision": 0.7740740228677294,
+     "recall": 0.5947754772502736,
+     "f1": 0.6726820535617739,
+     "threshold": 0.6
+    },
+    "at_default_threshold": {
+     "tp": 57821,
+     "fp": 20637,
+     "fn": 36312,
+     "precision": 0.736967549516939,
+     "recall": 0.6142479258071027,
+     "f1": 0.6700349380906304,
+     "threshold": 0.5
+    },
+    "max_recall": 0.6429201236548288,
+    "thresholds_meeting_pr_bar": []
+   },
+   "judged_view": "in_scope",
+   "thresholds_meeting_pr_bar": [
+    0.85,
+    0.9
+   ],
+   "meets_pr_bar": true,
    "meets_fps_bar": false
   }
  ],

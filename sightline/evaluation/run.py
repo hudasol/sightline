@@ -21,7 +21,7 @@ from sightline.evaluation import detection as det_eval
 from sightline.evaluation import tracking as trk_eval
 from sightline.evaluation.events import (EventMatch, GTEvent, derive_gt_events, event_metrics, load_gt_events,
                                          match_events)
-from sightline.evaluation.gt import GTFrames, IgnoreFrames, load_mot_gt
+from sightline.evaluation.gt import GTFrames, IgnoreFrames, InScope, load_mot_gt
 from sightline.ingest import SourceInfo, iter_frames, probe
 from sightline.manifest import METRICS, Clip
 from sightline.runner import ClipRun, run_clip
@@ -44,12 +44,19 @@ class ClipData:
     gt_events: list[GTEvent]
     n_frames: int
     tags: list[str]
+    # in-scope view (PLAN.md amendment A1): out-of-scope people moved to the ignore regions
+    gt_in: GTFrames | None = None
+    ignore_in: IgnoreFrames | None = None
 
 
 def prepare_clip(clip: Clip, root: Path, eval_cfg: dict) -> ClipData:
     info = probe(root / clip.source, clip.fps)
     corridor = load_corridor(root / clip.corridor)
     gt, ignore = load_mot_gt(root / clip.gt)
+    gt_in, ignore_in = gt, ignore
+    if eval_cfg.get("in_scope"):
+        s = eval_cfg["in_scope"]
+        gt_in, ignore_in = load_mot_gt(root / clip.gt, in_scope=InScope(s["min_height_frac"], s["min_visibility"], info.height))
     if clip.gt_events:
         gt_events = load_gt_events(root / clip.gt_events)
     else:
@@ -57,7 +64,7 @@ def prepare_clip(clip: Clip, root: Path, eval_cfg: dict) -> ClipData:
         gt_events = derive_gt_events(gt, corridor.polygon, rule["min_frames"], rule["merge_gap"])
     n = info.frame_count_reported or (max(gt) if gt else 0)
     tags = list(clip.conditions) + (["negative_corridor"] if clip.negative else [])
-    return ClipData(clip, info, corridor, gt, ignore, gt_events, n, tags)
+    return ClipData(clip, info, corridor, gt, ignore, gt_events, n, tags, gt_in, ignore_in)
 
 
 def detector_tag(cfg: Config) -> str:
@@ -93,15 +100,19 @@ class ClipResult:
     runs: dict[str, ClipRun] = field(default_factory=dict)
     accs: dict = field(default_factory=dict)
     matches: dict[str, EventMatch] = field(default_factory=dict)
+    det_counts_in: dict = field(default_factory=dict)  # in scope (A1)
+    accs_in: dict = field(default_factory=dict)
 
 
 def evaluate_clip(cd: ClipData, cfg: Config, dets: dict[int, list[Detection]], eval_cfg: dict, root: Path,
                   trackers: tuple[str, ...] = TRACKERS, out_root: Path | None = None) -> ClipResult:
     stride = cfg.pipeline.frame_stride
     frames = list(range(1, cd.n_frames + 1, stride))
-    det_m = det_eval.evaluate_detections(cd.gt, cd.ignore, dets, cfg.detector.score_threshold, frames,
-                                         eval_cfg["detection"]["iou"])
+    iou = eval_cfg["detection"]["iou"]
+    det_m = det_eval.evaluate_detections(cd.gt, cd.ignore, dets, cfg.detector.score_threshold, frames, iou)
+    gt_in, ig_in = in_scope_view(cd)
     res = ClipResult(cd, det_m)
+    res.det_counts_in = det_eval.evaluate_detections(gt_in, ig_in, dets, cfg.detector.score_threshold, frames, iou)
     for kind in trackers:
         c = copy.deepcopy(cfg)
         c.tracker = copy.deepcopy(cfg.baseline_tracker if kind == "iou" else cfg.tracker)
@@ -110,8 +121,13 @@ def evaluate_clip(cd: ClipData, cfg: Config, dets: dict[int, list[Detection]], e
                        out_dir=(out_root / kind / cd.clip.id) if out_root else None)
         res.runs[kind] = run
         res.accs[kind] = trk_eval.build_accumulator(cd.gt, cd.ignore, run.mot_rows, frames, eval_cfg["tracking"]["iou"])
+        res.accs_in[kind] = trk_eval.build_accumulator(gt_in, ig_in, run.mot_rows, frames, eval_cfg["tracking"]["iou"])
         res.matches[kind] = match_events(cd.gt_events, run.events)
     return res
+
+
+def in_scope_view(cd: ClipData) -> tuple[GTFrames, IgnoreFrames]:
+    return (cd.gt_in if cd.gt_in is not None else cd.gt), (cd.ignore_in if cd.ignore_in is not None else cd.ignore)
 
 
 def aggregate(results: list[ClipResult], trackers: tuple[str, ...] = TRACKERS) -> dict:
@@ -124,21 +140,30 @@ def aggregate(results: list[ClipResult], trackers: tuple[str, ...] = TRACKERS) -
     groups = {"ALL": results, **{t: [r for r in results if t in r.cd.tags] for t in tags}}
     out: dict = {"n_clips": len(results), "clips": [r.cd.clip.id for r in results],
                  "scope": {m: [r.cd.clip.id for r in results if r.cd.clip.scored_on(m)] for m in METRICS},
-                 "detection": {}, "tracking": {k: {} for k in trackers}, "events": {k: {} for k in trackers},
-                 "safety": {}}
+                 # "detection"/"tracking" = all boxes; "*_in_scope" = PLAN.md amendment A1 view
+                 "detection": {}, "detection_in_scope": {}, "detection_in_scope_by_dataset": {},
+                 "tracking": {k: {} for k in trackers}, "tracking_in_scope": {k: {} for k in trackers},
+                 "events": {k: {} for k in trackers}, "safety": {}}
+
+    def pooled(rs: list[ClipResult], attr: str) -> dict:
+        tp, fp, fn = (sum(getattr(r, attr)[k] for r in rs) for k in ("tp", "fp", "fn"))
+        return {**det_eval.counts_to_metrics(tp, fp, fn), "n_clips": len(rs)}
+
+    det_all = [r for r in results if r.cd.clip.scored_on("detection")]
+    for ds in sorted({r.cd.clip.dataset for r in det_all}):
+        out["detection_in_scope_by_dataset"][ds] = pooled([r for r in det_all if r.cd.clip.dataset == ds], "det_counts_in")
     for gname, group in groups.items():
         rs = [r for r in group if r.cd.clip.scored_on("detection")]
         if rs:
-            tp = sum(r.det_counts["tp"] for r in rs)
-            fp = sum(r.det_counts["fp"] for r in rs)
-            fn = sum(r.det_counts["fn"] for r in rs)
-            out["detection"][gname] = {**det_eval.counts_to_metrics(tp, fp, fn), "n_clips": len(rs)}
+            out["detection"][gname] = pooled(rs, "det_counts")
+            out["detection_in_scope"][gname] = pooled(rs, "det_counts_in")
         rs_trk = [r for r in group if r.cd.clip.scored_on("tracking")]
         rs_ev = [r for r in group if r.cd.clip.scored_on("events")]
         for k in trackers:
             if rs_trk:
-                summ = trk_eval.summarize({r.cd.clip.id: r.accs[k] for r in rs_trk}, with_overall=True)
-                out["tracking"][k][gname] = {**summ.get("OVERALL", {}), "n_clips": len(rs_trk)}
+                for fam, attr in (("tracking", "accs"), ("tracking_in_scope", "accs_in")):
+                    summ = trk_eval.summarize({r.cd.clip.id: getattr(r, attr)[k] for r in rs_trk}, with_overall=True)
+                    out[fam][k][gname] = {**summ.get("OVERALL", {}), "n_clips": len(rs_trk)}
             if not rs_ev:
                 continue
             if k == trackers[-1]:
@@ -165,7 +190,7 @@ def per_clip_details(r: ClipResult, cfg: Config, dets: dict[int, list[Detection]
     errs = det_eval.detection_errors(r.cd.gt, r.cd.ignore, dets, cfg.detector.score_threshold, frames, eval_cfg["detection"]["iou"])
     return {
         "clip": r.cd.clip.id, "tags": r.cd.tags, "negative": r.cd.clip.negative, "tracker": tracker,
-        "detection": r.det_counts,
+        "detection": r.det_counts, "detection_in_scope": r.det_counts_in, "dataset": r.cd.clip.dataset,
         "id_switches": switches,
         "events_predicted": [e.to_dict() for e in run.events],
         "events_gt": [g.__dict__ for g in r.cd.gt_events],
@@ -222,6 +247,8 @@ def bar_check(agg: dict, coverage: dict, eval_cfg: dict, tracker: str = "bytetra
     b = eval_cfg["bar"]
     # a family with no clips in scope has no ALL row: its checks fail rather than crash or pass
     det, trk = agg["detection"].get("ALL", {}), agg["tracking"][tracker].get("ALL", {})
+    if b.get("detection_bar_dataset"):  # A1: judged on that dataset's clips, in scope (no such clips -> fail)
+        det = agg.get("detection_in_scope_by_dataset", {}).get(b["detection_bar_dataset"], {})
     evn, base = agg["events"][tracker].get("ALL", {}), agg["tracking"][baseline].get("ALL", {})
     idf1, base_idf1 = trk.get("idf1"), base.get("idf1")
     idsw, base_idsw = trk.get("num_switches"), base.get("num_switches")
@@ -252,6 +279,8 @@ def bar_check(agg: dict, coverage: dict, eval_cfg: dict, tracker: str = "bytetra
     else:
         checks["throughput>=10fps"] = None  # not measured yet: run `benchmark` on the demo machine
     return {"checks": checks, "all_pass": all(v is True for v in checks.values()),
+            "detection_judged_on": (f"{b['detection_bar_dataset']} clips, in scope" if b.get("detection_bar_dataset")
+                                    else "all detection clips, all boxes"),
             "not_yet_measured": [k for k, v in checks.items() if v is None],
             "note": "Mechanical check of the numeric bar only. Degraded-state behaviour, tests, "
                     "reproducibility and visual error analysis are reviewed separately."}

@@ -21,6 +21,7 @@ CONDITIONS = ("clear", "occlusion_crowding", "camera_motion_blur", "low_light_co
 # what a clip is scored on. A moving-camera clip drops "events": its image-space corridor polygon
 # does not stay on the floor, so corridor events (and their derived labels) mean nothing there.
 METRICS = ("detection", "tracking", "events")
+DATASETS = ("own", "mot17", "synthetic")
 REQUIRED_FIELDS = ("id", "source", "scene", "camera", "session", "conditions", "corridor", "gt", "license")
 
 
@@ -47,6 +48,15 @@ class Clip:
 
     def scored_on(self, metric: str) -> bool:
         return metric in self.metrics
+
+    @property
+    def dataset(self) -> str:
+        """"own" or "mot17". The detection bar is judged on "own" clips (PLAN.md amendment A1).
+        An explicit "dataset" field wins; otherwise a MOT scene id means mot17."""
+        explicit = self.raw.get("dataset")
+        if explicit:
+            return str(explicit)
+        return "mot17" if self.base_scene.startswith("MOT-") else "own"
 
     @property
     def base_scene(self) -> str:
@@ -86,6 +96,8 @@ def load_manifest(path: str | Path) -> Manifest:
         if (not isinstance(metrics, list) or not metrics or len(set(metrics)) != len(metrics)
                 or any(m not in METRICS for m in metrics)):
             raise ManifestError(f"{p}: clip {c['id']!r} metrics must be a non-empty subset of {list(METRICS)}, got {metrics!r}")
+        if c.get("dataset") is not None and c["dataset"] not in DATASETS:
+            raise ManifestError(f"{p}: clip {c['id']!r} dataset must be one of {list(DATASETS)}, got {c['dataset']!r}")
         if c.get("negative") and "events" not in metrics:
             raise ManifestError(f"{p}: clip {c['id']!r} is negative but not scored on events; a negative clip only means something for events")
         clips.append(Clip(
