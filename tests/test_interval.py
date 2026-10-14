@@ -22,6 +22,8 @@ def test_interval_sweep_reports_events_on_event_clips_only(clip, cfg, cached, tm
                          None, [1, 3], progress=lambda *_: None)
     assert out["event_clips"] == ["static"] and out["excluded_not_scored_on_events"] == ["moving"]
     by_k = {r["detect_every"]: r for r in out["rows"]}
+    assert by_k[1]["events_opened_on_prediction"] == 0  # k=1: no frame is ever predicted
+    assert by_k[3]["events_resting_on_prediction"] <= by_k[3]["events_total"]
     assert by_k[1]["events_tp"] + by_k[1]["events_fn"] == by_k[3]["events_tp"] + by_k[3]["events_fn"]  # same GT
     assert by_k[1]["per_clip"][0]["detector_runs_per_second"] == 3 * by_k[3]["per_clip"][0]["detector_runs_per_second"]
     for r in out["rows"]:  # latency is reported in ORIGINAL frames whatever the interval

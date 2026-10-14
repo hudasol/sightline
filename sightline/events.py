@@ -16,6 +16,11 @@ Semantics (see docs/PLAN.md section 1):
 
 Frames where a track is lost (not observed) do not advance any counter: absence
 of evidence is not evidence of leaving.
+
+Evidence (PLAN.md A2): on frames the detector skipped, a track's box is predicted.
+Every event counts its inside frames by source (detected / predicted), records
+whether it opened or closed on a predicted box, and `rests_on_prediction` is true
+while no detector frame has seen the person inside.
 """
 
 from __future__ import annotations
@@ -51,6 +56,15 @@ class Event:
     close_reason: str | None = None
     exit_edge: int | None = None
     reopen_count: int = 0
+    inside_detected: int = 0  # inside frames whose box came from a detection
+    inside_predicted: int = 0  # inside frames whose box was predicted (detector skipped the frame)
+    opened_on_prediction: bool = False
+    closed_on_prediction: bool = False
+
+    @property
+    def rests_on_prediction(self) -> bool:
+        """No detector frame has seen this person inside the corridor."""
+        return self.inside_detected == 0
 
     @property
     def type(self) -> str | None:
@@ -77,6 +91,10 @@ class Event:
             "entry_edge": self.entry_edge,
             "exit_edge": self.exit_edge,
             "reopen_count": self.reopen_count,
+            "evidence": {"inside_detected": self.inside_detected, "inside_predicted": self.inside_predicted,
+                         "opened_on_prediction": self.opened_on_prediction,
+                         "closed_on_prediction": self.closed_on_prediction,
+                         "rests_on_prediction": self.rests_on_prediction},
         }
 
 
@@ -104,6 +122,8 @@ class _TrackPhase:
     last_inside_point: tuple[float, float] = (0.0, 0.0)
     event: Event | None = None
     closed_at_frame: int = -10**9
+    run_detected: int = 0  # inside frames of the current candidate run, by evidence source
+    run_predicted: int = 0
 
 
 class EventEngine:
@@ -138,7 +158,7 @@ class EventEngine:
                 self._seed(ph, t)
             if t.observed:
                 inside = self.polygon.contains(box_ref_point(t.box))
-                out.extend(self._observe(t.id, ph, inside, box_ref_point(t.box), frame_index, ts))
+                out.extend(self._observe(t.id, ph, inside, box_ref_point(t.box), frame_index, ts, t.box_predicted))
             # unobserved (lost): no counter moves
         for t in expired:
             out.extend(self._expire(t, frame_index, ts))
@@ -172,12 +192,14 @@ class EventEngine:
             x, y, f = run[-1]  # earliest of the run
             ph.phase = "candidate"
             ph.inside_count = len(run)
+            ph.run_detected, ph.run_predicted = len(run), 0  # trajectory points are detections
             ph.first_inside_frame = f
             ph.first_inside_ts = t.last_seen_ts  # best available; refined by caller if known
             ph.first_inside_point = (x, y)
             ph.last_inside_point = (run[0][0], run[0][1])
 
-    def _observe(self, tid: int, ph: _TrackPhase, inside: bool, point, frame: int, ts: float) -> list[EventRecord]:
+    def _observe(self, tid: int, ph: _TrackPhase, inside: bool, point, frame: int, ts: float,
+                 predicted: bool = False) -> list[EventRecord]:
         cfg = self.cfg
         out: list[EventRecord] = []
 
@@ -187,28 +209,33 @@ class EventEngine:
         if ph.phase in ("outside",):
             if inside:
                 ph.phase, ph.inside_count = "candidate", 1
+                ph.run_detected, ph.run_predicted = (0, 1) if predicted else (1, 0)
                 ph.first_inside_frame, ph.first_inside_ts = frame, ts
                 ph.first_inside_point = ph.last_inside_point = point
-                out.extend(self._maybe_open(tid, ph, frame, ts))
+                out.extend(self._maybe_open(tid, ph, frame, ts, predicted))
             return out
 
         if ph.phase == "candidate":
             if inside:
                 ph.inside_count += 1
+                ph.run_predicted += predicted
+                ph.run_detected += not predicted
                 ph.last_inside_point = point
-                out.extend(self._maybe_open(tid, ph, frame, ts))
+                out.extend(self._maybe_open(tid, ph, frame, ts, predicted))
             else:
                 ph.phase, ph.inside_count = "outside", 0  # debounce rejected a flicker
+                ph.run_detected = ph.run_predicted = 0
             return out
 
         if ph.phase == "active":
             assert ph.event is not None
             if inside:
                 ph.event.last_inside_frame = frame
+                _count_inside(ph.event, predicted)
                 ph.last_inside_point = point
             else:
                 ph.phase, ph.outside_count = "closing", 1
-                out.extend(self._maybe_close(tid, ph, frame, ts))
+                out.extend(self._maybe_close(tid, ph, frame, ts, predicted))
             return out
 
         if ph.phase == "closing":
@@ -216,10 +243,11 @@ class EventEngine:
             if inside:
                 ph.phase, ph.outside_count = "active", 0
                 ph.event.last_inside_frame = frame
+                _count_inside(ph.event, predicted)
                 ph.last_inside_point = point
             else:
                 ph.outside_count += 1
-                out.extend(self._maybe_close(tid, ph, frame, ts))
+                out.extend(self._maybe_close(tid, ph, frame, ts, predicted))
             return out
 
         if ph.phase == "cooldown":
@@ -229,13 +257,15 @@ class EventEngine:
                 ev.status, ev.close_frame, ev.close_ts, ev.close_reason, ev.exit_edge = EventStatus.ACTIVE, None, None, None, None
                 ev.reopen_count += 1
                 ev.last_inside_frame = frame
+                ev.closed_on_prediction = False
+                _count_inside(ev, predicted)
                 ph.phase, ph.outside_count = "active", 0
                 ph.last_inside_point = point
                 out.append(EventRecord("reopen", frame, ts, ev.to_dict()))
             return out
         return out
 
-    def _maybe_open(self, tid: int, ph: _TrackPhase, frame: int, ts: float) -> list[EventRecord]:
+    def _maybe_open(self, tid: int, ph: _TrackPhase, frame: int, ts: float, predicted: bool = False) -> list[EventRecord]:
         if ph.inside_count < self.cfg.n_open:
             return []
         ev = Event(
@@ -244,18 +274,20 @@ class EventEngine:
             open_frame=frame, open_ts=ts,
             entry_edge=self.polygon.nearest_edge(ph.first_inside_point),
             last_inside_frame=frame,
+            inside_detected=ph.run_detected, inside_predicted=ph.run_predicted, opened_on_prediction=predicted,
         )
         self._next_event_id += 1
         self.events[ev.event_id] = ev
         ph.event, ph.phase = ev, "active"
         return [EventRecord("open", frame, ts, ev.to_dict())]
 
-    def _maybe_close(self, tid: int, ph: _TrackPhase, frame: int, ts: float) -> list[EventRecord]:
+    def _maybe_close(self, tid: int, ph: _TrackPhase, frame: int, ts: float, predicted: bool = False) -> list[EventRecord]:
         if ph.outside_count < self.cfg.m_close:
             return []
         assert ph.event is not None
         ev = ph.event
         ev.status, ev.close_frame, ev.close_ts, ev.close_reason = EventStatus.CLOSED, frame, ts, "left_corridor"
+        ev.closed_on_prediction = predicted
         ev.exit_edge = self.polygon.nearest_edge(ph.last_inside_point)
         ph.phase, ph.closed_at_frame = "cooldown", frame
         return [EventRecord("close", frame, ts, ev.to_dict())]
@@ -283,3 +315,10 @@ class EventEngine:
         x1, y1, x2, y2 = box
         cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
         return cx <= mx or cx >= self.frame_w - mx or cy <= my or cy >= self.frame_h - my or x1 <= 0 or x2 >= self.frame_w
+
+
+def _count_inside(ev: Event, predicted: bool) -> None:
+    if predicted:
+        ev.inside_predicted += 1
+    else:
+        ev.inside_detected += 1

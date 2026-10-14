@@ -43,6 +43,38 @@ def feed(eng, points, start=1, tid=1):
 IN, OUT = (50, 50), (250, 250)
 
 
+def feed_evidence(eng, steps, tid=1):
+    """steps: list of ((x, y), predicted). The track's trajectory holds its last DETECTED point."""
+    recs, last_det = [], OUT
+    for i, (p, predicted) in enumerate(steps, start=1):
+        t = track(tid, *p, frame=i)
+        t.box_predicted = predicted
+        if not predicted:
+            last_det = p
+        t.trajectory.clear()
+        t.trajectory.append((last_det[0], last_det[1], i))
+        recs += eng.update(i, i / 15, [t], [])
+    return recs
+
+
+def test_event_records_detected_and_predicted_evidence():
+    eng = mk(n_open=3, m_close=2)
+    feed_evidence(eng, [(OUT, False), (IN, False), (IN, True), (IN, True), (IN, False), (OUT, True), (OUT, True)])
+    ev = eng.all_events()[0]
+    assert (ev.open_frame, ev.opened_on_prediction) == (4, True)  # 1 detected + 2 predicted inside frames
+    assert (ev.inside_detected, ev.inside_predicted) == (2, 2)
+    assert not ev.rests_on_prediction  # a detector frame did see the person inside
+    assert ev.status == EventStatus.CLOSED and ev.closed_on_prediction
+    assert ev.to_dict()["evidence"]["inside_predicted"] == 2
+
+
+def test_event_opened_only_by_prediction_is_marked_as_resting_on_it():
+    eng = mk(n_open=3)
+    feed_evidence(eng, [(OUT, False), (IN, True), (IN, True), (IN, True)])
+    ev = eng.all_events()[0]
+    assert ev.rests_on_prediction and ev.opened_on_prediction and ev.inside_detected == 0
+
+
 def test_sustained_occupancy_is_one_event_not_one_per_frame():
     eng = mk()
     recs = feed(eng, [IN] * 60)

@@ -42,17 +42,27 @@ def interval_sweep(man: Manifest, cfg: Config, eval_cfg: dict, root: Path, cache
         per_clip = [{"clip": r.cd.clip.id, "source_fps": r.cd.info.fps, "detector_runs_per_second": r.cd.info.fps / k,
                      "gt_events": len(r.cd.gt_events), "tp": r.matches[tracker].tp, "fp": r.matches[tracker].fp,
                      "fn": r.matches[tracker].fn, "latencies_frames": r.matches[tracker].latencies} for r in res]
+        events = [e for r in res for e in r.runs[tracker].events]
+        matched = {(r.cd.clip.id, pid) for r in res for _g, pid in r.matches[tracker].pairs}
+        tp_events = [e for r in res for e in r.runs[tracker].events if (r.cd.clip.id, e.event_id) in matched]
         row = {"detect_every": k,
                "event_recall": m["event_recall"], "event_precision": m["event_precision"],
                "events_tp": m["events_tp"], "events_fp": m["events_fp"], "events_fn": m["events_fn"],
                "events_unresolved": m["events_unresolved"],
+               # PLAN.md A2: how much of the event output rests on predicted boxes
+               "events_total": len(events),
+               "events_opened_on_prediction": sum(e.opened_on_prediction for e in events),
+               "events_resting_on_prediction": sum(e.rests_on_prediction for e in events),
+               "tp_events_resting_on_prediction": sum(e.rests_on_prediction for e in tp_events),
                "latency_frames": _summary(m["latency_frames_all"]), "latency_ms": _summary(lat_ms),
                "per_clip": per_clip}
         rows.append(row)
         lf, lm = row["latency_frames"], row["latency_ms"]
         progress(f"detect_every={k}: event R={_fmt(m['event_recall'], 3)} P={_fmt(m['event_precision'], 3)} "
                  f"latency median={_fmt(lf['median'], 1)} fr / {_fmt(lm['median'], 0)} ms  "
-                 f"p95={_fmt(lf['p95'], 1)} fr / {_fmt(lm['p95'], 0)} ms")
+                 f"p95={_fmt(lf['p95'], 1)} fr / {_fmt(lm['p95'], 0)} ms  "
+                 f"opened on prediction {row['events_opened_on_prediction']}/{row['events_total']}, "
+                 f"resting on prediction {row['events_resting_on_prediction']}")
     return {
         "what": "event recall/precision and latency vs pipeline.detect_every (PLAN.md A2), on cached detections; "
                 "nothing tuned",
