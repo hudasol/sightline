@@ -350,3 +350,40 @@ per clip at its own fps:
 - The defaults equal the old frame values at 30 fps and k = 1: 0.1 s (3 frames),
   0.167 s (5), 0.5 s (15) and 1.0 s (30). So nothing is retuned by this change.
   The `tune` grids are the old frame grids expressed in seconds.
+
+### A4 (2026-10-14): how the final detector and detection interval are chosen
+
+**What was known.** MOT17 val results for seven detector configurations and for
+detection intervals 1-6 (`docs/EVALUATION.md`, "Val results so far"). **No own
+corridor clip has been recorded**, so no own-clip number exists. Nothing is tuned,
+locked or frozen. `configs/default.yaml` keeps its current detector until this
+rule is applied.
+
+**Rule.** It replaces the selection rule in section 5 for the final choice.
+1. **Candidates are fixed now.** Detectors: MobileNetV3-320 FPN at 640x360 and
+   960x540, SSDLite320, YOLOX-nano, YOLOX-tiny and YOLOX-s, each at its stated
+   input size. Detection intervals k in {1, 2, 3, 4, 6}. ResNet50-FPN-v2 is an
+   accuracy reference only. No candidate is added after own-clip results are
+   seen.
+2. **Accuracy.** For each detector, take its in-scope detection F1 (IoU 0.5,
+   amendment A1) on the **own val clips**: the best F1 over the fixed threshold
+   grid (`evaluation.detection.THRESHOLDS`). That threshold becomes its operating
+   point. Detection is scored on the frames the detector runs on, so F1 does not
+   depend on k.
+3. **Speed.** For each (detector, k) pair, take the end-to-end pipeline
+   throughput on the own val clips. Every frame is processed, and the throughput
+   is the **median of 3 separate `benchmark` runs** on the demo machine. The
+   **range (min-max)** of the 3 runs is reported next to it. A pair qualifies only
+   if its median is >= 10 fps.
+4. **Choice.** Pick the qualifying pair with the **highest in-scope F1**. If
+   several qualify for the same detector, pick the **smallest k**: it rests least
+   on prediction. If two detectors tie on F1 at three decimals, pick the faster
+   median.
+5. **If no pair qualifies**, no detector is selected. That is reported as a
+   failure of the throughput bar. The bar is not lowered and no candidate is
+   added.
+6. **Latency.** Every throughput figure in a report is shown with the **p95 frame
+   latency** and the **worst-case frame latency** next to it. A throughput average
+   alone hides the slow frames on which the detector runs.
+7. MOT17 numbers do not enter the choice. They stay in the report as a harder
+   public benchmark (A1).
