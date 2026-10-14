@@ -15,6 +15,7 @@ from pathlib import Path
 
 import yaml
 
+from sightline.annotations import load_annotated_frames
 from sightline.config import Config, CorridorConfig, load_corridor
 from sightline.detector import Detector, read_detection_cache, write_detection_cache
 from sightline.evaluation import detection as det_eval
@@ -48,6 +49,11 @@ class ClipData:
     # in-scope view (PLAN.md amendment A1): out-of-scope people moved to the ignore regions
     gt_in: GTFrames | None = None
     ignore_in: IgnoreFrames | None = None
+    annotated: set[int] | None = None  # frames that were annotated; None = every frame
+
+    def scored(self, frames) -> list[int]:
+        """Only annotated frames are scored: an unannotated frame is unknown, not empty."""
+        return [f for f in frames if self.annotated is None or f in self.annotated]
 
 
 def prepare_clip(clip: Clip, root: Path, eval_cfg: dict) -> ClipData:
@@ -65,7 +71,8 @@ def prepare_clip(clip: Clip, root: Path, eval_cfg: dict) -> ClipData:
         gt_events = derive_gt_events(gt, corridor.polygon, rule["min_frames"], rule["merge_gap"])
     n = info.frame_count_reported or (max(gt) if gt else 0)
     tags = list(clip.conditions) + (["negative_corridor"] if clip.negative else [])
-    return ClipData(clip, info, corridor, gt, ignore, gt_events, n, tags, gt_in, ignore_in)
+    annotated = load_annotated_frames(root / clip.raw["annotated_frames"]) if clip.raw.get("annotated_frames") else None
+    return ClipData(clip, info, corridor, gt, ignore, gt_events, n, tags, gt_in, ignore_in, annotated)
 
 
 def detector_tag(cfg: Config) -> str:
@@ -108,8 +115,8 @@ class ClipResult:
 def evaluate_clip(cd: ClipData, cfg: Config, dets: dict[int, list[Detection]], eval_cfg: dict, root: Path,
                   trackers: tuple[str, ...] = TRACKERS, out_root: Path | None = None) -> ClipResult:
     # PLAN.md A2: the detector is scored where it ran; tracking is scored on every frame
-    frames = list(range(1, cd.n_frames + 1))
-    det_frames = detector_frames(cd.n_frames, cfg.pipeline.detect_every)
+    frames = cd.scored(range(1, cd.n_frames + 1))
+    det_frames = cd.scored(detector_frames(cd.n_frames, cfg.pipeline.detect_every))
     iou = eval_cfg["detection"]["iou"]
     det_m = det_eval.evaluate_detections(cd.gt, cd.ignore, dets, cfg.detector.score_threshold, det_frames, iou)
     gt_in, ig_in = in_scope_view(cd)
@@ -188,7 +195,7 @@ def per_clip_details(r: ClipResult, cfg: Config, dets: dict[int, list[Detection]
     if len(ev):
         sw = ev[ev["Type"] == "SWITCH"]
         switches = [{"frame": int(i[0]), "gt_id": int(row["OId"]), "track_id": int(row["HId"])} for i, row in sw.iterrows()]
-    frames = detector_frames(r.cd.n_frames, cfg.pipeline.detect_every)
+    frames = r.cd.scored(detector_frames(r.cd.n_frames, cfg.pipeline.detect_every))
     errs = det_eval.detection_errors(r.cd.gt, r.cd.ignore, dets, cfg.detector.score_threshold, frames, eval_cfg["detection"]["iou"])
     return {
         "clip": r.cd.clip.id, "tags": r.cd.tags, "negative": r.cd.clip.negative, "tracker": tracker,
@@ -218,6 +225,8 @@ def safety_metrics(results: list[ClipResult], tracker: str) -> dict:
         run = r.runs[tracker]
         poly = r.cd.corridor.polygon
         for f, status in run.corridor_by_frame.items():
+            if r.cd.annotated is not None and f not in r.cd.annotated:
+                continue  # no ground truth on this frame: nothing to say about it
             total += 1
             if any(poly.contains(box_ref_point(b)) for _i, b in r.cd.gt.get(f, [])):
                 occupied += 1

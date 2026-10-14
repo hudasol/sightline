@@ -98,6 +98,9 @@ def load_manifest(path: str | Path) -> Manifest:
             raise ManifestError(f"{p}: clip {c['id']!r} metrics must be a non-empty subset of {list(METRICS)}, got {metrics!r}")
         if c.get("dataset") is not None and c["dataset"] not in DATASETS:
             raise ManifestError(f"{p}: clip {c['id']!r} dataset must be one of {list(DATASETS)}, got {c['dataset']!r}")
+        if c.get("annotated_frames") and "events" in metrics and not c.get("gt_events"):
+            raise ManifestError(f"{p}: clip {c['id']!r} is sparsely annotated but scored on events without hand-labelled "
+                                "gt_events; events cannot be derived from gaps in the boxes")
         if c.get("negative") and "events" not in metrics:
             raise ManifestError(f"{p}: clip {c['id']!r} is negative but not scored on events; a negative clip only means something for events")
         clips.append(Clip(
@@ -190,6 +193,8 @@ def lock_manifest(manifest_path: str | Path, out_path: str | Path, root: str | P
         entry["corridor_sha256"] = sha256_file(root / c.corridor)
         if c.gt_events:
             entry["gt_events_sha256"] = sha256_file(root / c.gt_events)
+        if c.raw.get("annotated_frames"):
+            entry["annotated_frames_sha256"] = sha256_file(root / c.raw["annotated_frames"])
         entries.append(entry)
     coverage = coverage_check(man)
     complete = coverage["meets_min_clips"] and coverage["meets_three_difficult"] and coverage["has_negative_set"]
@@ -251,6 +256,8 @@ def verify_lock(lock_path: str | Path, root: str | Path = ".") -> list[str]:
                 problems.append(f"{c['id']}: labels changed since locking")
             if "corridor_sha256" in c and sha256_file(root / c["corridor"]) != c["corridor_sha256"]:
                 problems.append(f"{c['id']}: corridor polygon changed since locking")
+            if c.get("annotated_frames") and sha256_file(root / c["annotated_frames"]) != c.get("annotated_frames_sha256"):
+                problems.append(f"{c['id']}: annotated-frames list changed since locking")
             if c.get("gt_events") and sha256_file(root / c["gt_events"]) != c.get("gt_events_sha256"):
                 problems.append(f"{c['id']}: event labels changed since locking")
         except (ManifestError, FileNotFoundError) as exc:

@@ -195,7 +195,7 @@ def cmd_detect_eval(a) -> int:
     for c in clips:
         cd = prepare_clip(c, root, eval_cfg)
         dets = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
-        frames = list(range(1, cd.n_frames + 1))  # the detector itself, on every frame
+        frames = cd.scored(range(1, cd.n_frames + 1))  # the detector itself, on every annotated frame
         n_frames += len(frames)
         views["all"][c.id] = sweep_thresholds(cd.gt, cd.ignore, dets, ths, frames)
         views["in_scope"][c.id] = sweep_thresholds(*in_scope_view(cd), dets, ths, frames)
