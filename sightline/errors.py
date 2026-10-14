@@ -123,7 +123,7 @@ def analyze(results_dir: Path, root: Path, lock_path: Path, cache_dir: Path, det
         rows.append({**{k: v for k, v in it.items() if k not in ("event",)}, "image": png.name if rendered else None})
     (out_dir / "index.json").write_text(json.dumps(rows, indent=1, default=str))
     md = ["# Error analysis index (auto-selected, worst first)", "",
-          "Legend: green = ground truth, grey = detections, orange = tracks with ids, red = the failure.",
+          "Legend: green = ground truth, grey = detections, light blue = tracks with ids, red = the failure.",
           "The **Why it happened** column is for a human who has looked at the frame.", "",
           "| # | Type | Clip | Frame | Measured | Why it happened |", "|---|---|---|---|---|---|"]
     for n, r in enumerate(rows, start=1):
@@ -175,7 +175,7 @@ def select_unresolved(per_clip_dir: Path, n: int = 10) -> list[dict]:
 def render_strip(item: dict, root: Path, manifest_path: Path, cache_dir: Path, detector_tag: str, threshold: float,
                  tracks_root: Path, out_png: Path, n_frames: int = 6, tile_w: int = 480) -> bool:
     """n_frames evenly spaced from 10 frames before the person was last inside to the frame the event went
-    UNRESOLVED. Green = GT, grey = detections >= threshold, orange = reported tracks, red = the event's track."""
+    UNRESOLVED. Green = GT, grey = detections >= threshold, light blue = reported tracks, red = the event's track."""
     import numpy as np
 
     from sightline.config import load_corridor
@@ -241,7 +241,7 @@ def analyze_unresolved(results_dir: Path, root: Path, manifest_path: Path, cache
     (out_dir / "index.json").write_text(json.dumps({"rule": UNRESOLVED_RULE, "run": run_note, "items": rows}, indent=1))
     md = ["# Unresolved events (auto-selected, worst first)", "", f"Selection: {UNRESOLVED_RULE}", "", f"Run: {run_note}", "",
           "Legend: green polygon = corridor, green boxes = ground truth, grey = detections >= threshold, "
-          "orange = reported tracks, red = the event's track. These frames are not to be published (they show faces).",
+          "light blue = reported tracks, red = the event's track. These frames are not to be published (they show faces).",
           "The **Why it happened** column is for a human who has looked at the strip. No setting was changed from it.", "",
           "| # | Clip | Event | Open frames before loss | Opened / last inside / unresolved | Why it happened |",
           "|---|---|---|---|---|---|"]
