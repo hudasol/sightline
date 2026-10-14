@@ -24,6 +24,7 @@ from sightline.evaluation.events import (EventMatch, GTEvent, derive_gt_events, 
 from sightline.evaluation.gt import GTFrames, IgnoreFrames, InScope, load_mot_gt
 from sightline.ingest import SourceInfo, iter_frames, probe
 from sightline.manifest import METRICS, Clip
+from sightline.pipeline import detector_frames
 from sightline.runner import ClipRun, run_clip
 from sightline.types import Detection
 
@@ -106,13 +107,14 @@ class ClipResult:
 
 def evaluate_clip(cd: ClipData, cfg: Config, dets: dict[int, list[Detection]], eval_cfg: dict, root: Path,
                   trackers: tuple[str, ...] = TRACKERS, out_root: Path | None = None) -> ClipResult:
-    stride = cfg.pipeline.frame_stride
-    frames = list(range(1, cd.n_frames + 1, stride))
+    # PLAN.md A2: the detector is scored where it ran; tracking is scored on every frame
+    frames = list(range(1, cd.n_frames + 1))
+    det_frames = detector_frames(cd.n_frames, cfg.pipeline.detect_every)
     iou = eval_cfg["detection"]["iou"]
-    det_m = det_eval.evaluate_detections(cd.gt, cd.ignore, dets, cfg.detector.score_threshold, frames, iou)
+    det_m = det_eval.evaluate_detections(cd.gt, cd.ignore, dets, cfg.detector.score_threshold, det_frames, iou)
     gt_in, ig_in = in_scope_view(cd)
     res = ClipResult(cd, det_m)
-    res.det_counts_in = det_eval.evaluate_detections(gt_in, ig_in, dets, cfg.detector.score_threshold, frames, iou)
+    res.det_counts_in = det_eval.evaluate_detections(gt_in, ig_in, dets, cfg.detector.score_threshold, det_frames, iou)
     for kind in trackers:
         c = copy.deepcopy(cfg)
         c.tracker = copy.deepcopy(cfg.baseline_tracker if kind == "iou" else cfg.tracker)
@@ -186,7 +188,7 @@ def per_clip_details(r: ClipResult, cfg: Config, dets: dict[int, list[Detection]
     if len(ev):
         sw = ev[ev["Type"] == "SWITCH"]
         switches = [{"frame": int(i[0]), "gt_id": int(row["OId"]), "track_id": int(row["HId"])} for i, row in sw.iterrows()]
-    frames = list(range(1, r.cd.n_frames + 1, cfg.pipeline.frame_stride))
+    frames = detector_frames(r.cd.n_frames, cfg.pipeline.detect_every)
     errs = det_eval.detection_errors(r.cd.gt, r.cd.ignore, dets, cfg.detector.score_threshold, frames, eval_cfg["detection"]["iou"])
     return {
         "clip": r.cd.clip.id, "tags": r.cd.tags, "negative": r.cd.clip.negative, "tracker": tracker,

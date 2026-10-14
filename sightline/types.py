@@ -73,11 +73,13 @@ class TrackView:
     time_since_update: int
     last_seen_ts: float
     trajectory: list[tuple[float, float, int]] = field(default_factory=list)
+    predicted: bool = False  # box from prediction on a frame the detector skipped (PLAN.md A2)
 
     def to_dict(self) -> dict:
         return {
             "id": self.id,
             "box": [round(v, 2) for v in self.box],
+            "predicted": self.predicted,
             "score": round(self.score, 4),
             "state": self.state.value,
             "age": self.age,

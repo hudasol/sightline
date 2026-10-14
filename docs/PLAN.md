@@ -304,3 +304,27 @@ so no held-out or own-clip number had been seen by anyone.
      had made *all* conf-0 rows ignore regions, so detections on vehicles and
      occluders were excused. Every detection number saved before that fix is
      re-scored from the cached detections.
+
+### A2 (2026-10-14): a detection interval replaces frame skipping
+
+**What was known.** Frame skipping was measured on val at strides 1-3 (saved in
+`results/stride/`). It processes only every s-th frame, so output and health also
+exist only every s-th frame. And the detector, at about 5 fps, still could not keep
+up with a 30 fps source at stride 3.
+
+**Decision.** `pipeline.frame_stride` is removed. It is replaced by
+`pipeline.detect_every` (k):
+- **Every frame is processed.** The detector runs on every k-th frame. In between,
+  the tracker predicts each track one step (the Kalman filter for the chosen
+  tracker; the IoU baseline holds its last box). Events, the corridor status and
+  health are updated on every frame.
+- **A non-detector frame is not a missed detection.** Track misses and
+  confirmations count detector frames only.
+- **Events mark predicted evidence.** Each event records how many of its inside
+  frames came from detected and from predicted boxes, whether it opened or closed
+  on a predicted box, and `rests_on_prediction` (no detector frame has seen the
+  person inside yet).
+- **Detection metrics** score the detector on the frames it ran. **Tracking
+  metrics** score the boxes reported on every frame, predicted ones included.
+- k is a sampling policy. It is recorded in every run and judged by event recall,
+  latency and the share of events resting on prediction, never by fps alone.

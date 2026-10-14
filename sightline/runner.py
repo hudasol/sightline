@@ -89,13 +89,13 @@ def run_clip(
         except IngestError as exc:
             return _unavailable(run, out, f"source_unreadable: {exc}")
     run.info = info
-    stride = cfg.pipeline.frame_stride
-    run.policy = {"frame_stride": stride, "realtime_emulation": realtime, "tracker": cfg.tracker.kind,
+    run.policy = {"detect_every": cfg.pipeline.detect_every, "realtime_emulation": realtime, "tracker": cfg.tracker.kind,
                   "detections": "cache" if cached is not None else "live",
-                  "note": "stride > 1 means frames were skipped by policy; judge it by event recall/latency"}
+                  "note": "every frame is processed; detect_every > 1 means the tracker predicted between detector "
+                          "frames (PLAN.md A2); judge it by event recall, latency and events resting on prediction"}
 
     if frames is None:
-        frames = iter_frames(source, fps_override, stride=stride, info=info)
+        frames = iter_frames(source, fps_override, info=info)
         if max_frames:
             frames = islice(frames, max_frames)
             run.policy["max_frames"] = max_frames  # a truncated run: say so in every output
@@ -103,14 +103,14 @@ def run_clip(
             frames = prefetch(frames, cfg.pipeline.decode_queue)
     run.policy["decode_thread"] = cfg.pipeline.decode_thread
 
-    pipe = Pipeline(cfg, corridor, detector, (info.width, info.height), nominal_fps=info.fps / stride, clock=clock)
+    pipe = Pipeline(cfg, corridor, detector, (info.width, info.height), nominal_fps=info.fps, clock=clock)
     rec = RuntimeRecorder(warmup=cfg.health.warmup_frames, budget_s=1.0 / cfg.health.min_fps)
     health_log = (out / "health.jsonl").open("w") if out else None
     events_log = (out / "events.jsonl").open("w") if out else None
     tracks_log = (out / "tracks.jsonl").open("w") if out else None
     writer = None
     if out and overlay:
-        writer = OverlayWriter(out / "overlay.mp4", info.fps / stride, (info.width, info.height), corridor.polygon)
+        writer = OverlayWriter(out / "overlay.mp4", info.fps, (info.width, info.height), corridor.polygon)
 
     health_counts: Counter[str] = Counter()
     corridor_counts: Counter[str] = Counter()
@@ -149,7 +149,7 @@ def run_clip(
 
             run.corridor_by_frame[frame.index] = res.corridor.value
             if res.processed:
-                rec.record(res.latency_s, res.infer_s)
+                rec.record(res.latency_s, res.infer_s if res.detector_ran else None)
             else:
                 rec.invalid += 1
             health_counts[res.health.state.value] += 1
@@ -178,7 +178,6 @@ def run_clip(
         if f:
             f.close()
 
-    rec.skipped_policy = [i for i in range(1, last_index + 1) if (i - 1) % stride]
     run.events = pipe.engine.all_events()
     run.runtime = {**rec.summary(), "machine": machine_info()}
     run.health_counts = dict(health_counts)

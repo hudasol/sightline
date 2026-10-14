@@ -33,6 +33,18 @@ class BaseTracker:
     def update(self, detections: list[Detection], frame_index: int, timestamp: float) -> TrackerOutput:
         raise NotImplementedError
 
+    def predict(self, frame_index: int, timestamp: float) -> TrackerOutput:
+        """A frame the detector skipped (PLAN.md A2): move every track one step without
+        evidence. Nothing is matched, missed, confirmed, created or expired."""
+        for t in self.tracks:
+            t.age += 1
+            t.box = self._predicted_box(t)
+            t.box_predicted = True
+        return TrackerOutput(tracks=list(self.tracks), expired=[])
+
+    def _predicted_box(self, t: Track):
+        return t.box  # no motion model: hold the last box
+
     # -- helpers -------------------------------------------------------------
 
     def _new_track(self, det: Detection, frame_index: int, timestamp: float) -> Track:

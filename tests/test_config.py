@@ -21,7 +21,8 @@ def test_default_config_loads_and_is_stable(cfg):
     {"events": {"edge_margin_frac": 0.7}},
     {"health": {"min_fps": 0}},
     {"health": {"gap_factor": 0.5}},
-    {"pipeline": {"frame_stride": 0}},
+    {"pipeline": {"detect_every": 0}},
+    {"pipeline": {"frame_stride": 2}},  # removed by PLAN.md A2: an old config must fail loudly
     {"detector": {"torch_threads": 0}},
 ])
 def test_invalid_config_is_rejected(patch):

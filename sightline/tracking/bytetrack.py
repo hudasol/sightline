@@ -30,12 +30,11 @@ class ByteTracker(BaseTracker):
         high = [d for d in detections if d.score >= self.high_thresh]
         low = [d for d in detections if self.low_thresh <= d.score < self.high_thresh]
 
-        # 1. predict every live track forward one step
+        # 1. predict every live track forward one step (a matched track's box is replaced below)
         for t in self.tracks:
             t.age += 1
-            assert t.mean is not None and t.cov is not None
-            t.mean, t.cov = self.kf.predict(t.mean, t.cov)
-            t.box = mean_to_box(t.mean)
+            t.box = self._predicted_box(t)
+            t.box_predicted = True
 
         pool = [t for t in self.tracks if t.state in (TrackState.CONFIRMED, TrackState.LOST)]
         tentative = [t for t in self.tracks if t.state == TrackState.TENTATIVE]
@@ -80,6 +79,11 @@ class ByteTracker(BaseTracker):
 
         self.tracks = [t for t in self.tracks if t.id not in dropped]
         return self._retire()
+
+    def _predicted_box(self, t):
+        assert t.mean is not None and t.cov is not None
+        t.mean, t.cov = self.kf.predict(t.mean, t.cov)
+        return mean_to_box(t.mean)
 
     def _apply(self, track, det: Detection, frame_index: int, timestamp: float) -> None:
         assert track.mean is not None and track.cov is not None

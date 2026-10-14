@@ -33,6 +33,32 @@ def test_steady_motion_keeps_one_id():
     assert res[0][0] == set() and res[1][0] == set() and res[2][0] == {1}  # confirmed on the 3rd hit
 
 
+def test_predict_moves_along_velocity_without_counting_a_miss():
+    t = ByteTracker(cfg(), 0.5, 0.1)
+    run(t, [[det(10 + 3 * i)] for i in range(10)])  # confirmed, moving +3 px per frame
+    tr = t.tracks[0]
+    x_before, hits, state = tr.box[0], tr.hits, tr.state
+    o = t.predict(11, 11 / 15.0)
+    assert tr.box[0] > x_before  # Kalman carried it forward
+    assert tr.box_predicted and tr.observed  # still reported: last detector frame matched it
+    assert (tr.hits, tr.state, tr.time_since_update) == (hits, state, 0)  # no miss, no hit
+    assert [x.id for x in o.reported] == [tr.id] and not o.expired
+    t.update([det(10 + 3 * 11)], 12, 12 / 15.0)
+    assert not tr.box_predicted and tr.state == TrackState.CONFIRMED  # a detection replaces the prediction
+
+
+def test_predict_keeps_tentative_tracks_and_iou_baseline_holds_its_box():
+    b = ByteTracker(cfg(), 0.5, 0.1)
+    b.update([det(10)], 1, 0.0)
+    b.predict(2, 0.1)
+    assert len(b.tracks) == 1 and b.tracks[0].state == TrackState.TENTATIVE  # a skipped frame is not a miss
+    i = IoUTracker(cfg(), 0.5, 0.1)
+    i.update([det(10)], 1, 0.0)
+    box = i.tracks[0].box
+    i.predict(2, 0.1)
+    assert i.tracks[0].box == box and i.tracks[0].box_predicted
+
+
 def test_single_frame_false_detection_is_never_reported():
     t = ByteTracker(cfg(), 0.5, 0.1)
     frames = [[det(10)], [], [], [], []]

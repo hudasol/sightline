@@ -195,7 +195,7 @@ def cmd_detect_eval(a) -> int:
     for c in clips:
         cd = prepare_clip(c, root, eval_cfg)
         dets = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
-        frames = list(range(1, cd.n_frames + 1, cfg.pipeline.frame_stride))
+        frames = list(range(1, cd.n_frames + 1))  # the detector itself, on every frame
         n_frames += len(frames)
         views["all"][c.id] = sweep_thresholds(cd.gt, cd.ignore, dets, ths, frames)
         views["in_scope"][c.id] = sweep_thresholds(*in_scope_view(cd), dets, ths, frames)
@@ -214,7 +214,7 @@ def cmd_detect_eval(a) -> int:
         write_json(a.out, {
             "what": f"person detection P/R/F1 at IoU {eval_cfg['detection']['iou']} vs score threshold, pooled over clips",
             "manifest": a.manifest, "detector": cfg.detector.name, "input_size": list(cfg.detector.input_size),
-            "min_score": cfg.detector.min_score, "frame_stride": cfg.pipeline.frame_stride,
+            "min_score": cfg.detector.min_score,
             "clips": [c.id for c in clips], "frames_evaluated": n_frames,
             "ground_truth": "MOTChallenge rules as of 2026-10-14: class 1 conf 1 scored; classes 2,7,8,12 and conf-0 "
                             "pedestrians ignored; other classes dropped",
@@ -226,17 +226,17 @@ def cmd_detect_eval(a) -> int:
 
 
 
-def cmd_stride_eval(a) -> int:
+def cmd_interval_eval(a) -> int:
     from sightline.evaluation.run import load_eval_config, write_json
-    from sightline.evaluation.stride import stride_sweep
+    from sightline.evaluation.interval import interval_sweep
 
     try:
         cfg = _load_cfg(a)
         man = load_manifest(a.manifest)
     except (ConfigError, ManifestError) as exc:
         return _unavailable(None, str(exc))
-    out = stride_sweep(man, cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache), _detector_factory(cfg),
-                       a.strides, progress=_p)
+    out = interval_sweep(man, cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache), _detector_factory(cfg),
+                         a.every, progress=_p)
     if a.out:
         write_json(a.out, out)
         _p(f"wrote {a.out}")
@@ -309,7 +309,7 @@ def cmd_evaluate(a) -> int:
     agg["frozen_config_sha256"] = hashlib.sha256(cfg_text.encode()).hexdigest()
     agg["locked_manifest_sha256"] = lock["manifest_sha256"]
     agg["detector"] = {"name": cfg.detector.name, "score_threshold": cfg.detector.score_threshold}
-    agg["frame_stride"] = cfg.pipeline.frame_stride
+    agg["detect_every"] = cfg.pipeline.detect_every
     agg["bar"] = bar_check(agg, cov, eval_cfg, runtime=runtime)
     write_json(final_path, agg)
     write_json(results / "bar_check.json", agg["bar"])
@@ -531,9 +531,10 @@ def build_parser() -> argparse.ArgumentParser:
     _add_detector_overrides(sp)
     common(sp)
 
-    sp = add("stride-eval", cmd_stride_eval, "event recall/latency vs frame_stride on a manifest (use val); tunes nothing")
+    sp = add("interval-eval", cmd_interval_eval,
+             "event recall/latency vs detection interval on a manifest (use val); tunes nothing")
     sp.add_argument("--manifest", default="configs/manifests/val.json")
-    sp.add_argument("--strides", type=int, nargs="+", default=[1, 2, 3])
+    sp.add_argument("--every", type=int, nargs="+", default=[1, 2, 3], help="detection intervals k to compare")
     sp.add_argument("--out")
     _add_detector_overrides(sp)
     common(sp)

@@ -18,6 +18,7 @@ class Track:
         self.id = track_id
         self.box: Box = box  # best current estimate (Kalman-predicted when unmatched)
         self.last_det_box: Box = box
+        self.box_predicted = False  # True when self.box comes from prediction on a frame the detector skipped
         self.score = score  # smoothed detection confidence
         self.state = TrackState.TENTATIVE
         self.age = 1  # processed frames since creation
@@ -34,6 +35,7 @@ class Track:
 
     def mark_matched(self, box: Box, score: float, frame_index: int, timestamp: float, min_hits: int) -> None:
         self.last_det_box = box
+        self.box_predicted = False
         self.score = 0.7 * self.score + 0.3 * score
         self.hits += 1
         self.time_since_update = 0
@@ -68,5 +70,5 @@ class Track:
         return TrackView(
             id=self.id, box=self.box, score=self.score, state=self.state, age=self.age,
             hits=self.hits, time_since_update=self.time_since_update,
-            last_seen_ts=self.last_seen_ts, trajectory=list(self.trajectory),
+            last_seen_ts=self.last_seen_ts, trajectory=list(self.trajectory), predicted=self.box_predicted,
         )
