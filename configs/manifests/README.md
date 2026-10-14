@@ -11,13 +11,18 @@ clip is in which split. Paths are relative to the repo root.
 | test | 09, 10 |
 
 `split-check` on these two files passes but reports the held-out coverage gaps.
-Your own corridor clips must close them:
 
+Before a **final** lock, your own corridor clips must add:
 - at least **10 more test clips** (the bar is 12, and MOT17 gives 2)
 - at least one test clip tagged **`occlusion_crowding`** (09 and 10 already give
   `clear`, `camera_motion_blur` and `low_light_compression`)
 - at least one **negative** test clip (`"negative": true`): people visible, nobody
   enters the corridor
+
+For the **event** metrics to see any hard condition, own clips must also cover
+crowding, low light and blur. MOT17-10 is moving-camera, so it counts for detection
+and tracking only. Blur for events needs a static camera on fast motion
+(`docs/RECORDING_GUIDE.md`).
 
 ## What a clip is scored on: `metrics`
 
