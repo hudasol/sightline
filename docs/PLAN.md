@@ -387,3 +387,37 @@ rule is applied.
    alone hides the slow frames on which the detector runs.
 7. MOT17 numbers do not enter the choice. They stay in the report as a harder
    public benchmark (A1).
+
+### A5 (2026-10-14): changes made after seeing val data, recorded late
+
+A repo review on 2026-10-14 found these changes in commits but not in this plan.
+They are recorded here with what was known when each was made. None used held-out
+or own-clip data, because none exists.
+
+1. **Threshold grid 0.15-0.90** (commit 56d408c). **What was known:** every
+   SSDLite and YOLOX best F1 on val sat at 0.30, the lowest value of the old
+   0.30-0.90 grid. No result below 0.30 had been computed. The grid starts at 0.15
+   because the operating threshold must stay above the 0.10 detection floor. This
+   is the "fixed threshold grid" A4 refers to. On all boxes, four of seven
+   candidates still have their best F1 at 0.15, so that column is limited by the
+   grid.
+2. **Detection on a worker thread** (`pipeline.async_detection`, commit d93b2f2).
+   **What was known:** synchronous real-time runs dropped most frames
+   (`results/runtime/async/before_sync/`). With the worker, a detector frame is
+   **skipped** whenever the worker is still busy (48-69% of detector frames in the
+   val runs). So "the detector runs on every k-th frame" (A2) holds only for the
+   synchronous pipeline, which is the default. Async accuracy is not measured.
+   **Until it is, A4's throughput is measured with the default synchronous
+   pipeline** (`benchmark` without `--async-detection`), and async runs are
+   reported separately. Otherwise every candidate would qualify at the source frame
+   rate.
+3. **ONNX:** section 11 said "Not attempting: ONNX/TensorRT". YOLOX now runs on
+   ONNX Runtime (commit 1b39626), added for decision (3) of 2026-10-14 to evaluate
+   faster permissively licensed detectors. TensorRT is still not attempted.
+4. **A1's recall figures** (0.282 / 0.423 / 0.643) are as saved at commit
+   a2c6a10, on the 0.30-0.90 grid with all boxes. The files in
+   `results/detector_selection/` now hold the re-scored values (A1 ground-truth
+   fix, A5.1 grid). The A1 decision does not depend on the exact figures.
+5. Section 3 names `tests/test_split.py`. The leakage tests are in
+   `tests/test_manifest.py`.
+
