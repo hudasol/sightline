@@ -9,15 +9,16 @@ poor to trust. It never reports "clear" when it is not sure.
 > biometric processing. Tracks are anonymous integers.
 
 **Status: under construction.** `docs/PLAN.md` was committed first and is the
-contract. No held-out metrics exist yet; none are claimed anywhere in this
-repo until `results/` contains them. The table at the bottom is kept current.
+contract. Only MOT17 **val** measurements exist (`docs/EVALUATION.md`). No held-out
+or own-clip metric exists, and none is claimed until `results/` contains it. The status
+table at the bottom was last updated on 2026-10-14.
 
 ## What is in the box
 
 | Stage | Module | What it does |
 |---|---|---|
 | Ingest | `sightline/ingest.py` | One command records fps, frame count, per-frame timestamps and source metadata |
-| Detect | `sightline/detector.py` | Pretrained torchvision person detector at a frozen confidence threshold |
+| Detect | `sightline/detector.py` | Pretrained COCO person detectors (torchvision, or YOLOX on ONNX Runtime); the operating threshold is frozen on val, which has not happened yet |
 | Track (baseline) | `sightline/tracking/iou_tracker.py` | Greedy IoU matching, no motion model |
 | Track (chosen) | `sightline/tracking/bytetrack.py` | ByteTrack-style two-stage association, Kalman + Hungarian, geometry only |
 | Track state | `sightline/tracking/state.py` | id, age, last seen, confidence, trajectory, explicit lost/expired policy |
@@ -229,10 +230,10 @@ generated synthetic clip (no downloads needed).
 ## Repository layout
 
 ```text
-docs/        PLAN, DATA_CARD, MODEL_CARD, EVALUATION, PROCESS_LOG, RETROSPECTIVE
+docs/        PLAN, DATA_CARD, MODEL_CARD, EVALUATION, RECORDING_GUIDE, PROCESS_LOG, RETROSPECTIVE
 sightline/   package
-configs/     corridors, manifests, default parameters
-results/     machine-readable metrics, frozen config, held-out manifest
+configs/     corridors, manifests (+ own-clip template), default parameters
+results/     saved measurements (see results/README.md); later the frozen config and locked held-out manifest
 tests/
 ```
 
@@ -240,15 +241,22 @@ tests/
 
 | Item | State |
 |---|---|
-| `docs/PLAN.md` | done |
+| `docs/PLAN.md` and amendments A1-A4 | done |
 | Pipeline code and tests (synthetic + unit) | done, passing |
-| Real detector run (needs torch + weights) | not run yet |
-| Real datasets assembled and annotated | not started (needs footage) |
-| Held-out evaluation | not run |
+| Real detectors on MOT17 **val** (7 configurations) | done, val only: `results/detector_selection/`, `results/interval/`, `results/runtime/` |
+| MOT17 downloaded, ingested and split | done (`docs/DATA_CARD.md`) |
+| Own corridor clips | not recorded yet (`docs/RECORDING_GUIDE.md`) |
+| Detector and detection interval selected | no: chosen on own val clips by PLAN.md A4 |
+| Held-out manifest locked, tuning, held-out evaluation | not done |
 | Demo video, retrospective, `v1.0.0` | not started |
 
 ## Licences
 
-Code: MIT. Third-party: torchvision (BSD-3-Clause), COCO-trained weights,
-MOT17 (non-commercial terms, see `docs/DATA_CARD.md`). Do not commit clips or
-weights.
+This code is MIT. Third-party parts:
+- torchvision (BSD-3-Clause)
+- YOLOX ONNX exports (Apache-2.0)
+- ONNX Runtime (MIT)
+- detector weights trained on COCO (annotations CC BY 4.0, images under the Flickr terms). Files and hashes are in `docs/MODEL_CARD.md`.
+- MOT17 (commonly cited as CC BY-NC-SA 3.0, not re-verified; see `docs/DATA_CARD.md`)
+
+Do not commit clips or weights.
