@@ -76,6 +76,20 @@ def cmd_ingest(a) -> int:
         return _unavailable(None, f"ingest: {exc}")
 
 
+def cmd_draw_corridor(a) -> int:
+    from sightline.footage import GuiUnavailable, draw_corridor
+
+    try:
+        res = draw_corridor(a.clip, a.out, a.name)
+    except (IngestError, GuiUnavailable) as exc:
+        return _unavailable(None, str(exc))
+    if res is None:
+        _p("cancelled: nothing written")
+        return 1
+    _p(f"wrote {res['corridor']}: {len(res['polygon'])} vertices on a {res['frame_size'][0]}x{res['frame_size'][1]} frame")
+    return 0
+
+
 def cmd_import_cvat(a) -> int:
     from sightline.annotations import AnnotationError, import_cvat_mot
 
@@ -507,6 +521,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("path")
     sp.add_argument("--out", default="results/ingest")
     sp.add_argument("--fps", type=float)
+
+    sp = add("draw-corridor", cmd_draw_corridor, "click a corridor polygon on frame 1 and write a validated YAML")
+    sp.add_argument("clip")
+    sp.add_argument("--out", required=True, help="e.g. configs/corridors/own-corridorA-tripod1.yaml")
+    sp.add_argument("--name", help="corridor name (default: the file stem)")
 
     sp = add("import-cvat", cmd_import_cvat, "convert a CVAT 'MOT 1.1' export into annotations/<clip>/")
     sp.add_argument("export", help="the exported .zip, or its unpacked folder")
