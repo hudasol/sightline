@@ -328,3 +328,25 @@ up with a 30 fps source at stride 3.
   metrics** score the boxes reported on every frame, predicted ones included.
 - k is a sampling policy. It is recorded in every run and judged by event recall,
   latency and the share of events resting on prediction, never by fps alone.
+
+### A3 (2026-10-14): time-based, detection-interval-aware settings
+
+**What was known.** The interval results with frame-based settings were saved
+(`results/interval/*_frame_params.json`). No tuning had run. MOT17 val clips run
+at 14, 25 and 30 fps, so a setting counted in frames meant a different time on
+each clip, and at k > 1 `max_age` (counted in detector frames) meant k times more
+video.
+
+**Decision.** The tracker and event settings are given in seconds and converted
+per clip at its own fps:
+- `events.open_s`, `close_s` and `cooldown_s` count every processed frame,
+  detected or predicted.
+- `tracker.max_age_s` counts **detector** frames, at fps / k, so a track's
+  patience in seconds is the same at any k.
+- `tracker.min_hits` stays a count of real detections. It is evidence, not time.
+  Its time cost grows with k, and that is reported, not hidden.
+- Seconds win over the old frame counts when both are given. Every run records
+  the frame counts that actually ran.
+- The defaults equal the old frame values at 30 fps and k = 1: 0.1 s (3 frames),
+  0.167 s (5), 0.5 s (15) and 1.0 s (30). So nothing is retuned by this change.
+  The `tune` grids are the old frame grids expressed in seconds.
