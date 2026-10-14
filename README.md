@@ -171,8 +171,10 @@ Detectors (`--detector`):
 in the report. `threads <clip>` times the detector at several torch thread counts.
 
 `benchmark --async-detection` runs the detector on a worker thread, so other frames
-never wait for it (`pipeline.async_detection`). It is off by default, and its effect on
-accuracy is not yet measured (`docs/EVALUATION.md`). `runtime-summary <folder>` gives
+never wait for it (`pipeline.async_detection`). It is off by default. Its effect on
+accuracy is not yet measured, and health does not yet check how old the last detection
+is, so the "never CLEAR when unsure" guarantee covers only the default synchronous mode
+(`docs/EVALUATION.md`). `runtime-summary <folder>` gives
 the median and range over repeated benchmark runs (PLAN.md A4).
 
 `tune` refuses to run unless the held-out lock is **final** (coverage met) and

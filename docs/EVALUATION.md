@@ -127,6 +127,7 @@ What this does and does not show:
 - **It removes blocking.** With the worker, no frame waits for the detector: no frame is dropped, and p95 latency falls from about 250-380 ms to 13-26 ms.
 - **It does not make the detector faster.** In async runs, 23.78 fps is the source rate of these clips (30, 30, 14, 30 and 25 fps), so every frame was processed in time. But 48-69% of the detector frames were skipped because the worker was still busy, so detections happen only as often as the detector can run. Between them the tracker predicts for longer than k frames.
 - **Its effect on accuracy is not measured.** When a result arrives depends on wall-clock timing, so cached-detection evaluation cannot reproduce async runs. Event recall and latency in async mode are untested.
+- **Health cannot see a slow detector in async mode.** The low-fps check (`sightline/health.py`) uses per-frame processing time, which is a few ms when the detector runs elsewhere, and nothing checks how old the last detection is. So with a very slow detector the corridor status could rest on old detections without turning DEGRADED. Until a detection-age check exists, async mode is not covered by the "never CLEAR when unsure" claim.
 - **Synchronous real time does not keep up.** Even YOLOX-s at k = 3 dropped about half of all frames (415 of 750) in sync mode.
 - **Timing is noisy.** The control (same synchronous code) differs from "before" by up to 17% in throughput.
 
