@@ -47,6 +47,8 @@ def _load_cfg(a) -> Config:
         cfg.detector.input_size = list(a.input_size)
     if getattr(a, "detect_every", None):
         cfg.pipeline.detect_every = a.detect_every
+    if getattr(a, "async_detection", False):
+        cfg.pipeline.async_detection = True
     return cfg.validate()
 
 
@@ -427,7 +429,7 @@ def cmd_benchmark(a) -> int:
     report = {"summary": best, "per_clip": summaries, "machine": machine_info(), "detector": detector.info(),
               "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height],
               "detector_input_size": list(cfg.detector.input_size), "decode_thread": cfg.pipeline.decode_thread,
-              "detect_every": cfg.pipeline.detect_every,
+              "detect_every": cfg.pipeline.detect_every, "async_detection": cfg.pipeline.async_detection,
               "max_frames_per_clip": a.max_frames}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, indent=1))
@@ -656,6 +658,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--realtime", action="store_true")
     sp.add_argument("--max-frames", type=int, help="time only the first N frames of each clip (recorded in the report)")
     sp.add_argument("--detect-every", type=int, help="override pipeline.detect_every (PLAN.md A2)")
+    sp.add_argument("--async-detection", action="store_true", help="run the detector on a worker thread")
     _add_detector_overrides(sp)
 
     sp = add("detector-summary", cmd_detector_summary, "P/R/F1 vs fps table for detector candidates, from saved results")

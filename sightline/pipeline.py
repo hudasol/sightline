@@ -10,10 +10,12 @@ count). Whenever the system cannot tell, the answer is UNKNOWN.
 
 from __future__ import annotations
 
+import copy
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from sightline.async_detect import DetectionWorker
 from sightline.config import Config, CorridorConfig, resolve_timing
 from sightline.detector import Detector
 from sightline.events import EventEngine, EventRecord
@@ -47,6 +49,10 @@ class FrameResult:
     latency_s: float = 0.0
     infer_s: float = 0.0
     detector_ran: bool = True  # False on frames pipeline.detect_every skipped (tracks were predicted)
+    # which frame's detections were applied on this frame (sync: this frame; async: an earlier one), and how late
+    detection_applied_from: int | None = None
+    detection_delay_frames: int | None = None
+    detection_skipped_busy: bool = False  # async: a detector frame whose detection was skipped, worker busy
 
     def to_dict(self) -> dict:
         return {
@@ -54,6 +60,9 @@ class FrameResult:
             "ts": round(self.timestamp, 4),
             "processed": self.processed,
             "detector_ran": self.detector_ran,
+            "detection_applied_from": self.detection_applied_from,
+            "detection_delay_frames": self.detection_delay_frames,
+            "detection_skipped_busy": self.detection_skipped_busy,
             "health": self.health.to_dict(),
             "corridor": self.corridor.value,
             "n_detections": len(self.detections),
@@ -86,6 +95,13 @@ class Pipeline:
         self.monitor = HealthMonitor(cfg.health, nominal_fps)
         self._last_index = 0
         self._last_ts = 0.0
+        # async detection (live detector only): worker + tracker snapshots taken just before each submitted frame
+        self.worker = DetectionWorker(detector, clock) if (cfg.pipeline.async_detection and detector is not None) else None
+        self._snapshots: dict[int, object] = {}
+
+    def close(self) -> None:
+        if self.worker is not None:
+            self.worker.close()
 
     def process(self, frame: FrameData, detections: list[Detection] | None = None,
                 arrival: float | None = None) -> FrameResult:
@@ -111,7 +127,28 @@ class Pipeline:
         quality = measure_quality(frame.image)
         infer_s = 0.0
         detector_ran = is_detector_frame(frame.index, self.cfg.pipeline.detect_every)
-        if not detector_ran:
+        applied_from = delay = None
+        skipped_busy = False
+        replay_expired = []
+        if self.worker is not None and detections is None:
+            # async: apply a finished detection by replay, submit this frame if it is a detector frame,
+            # and predict this frame without waiting for anything
+            done_det = self.worker.poll()
+            if done_det is not None:
+                f_det, detections, infer_s = done_det
+                replay_expired = self._apply_late(f_det, detections, frame.index)
+                applied_from, delay = f_det, frame.index - f_det
+            else:
+                detections = []
+            if detector_ran:
+                if self.worker.idle:
+                    self._snapshots[frame.index] = copy.deepcopy(self.tracker)
+                    self.worker.submit(frame.index, frame.image)
+                else:
+                    skipped_busy = True
+            out = self.tracker.predict(frame.index, frame.timestamp)
+            detector_ran = applied_from is not None  # "ran" = detections reached the tracker on this frame
+        elif not detector_ran:
             detections = []
             out = self.tracker.predict(frame.index, frame.timestamp)
         else:
@@ -122,7 +159,8 @@ class Pipeline:
                 detections = self.detector.detect(frame.image)
                 infer_s = self.clock() - t_inf
             out = self.tracker.update(detections, frame.index, frame.timestamp)
-        records = self.engine.update(frame.index, frame.timestamp, out.tracks, out.expired)
+            applied_from, delay = frame.index, 0
+        records = self.engine.update(frame.index, frame.timestamp, out.tracks, replay_expired + out.expired)
 
         done = self.clock()
         health = self.monitor.observe(
@@ -142,7 +180,18 @@ class Pipeline:
             lost_tracks=[t.view() for t in out.tracks if t.state == TrackState.LOST],
             events=records, processed=True,
             latency_s=self.clock() - arrival, infer_s=infer_s, detector_ran=detector_ran,
+            detection_applied_from=applied_from, detection_delay_frames=delay, detection_skipped_busy=skipped_busy,
         )
+
+    def _apply_late(self, f_det: int, detections: list[Detection], f_now: int) -> list:
+        """Replay: the tracker as it was just before f_det, updated with f_det's detections, then
+        predicted through f_det+1 .. f_now-1. Returns the tracks that expired during the replay."""
+        tracker = self._snapshots.pop(f_det)
+        out = tracker.update(detections, f_det, 0.0)
+        for f in range(f_det + 1, f_now):
+            tracker.predict(f, 0.0)
+        self.tracker = tracker
+        return list(out.expired)
 
     def _corridor_status(self, health: HealthReport, tentative_inside: bool) -> CorridorStatus:
         if self.engine.occupied or tentative_inside:

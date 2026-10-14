@@ -102,6 +102,7 @@ def run_clip(
         if cfg.pipeline.decode_thread:
             frames = prefetch(frames, cfg.pipeline.decode_queue)
     run.policy["decode_thread"] = cfg.pipeline.decode_thread
+    run.policy["async_detection"] = bool(cfg.pipeline.async_detection and detector is not None and cached is None)
 
     pipe = Pipeline(cfg, corridor, detector, (info.width, info.height), nominal_fps=info.fps, clock=clock)
     run.policy["resolved_timing"] = timing_summary(pipe.cfg)  # the frame counts that actually ran
@@ -150,7 +151,8 @@ def run_clip(
 
             run.corridor_by_frame[frame.index] = res.corridor.value
             if res.processed:
-                rec.record(res.latency_s, res.infer_s if res.detector_ran else None)
+                rec.record(res.latency_s, res.infer_s if res.detection_applied_from is not None else None,
+                           delay_frames=res.detection_delay_frames, skipped_busy=res.detection_skipped_busy)
             else:
                 rec.invalid += 1
             health_counts[res.health.state.value] += 1
@@ -165,6 +167,7 @@ def run_clip(
                 run.results.append(res)
     finally:
         rec.stop()
+        pipe.close()  # stops the detection worker, if any
         close = getattr(frames, "close", None)
         if close is not None:
             close()  # stops the decode thread if the loop ended early

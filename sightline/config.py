@@ -89,6 +89,9 @@ class PipelineConfig:
     # PLAN.md A2: the detector runs on every k-th frame; the tracker predicts in between.
     # Every frame is still processed. k > 1 is a recorded sampling policy.
     detect_every: int = 1
+    # run the detector on a worker thread so other frames never wait for it (sightline/async_detect.py).
+    # Live detector only: evaluation from cached detections always runs synchronously and deterministically.
+    async_detection: bool = False
     declared_width: int = 640
     declared_height: int = 360
     decode_thread: bool = True  # decode frames in a background thread so decoding overlaps inference

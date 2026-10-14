@@ -47,6 +47,8 @@ class RuntimeRecorder:
     infer: list[float] = field(default_factory=list)
     dropped: list[int] = field(default_factory=list)  # lagging live stream: frames not processed
     skipped_policy: list[int] = field(default_factory=list)  # frames the sampling policy skipped
+    delays: list[int] = field(default_factory=list)  # frames between a detector frame and its detections' use
+    skipped_busy: int = 0  # async: detector frames whose detection was skipped because the worker was busy
     invalid: int = 0
     _t0: float | None = None
     _t1: float | None = None
@@ -57,11 +59,15 @@ class RuntimeRecorder:
     def stop(self) -> None:
         self._t1 = time.perf_counter()
 
-    def record(self, latency_s: float, infer_s: float | None) -> None:
-        """infer_s is None on frames where the detector did not run (PLAN.md A2)."""
+    def record(self, latency_s: float, infer_s: float | None, delay_frames: int | None = None,
+               skipped_busy: bool = False) -> None:
+        """infer_s is None on frames where no detection reached the tracker (PLAN.md A2)."""
         self.latencies.append(latency_s)
         if infer_s is not None:
             self.infer.append(infer_s)
+        if delay_frames is not None:
+            self.delays.append(delay_frames)
+        self.skipped_busy += int(skipped_busy)
 
     def summary(self) -> dict:
         wall = ((self._t1 or time.perf_counter()) - self._t0) if self._t0 is not None else float("nan")
@@ -91,4 +97,7 @@ class RuntimeRecorder:
             "inference_ms_p50": pct(inf, 50),
             "inference_ms_p95": pct(inf, 95),
             "dropped_frame_indices": self.dropped[:500],
+            "detections_skipped_worker_busy": self.skipped_busy,
+            "detection_delay_frames_p50": float(np.percentile(self.delays, 50)) if self.delays else None,
+            "detection_delay_frames_max": max(self.delays) if self.delays else None,
         }
