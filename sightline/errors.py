@@ -131,3 +131,122 @@ def analyze(results_dir: Path, root: Path, lock_path: Path, cache_dir: Path, det
         md.append(f"| {n} | {r['type']} | {r['clip']} | {r['frame']} | {measured} | TODO(human): look at `{r['image']}` |")
     (out_dir / "INDEX.md").write_text("\n".join(md) + "\n")
     return out_dir
+
+
+# -- unresolved events as frame strips --------------------------------------------------------------
+
+UNRESOLVED_RULE = ("UNRESOLVED events whose track was lost while the event was open (close_reason track_lost; "
+                   "stream_end is not a failure). Worst first = longest open before the loss (close_frame - "
+                   "open_frame), ties broken by clip id then frame. Fixed before any strip was looked at.")
+
+
+def collect_details(manifest_path: Path, cfg, eval_cfg: dict, root: Path, cache_dir: Path, results_dir: Path) -> list[str]:
+    """Per-clip details and track files for a manifest's event clips, from CACHED detections only
+    (a missing cache is an error: this never runs a detector). Nothing is tuned or changed."""
+    from sightline.evaluation.run import evaluate_clip, get_detections, per_clip_details, prepare_clip, write_json
+
+    done = []
+    for c in load_manifest(manifest_path).clips:
+        if not c.scored_on("events"):
+            continue
+        cd = prepare_clip(c, root, eval_cfg)
+        dets = get_detections(cd, cfg, root, cache_dir, None)
+        r = evaluate_clip(cd, cfg, dets, eval_cfg, root, trackers=("bytetrack",), out_root=results_dir / "tracks")
+        write_json(results_dir / "per_clip" / "bytetrack" / f"{c.id}.json", per_clip_details(r, cfg, dets, eval_cfg, "bytetrack"))
+        done.append(c.id)
+    return done
+
+
+def select_unresolved(per_clip_dir: Path, n: int = 10) -> list[dict]:
+    items = []
+    for f in sorted((per_clip_dir / "bytetrack").glob("*.json")):
+        d = json.loads(f.read_text())
+        for e in d["events_predicted"]:
+            if e["status"] == "UNRESOLVED" and e["close_reason"] == "track_lost":
+                items.append({"type": "unresolved_event", "clip": d["clip"], "frame": e["close_frame"],
+                              "event_id": e["event_id"], "track_id": e["track_id"], "open_frame": e["open_frame"],
+                              "first_inside_frame": e["first_inside_frame"], "last_inside_frame": e["last_inside_frame"],
+                              "open_frames_before_loss": e["close_frame"] - e["open_frame"],
+                              "evidence": e.get("evidence")})
+    items.sort(key=lambda x: (-x["open_frames_before_loss"], x["clip"], x["frame"]))
+    return items[:n]
+
+
+def render_strip(item: dict, root: Path, manifest_path: Path, cache_dir: Path, detector_tag: str, threshold: float,
+                 tracks_root: Path, out_png: Path, n_frames: int = 6, tile_w: int = 480) -> bool:
+    """n_frames evenly spaced from 10 frames before the person was last inside to the frame the event went
+    UNRESOLVED. Green = GT, grey = detections >= threshold, orange = reported tracks, red = the event's track."""
+    import numpy as np
+
+    from sightline.config import load_corridor
+
+    clip = next(c for c in load_manifest(manifest_path).clips if c.id == item["clip"])
+    src = root / clip.source
+    info = probe(src, clip.fps)
+    poly = np.array(load_corridor(root / clip.corridor).polygon.vertices, dtype=np.int32)
+    gt, _ig = load_mot_gt(root / clip.gt)
+    cache = cache_dir / detector_tag / f"{clip.id}.jsonl"
+    dets = read_detection_cache(cache)[1] if cache.is_file() else {}
+    tracks: dict[int, list] = {}
+    tfile = tracks_root / "bytetrack" / clip.id / "tracks.txt"
+    if tfile.is_file():
+        for line in tfile.read_text().splitlines():
+            f, tid, x, y, w, h, *_ = line.split(",")
+            tracks.setdefault(int(f), []).append((int(tid), float(x), float(y), float(x) + float(w), float(y) + float(h)))
+    start = max(1, min(item["last_inside_frame"], item["frame"]) - 10)
+    frames = sorted({int(round(v)) for v in np.linspace(start, item["frame"], n_frames)})
+    tiles = []
+    for fidx in frames:
+        img = read_frame(src, fidx, info, clip.fps)
+        if img is None:
+            continue
+        lw = max(2, img.shape[1] // 480)
+        cv2.polylines(img, [poly], True, (0, 255, 0), lw)
+        for _gid, (x1, y1, x2, y2) in gt.get(fidx, []):
+            cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (80, 190, 80), lw)
+        for d in dets.get(fidx, []):
+            if d.score >= threshold:
+                cv2.rectangle(img, (int(d.box[0]), int(d.box[1])), (int(d.box[2]), int(d.box[3])), (170, 170, 170), 1)
+        for tid, x1, y1, x2, y2 in tracks.get(fidx, []):
+            col = (0, 0, 255) if tid == item["track_id"] else (255, 170, 0)
+            cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), col, lw + (1 if tid == item["track_id"] else 0))
+            cv2.putText(img, f"#{tid}", (int(x1), max(14, int(y1) - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.9, col, 2)
+        scale = tile_w / img.shape[1]
+        tile = cv2.resize(img, (tile_w, int(img.shape[0] * scale)), interpolation=cv2.INTER_AREA)
+        cv2.rectangle(tile, (0, 0), (tile_w, 24), (0, 0, 0), -1)
+        cv2.putText(tile, f"frame {fidx}", (6, 17), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1)
+        tiles.append(tile)
+    if not tiles:
+        return False
+    strip = np.hstack(tiles)
+    head = np.zeros((28, strip.shape[1], 3), np.uint8)
+    cv2.putText(head, f"{item['clip']}  event {item['event_id']} (track #{item['track_id']})  opened {item['open_frame']}, "
+                f"last inside {item['last_inside_frame']}, UNRESOLVED at {item['frame']}", (6, 19),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255), 1)
+    out_png.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(out_png), np.vstack([head, strip]))
+    return True
+
+
+def analyze_unresolved(results_dir: Path, root: Path, manifest_path: Path, cache_dir: Path, detector_tag: str,
+                       threshold: float, n: int, run_note: str) -> Path:
+    out_dir = results_dir / "error_analysis" / "unresolved"
+    out_dir.mkdir(parents=True, exist_ok=True)  # an index is written even when nothing is unresolved
+    items = select_unresolved(results_dir / "per_clip", n)
+    rows = []
+    for k, it in enumerate(items, start=1):
+        png = out_dir / f"{k:02d}_unresolved_{it['clip']}_ev{it['event_id']}_f{it['frame']}.png"
+        ok = render_strip(it, root, manifest_path, cache_dir, detector_tag, threshold, results_dir / "tracks", png)
+        rows.append({**it, "image": png.name if ok else None})
+    (out_dir / "index.json").write_text(json.dumps({"rule": UNRESOLVED_RULE, "run": run_note, "items": rows}, indent=1))
+    md = ["# Unresolved events (auto-selected, worst first)", "", f"Selection: {UNRESOLVED_RULE}", "", f"Run: {run_note}", "",
+          "Legend: green polygon = corridor, green boxes = ground truth, grey = detections >= threshold, "
+          "orange = reported tracks, red = the event's track. These frames are not to be published (they show faces).",
+          "The **Why it happened** column is for a human who has looked at the strip. No setting was changed from it.", "",
+          "| # | Clip | Event | Open frames before loss | Opened / last inside / unresolved | Why it happened |",
+          "|---|---|---|---|---|---|"]
+    for k, r in enumerate(rows, start=1):
+        md.append(f"| {k} | {r['clip']} | {r['event_id']} (track #{r['track_id']}) | {r['open_frames_before_loss']} | "
+                  f"{r['open_frame']} / {r['last_inside_frame']} / {r['frame']} | TODO(human): look at `{r['image']}` |")
+    (out_dir / "INDEX.md").write_text("\n".join(md) + "\n")
+    return out_dir

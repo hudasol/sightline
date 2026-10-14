@@ -549,6 +549,24 @@ def cmd_errors(a) -> int:
     from sightline.errors import analyze
     from sightline.evaluation.run import detector_tag
 
+    if a.unresolved:
+        from sightline.errors import analyze_unresolved, collect_details
+        from sightline.evaluation.run import load_eval_config
+
+        cfg, manifest = _load_cfg(a), Path(a.manifest or a.lock)
+        if a.manifest:  # val mode: build per-clip details from cached detections, nothing tuned
+            try:
+                clips = collect_details(manifest, cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache),
+                                        Path(a.results))
+            except RuntimeError as exc:
+                return _unavailable(None, f"errors: {exc}")
+            _p(f"per-clip details for {clips} written to {a.results}")
+        note = (f"{manifest.as_posix()} | detector {cfg.detector.name} @{cfg.detector.input_size} | detect_every "
+                f"{cfg.pipeline.detect_every} | score threshold {cfg.detector.score_threshold} | config {a.config} (untuned)")
+        out = analyze_unresolved(Path(a.results), Path(a.root), manifest, Path(a.cache), detector_tag(cfg),
+                                 cfg.detector.score_threshold, a.unresolved, note)
+        _p(f"unresolved-event strips written to {out}: open INDEX.md and write the 'why' for each after looking at it")
+        return 0
     cfg = load_config(a.config)
     out = analyze(Path(a.results), Path(a.root), Path(a.lock), Path(a.cache), detector_tag(cfg), cfg.detector.score_threshold, a.per_type)
     _p(f"error analysis written to {out}: open INDEX.md and write the 'why' for each failure after looking at it")
@@ -710,6 +728,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--lock", default="results/heldout_manifest.json")
     sp.add_argument("--results", default="results")
     sp.add_argument("--per-type", type=int, default=2)
+    sp.add_argument("--unresolved", type=int, metavar="N",
+                    help="instead: render the N worst UNRESOLVED events as frame strips")
+    sp.add_argument("--manifest", help="with --unresolved: build details for this manifest (e.g. val) from cached detections")
+    sp.add_argument("--detect-every", type=int, help="override pipeline.detect_every")
+    _add_detector_overrides(sp)
     common(sp)
     sp.set_defaults(config="results/frozen_config.yaml")
 
