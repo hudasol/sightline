@@ -1,0 +1,89 @@
+{
+ "summary": {
+  "frames_processed": 150,
+  "throughput_fps": 14.08677838648261,
+  "latency_ms_p50": 3.158314269967377,
+  "latency_ms_p95": 4.857277125120163,
+  "inference_ms_p50": 175.81679997965693,
+  "inference_ms_p95": 209.75871494156306,
+  "frames_dropped_lagging": 0,
+  "frames_skipped_by_policy": 0,
+  "frames_late": 0,
+  "note": "latency_ms_p95 is the worst p95 over clips; p50s are frame-weighted"
+ },
+ "per_clip": [
+  {
+   "clip": "MOT17-05-FRCNN",
+   "frames_processed": 150,
+   "detector_frames": 37,
+   "frames_dropped_lagging": 0,
+   "frames_skipped_by_policy": 0,
+   "frames_invalid": 0,
+   "frames_late": 0,
+   "late_budget_ms": 100.0,
+   "warmup_frames_excluded_from_latency": 5,
+   "wall_seconds": 10.648282799986191,
+   "throughput_fps": 14.08677838648261,
+   "latency_ms_p50": 3.158314269967377,
+   "latency_ms_p95": 4.857277125120163,
+   "latency_ms_max": 9.034342831000686,
+   "inference_ms_p50": 175.81679997965693,
+   "inference_ms_p95": 209.75871494156306,
+   "dropped_frame_indices": [],
+   "detections_skipped_worker_busy": 38,
+   "detection_delay_frames_p50": 3.0,
+   "detection_delay_frames_max": 5,
+   "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "cpu_count_logical": 16,
+    "python": "3.13.0",
+    "opencv": "5.0.0",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "torch_threads": 8
+   }
+  }
+ ],
+ "machine": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "cpu_count_logical": 16,
+  "python": "3.13.0",
+  "opencv": "5.0.0",
+  "torch": "2.14.1+cpu",
+  "cuda_available": false,
+  "torch_threads": 8
+ },
+ "detector": {
+  "detector": "fasterrcnn_mobilenet_v3_large_320_fpn",
+  "weights": "FasterRCNN_MobileNet_V3_Large_320_FPN_Weights.DEFAULT",
+  "min_score": 0.1,
+  "input_size": [
+   640,
+   360
+  ],
+  "resize": "fit inside input_size, aspect kept, no upscaling",
+  "device": "cpu",
+  "backend": "torchvision",
+  "torch_threads": 8,
+  "torch_interop_threads": 8,
+  "torch": "2.14.1+cpu",
+  "torchvision": "0.29.1+cpu"
+ },
+ "realtime_emulation": true,
+ "declared_input": [
+  640,
+  360
+ ],
+ "detector_input_size": [
+  640,
+  360
+ ],
+ "decode_thread": true,
+ "detect_every": 2,
+ "async_detection": true,
+ "max_frames_per_clip": 150
+}

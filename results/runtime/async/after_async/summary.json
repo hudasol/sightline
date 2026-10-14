@@ -1,0 +1,200 @@
+{
+ "mbv3_320fpn_640x360_k2": {
+  "runs": 3,
+  "per_run": [
+   {
+    "run": 1,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.785614283684488,
+    "worst_clip_latency_ms_p95": 17.266953317448497,
+    "latency_ms_max": 20.156833343207836,
+    "detections_skipped_worker_busy": 259,
+    "async_detection": true,
+    "realtime_emulation": true
+   },
+   {
+    "run": 2,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.78053164226778,
+    "worst_clip_latency_ms_p95": 13.0491399904713,
+    "latency_ms_max": 34.25573336426169,
+    "detections_skipped_worker_busy": 259,
+    "async_detection": true,
+    "realtime_emulation": true
+   },
+   {
+    "run": 3,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.77914659149669,
+    "worst_clip_latency_ms_p95": 12.58537995163351,
+    "latency_ms_max": 17.12309999857098,
+    "detections_skipped_worker_busy": 254,
+    "async_detection": true,
+    "realtime_emulation": true
+   }
+  ],
+  "throughput_fps": {
+   "median": 23.78053164226778,
+   "min": 23.77914659149669,
+   "max": 23.785614283684488
+  },
+  "frames_dropped": {
+   "median": 0,
+   "min": 0,
+   "max": 0
+  },
+  "worst_clip_latency_ms_p95": {
+   "median": 13.0491399904713,
+   "min": 12.58537995163351,
+   "max": 17.266953317448497
+  },
+  "latency_ms_max": {
+   "median": 20.156833343207836,
+   "min": 17.12309999857098,
+   "max": 34.25573336426169
+  },
+  "detections_skipped_worker_busy": {
+   "median": 259,
+   "min": 254,
+   "max": 259
+  }
+ },
+ "yolox_s_640x640_k2": {
+  "runs": 3,
+  "per_run": [
+   {
+    "run": 1,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.78226088264646,
+    "worst_clip_latency_ms_p95": 11.862059915438294,
+    "latency_ms_max": 17.00516662094742,
+    "detections_skipped_worker_busy": 233,
+    "async_detection": true,
+    "realtime_emulation": true
+   },
+   {
+    "run": 2,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.785781069336814,
+    "worst_clip_latency_ms_p95": 36.01922004017978,
+    "latency_ms_max": 93.41819991823286,
+    "detections_skipped_worker_busy": 237,
+    "async_detection": true,
+    "realtime_emulation": true
+   },
+   {
+    "run": 3,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.784137300901467,
+    "worst_clip_latency_ms_p95": 15.074359974823885,
+    "latency_ms_max": 27.227633399888873,
+    "detections_skipped_worker_busy": 239,
+    "async_detection": true,
+    "realtime_emulation": true
+   }
+  ],
+  "throughput_fps": {
+   "median": 23.784137300901467,
+   "min": 23.78226088264646,
+   "max": 23.785781069336814
+  },
+  "frames_dropped": {
+   "median": 0,
+   "min": 0,
+   "max": 0
+  },
+  "worst_clip_latency_ms_p95": {
+   "median": 15.074359974823885,
+   "min": 11.862059915438294,
+   "max": 36.01922004017978
+  },
+  "latency_ms_max": {
+   "median": 27.227633399888873,
+   "min": 17.00516662094742,
+   "max": 93.41819991823286
+  },
+  "detections_skipped_worker_busy": {
+   "median": 237,
+   "min": 233,
+   "max": 239
+  }
+ },
+ "yolox_s_640x640_k3": {
+  "runs": 3,
+  "per_run": [
+   {
+    "run": 1,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.78020055731412,
+    "worst_clip_latency_ms_p95": 26.306620030663897,
+    "latency_ms_max": 78.85258574970067,
+    "detections_skipped_worker_busy": 120,
+    "async_detection": true,
+    "realtime_emulation": true
+   },
+   {
+    "run": 2,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.784244329045208,
+    "worst_clip_latency_ms_p95": 21.4577600592747,
+    "latency_ms_max": 54.193199961446226,
+    "detections_skipped_worker_busy": 114,
+    "async_detection": true,
+    "realtime_emulation": true
+   },
+   {
+    "run": 3,
+    "clips": 5,
+    "frames_processed": 750,
+    "frames_dropped": 0,
+    "throughput_fps": 23.775536039077107,
+    "worst_clip_latency_ms_p95": 26.98715338483452,
+    "latency_ms_max": 41.955842869356275,
+    "detections_skipped_worker_busy": 122,
+    "async_detection": true,
+    "realtime_emulation": true
+   }
+  ],
+  "throughput_fps": {
+   "median": 23.78020055731412,
+   "min": 23.775536039077107,
+   "max": 23.784244329045208
+  },
+  "frames_dropped": {
+   "median": 0,
+   "min": 0,
+   "max": 0
+  },
+  "worst_clip_latency_ms_p95": {
+   "median": 26.306620030663897,
+   "min": 21.4577600592747,
+   "max": 26.98715338483452
+  },
+  "latency_ms_max": {
+   "median": 54.193199961446226,
+   "min": 41.955842869356275,
+   "max": 78.85258574970067
+  },
+  "detections_skipped_worker_busy": {
+   "median": 120,
+   "min": 114,
+   "max": 122
+  }
+ }
+}

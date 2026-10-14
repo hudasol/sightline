@@ -1,0 +1,91 @@
+{
+ "summary": {
+  "frames_processed": 150,
+  "throughput_fps": 14.090529586061688,
+  "latency_ms_p50": 3.3125714398920536,
+  "latency_ms_p95": 4.586534318514168,
+  "inference_ms_p50": 164.15840003173798,
+  "inference_ms_p95": 173.11906998511404,
+  "frames_dropped_lagging": 0,
+  "frames_skipped_by_policy": 0,
+  "frames_late": 0,
+  "note": "latency_ms_p95 is the worst p95 over clips; p50s are frame-weighted"
+ },
+ "per_clip": [
+  {
+   "clip": "MOT17-05-FRCNN",
+   "frames_processed": 150,
+   "detector_frames": 37,
+   "frames_dropped_lagging": 0,
+   "frames_skipped_by_policy": 0,
+   "frames_invalid": 0,
+   "frames_late": 0,
+   "late_budget_ms": 100.0,
+   "warmup_frames_excluded_from_latency": 5,
+   "wall_seconds": 10.64544799993746,
+   "throughput_fps": 14.090529586061688,
+   "latency_ms_p50": 3.3125714398920536,
+   "latency_ms_p95": 4.586534318514168,
+   "latency_ms_max": 5.859942873939872,
+   "inference_ms_p50": 164.15840003173798,
+   "inference_ms_p95": 173.11906998511404,
+   "dropped_frame_indices": [],
+   "detections_skipped_worker_busy": 37,
+   "detection_delay_frames_p50": 3.0,
+   "detection_delay_frames_max": 4,
+   "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+    "cpu_count_logical": 16,
+    "python": "3.13.0",
+    "opencv": "5.0.0",
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "torch_threads": 8
+   }
+  }
+ ],
+ "machine": {
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "cpu_count_logical": 16,
+  "python": "3.13.0",
+  "opencv": "5.0.0",
+  "torch": "2.14.1+cpu",
+  "cuda_available": false,
+  "torch_threads": 8
+ },
+ "detector": {
+  "detector": "yolox_s",
+  "weights": {
+   "path": "weights/yolox/yolox_s.onnx",
+   "sha256": "c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063"
+  },
+  "min_score": 0.1,
+  "input_size": [
+   640,
+   640
+  ],
+  "resize": "letterboxed into the fixed square input, aspect kept",
+  "device": "cpu",
+  "backend": "onnxruntime",
+  "intra_op_threads": 8,
+  "nms_iou": 0.45,
+  "onnxruntime": "1.31.0"
+ },
+ "realtime_emulation": true,
+ "declared_input": [
+  640,
+  360
+ ],
+ "detector_input_size": [
+  640,
+  640
+ ],
+ "decode_thread": true,
+ "detect_every": 2,
+ "async_detection": true,
+ "max_frames_per_clip": 150
+}
