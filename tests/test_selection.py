@@ -38,6 +38,6 @@ def test_selection_is_judged_on_the_in_scope_view(tmp_path):
 def test_no_candidate_means_sampling_not_a_lower_bar(tmp_path):
     _write(tmp_path, "a", 0.9, 0.3, 5.0)
     t = build_table(tmp_path, ["a", "missing"], 0.8, 0.8, 10.0, 0.5)
-    assert t["choice"] is None and "frame-sampling" in t["verdict"]
+    assert t["choice"] is None and "detection interval" in t["verdict"]
     assert t["rows"][1]["pending"] and t["rows"][1]["meets_pr_bar"] is None
     assert "pending" in to_markdown(t)
