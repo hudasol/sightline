@@ -24,6 +24,12 @@ Split by whole **scene / camera / recording session**, never by frame or by clip
 - Person boxes: MOTChallenge format (`frame,id,x,y,w,h,conf,class,vis`). MOT17 labels as published; self-recorded clips annotated by [annotator, tool, date].
 - Ground-truth **events**: for MOT17 derived mechanically from GT boxes with the same rule constants as the system (`configs/eval.yaml`, never tuned); for own clips hand-marked first-inside frames, reviewed [by whom].
 - Known label limits: MOT17 GT is not a corridor annotation; derived events are a proxy. Own-clip event labels are single-annotator unless stated.
+- **MOT17 classes (checked 2026-10-14):** class 1 conf 1 is scored. Classes 2, 7, 8 and 12, and conf-0 pedestrians, are ignore regions. All other classes are dropped. See PLAN.md amendment A1.
+
+## Own-clip annotation rules (PLAN.md amendment A1)
+- **Every person box records visibility** (0-1, the visible fraction of the person) in column 9. The in-scope test (height >= 10% of the frame and visibility >= 0.65) needs it. A box with no real visibility estimate must not be exported as 1.0.
+- Label every person in view, in scope or not. Out-of-scope people become ignore regions, so a detection on them is never counted as a false positive.
+- Record which frames were annotated. Unannotated frames are not scored, and empty annotated frames are real negatives.
 
 ## Counts (fill in)
 | Split | Clips | Frames | Minutes | Events | Negative minutes |
