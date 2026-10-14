@@ -18,11 +18,11 @@
 Split by whole **scene / camera / recording session**, never by frame or by clip within a session. `sightline split-check` fails on any shared id, path, scene, base scene, camera or session. The held-out manifest is hashed (`lock-manifest`) **before** any tuning; `tune` refuses to run without the lock and `evaluate` refuses if hashes changed.
 
 ## Held-out coverage required (brief)
-≥12 clips, including negatives (nobody enters) and each of: clear, occlusion/crowding, camera motion/blur, low light/compression. `coverage_check` reports gaps.
+>= 12 clips, including negatives (nobody enters) and each of: clear, occlusion/crowding, camera motion/blur, low light/compression. `coverage_check` reports gaps, including which difficult conditions the **event** metrics rest on: moving-camera clips count for detection and tracking only.
 
 ## Labels
 - Person boxes: MOTChallenge format (`frame,id,x,y,w,h,conf,class,vis`). MOT17 labels as published; self-recorded clips annotated by [annotator, tool, date].
-- Ground-truth **events**: for MOT17 derived mechanically from GT boxes with the same rule constants as the system (`configs/eval.yaml`, never tuned); for own clips hand-marked first-inside frames, reviewed [by whom].
+- Ground-truth **events**: for MOT17 derived mechanically from GT boxes and the corridor by a fixed label rule (`configs/eval.yaml`: at least 3 frames inside, gaps of up to 5 frames merged; never tuned). That rule is separate from the system's own tunable event settings in `configs/default.yaml`; for own clips hand-marked first-inside frames, reviewed [by whom].
 - Known label limits: MOT17 GT is not a corridor annotation; derived events are a proxy. Own-clip event labels are single-annotator unless stated.
 - **MOT17 classes (checked 2026-10-14):** class 1 conf 1 is scored. Classes 2, 7, 8 and 12, and conf-0 pedestrians, are ignore regions. All other classes are dropped. See PLAN.md amendment A1.
 

@@ -7,7 +7,7 @@
 |---|---|---|
 | Detector | Pretrained COCO detectors, person class only. Candidates are listed below. | Permissive licences only (BSD-3 / Apache-2.0 / MIT); avoids AGPL (Ultralytics). Chosen on own val clips by PLAN.md A4, never on test results. |
 | Tracker | Own ByteTrack-style two-stage association: Kalman (cx, cy, aspect, h) + IoU + Hungarian, no appearance model | Geometry only; cheap; handles low-score recovery |
-| Baseline | Greedy IoU tracker | Required comparison; tuned on the same grid |
+| Baseline | Greedy IoU tracker | Required comparison; to be tuned on the same grid as the chosen tracker (no tuning has run yet) |
 | Events | Bottom-centre point vs corridor polygon, debounced open (n), hysteresis close (m), cooldown merge | Deterministic and explainable |
 | Health | OK / DEGRADED / UNAVAILABLE from frame validity, timestamps, fps, brightness, blur, detector confidence | Failure must be visible, never silent |
 
