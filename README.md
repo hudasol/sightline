@@ -102,7 +102,7 @@ The demo is synthetic. It checks the code, not real-world performance.
 ```bash
 python -m sightline split-check --val configs/manifests/val.json --test configs/manifests/test.json --out results/split/split_check.json
 python -m sightline detect-eval --manifest configs/manifests/val.json --out <file>   # val only: P/R/F1 vs threshold
-python -m sightline stride-eval --strides 1 2 3 --out <file>      # val only: event recall/latency vs frame skipping
+python -m sightline interval-eval --every 1 2 3 --out <file>      # val only: event recall/latency vs detection interval
 python -m sightline lock-manifest configs/manifests/test.json      # BEFORE tuning; "draft" until coverage is met
 python -m sightline tune                                           # val only -> results/frozen_config.yaml
 python -m sightline evaluate                                       # locked held-out set, once
@@ -112,7 +112,18 @@ python -m sightline errors                                         # picks failu
 python -m sightline plots                                          # all plots from saved results
 ```
 
-`detect-eval`, `stride-eval`, `benchmark` and `threads` accept `--detector NAME` and
+Every frame is processed. `pipeline.detect_every: k` runs the detector on every k-th
+frame, and the tracker predicts in between. Events record how much of their evidence
+came from predicted boxes (PLAN.md A2). Tracker and event settings are given in
+seconds and converted at each clip's fps (A3).
+
+Detectors (`--detector`):
+- torchvision: `fasterrcnn_mobilenet_v3_large_320_fpn`, `fasterrcnn_resnet50_fpn_v2`,
+  `ssdlite320_mobilenet_v3_large`
+- YOLOX through ONNX Runtime: `yolox_nano`, `yolox_tiny`, `yolox_s`. Install with
+  `pip install -e ".[onnx]"`, and put the 0.1.1rc0 `.onnx` files in `weights/yolox/`.
+
+`detect-eval`, `interval-eval`, `benchmark` and `threads` accept `--detector NAME` and
 `--input-size W H` to compare detector candidates without editing the config.
 `benchmark --max-frames N` times only the first N frames of each clip and says so
 in the report. `threads <clip>` times the detector at several torch thread counts.
