@@ -39,7 +39,9 @@
    "corridor": "configs/corridors/MOT17-05.yaml",
    "gt": "data/mot17/MOT17-05-FRCNN/gt/gt.txt",
    "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
-   "negative": false
+   "negative": false,
+   "metrics": ["detection", "tracking"],
+   "metrics_note": "moving camera: the image-space corridor polygon does not stay on the floor, so corridor events and their rule-derived labels are not meaningful; scored on detection and tracking only"
   },
   {
    "id": "MOT17-11-FRCNN",
@@ -52,7 +54,9 @@
    "corridor": "configs/corridors/MOT17-11.yaml",
    "gt": "data/mot17/MOT17-11-FRCNN/gt/gt.txt",
    "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
-   "negative": false
+   "negative": false,
+   "metrics": ["detection", "tracking"],
+   "metrics_note": "moving camera: the image-space corridor polygon does not stay on the floor, so corridor events and their rule-derived labels are not meaningful; scored on detection and tracking only"
   },
   {
    "id": "MOT17-13-FRCNN",
@@ -65,7 +69,9 @@
    "corridor": "configs/corridors/MOT17-13.yaml",
    "gt": "data/mot17/MOT17-13-FRCNN/gt/gt.txt",
    "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
-   "negative": false
+   "negative": false,
+   "metrics": ["detection", "tracking"],
+   "metrics_note": "moving camera: the image-space corridor polygon does not stay on the floor, so corridor events and their rule-derived labels are not meaningful; scored on detection and tracking only"
   }
  ]
 }

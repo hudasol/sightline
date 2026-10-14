@@ -18,6 +18,9 @@ from pathlib import Path
 from sightline.ingest import IMAGE_EXTS, sha256_file
 
 CONDITIONS = ("clear", "occlusion_crowding", "camera_motion_blur", "low_light_compression")
+# what a clip is scored on. A moving-camera clip drops "events": its image-space corridor polygon
+# does not stay on the floor, so corridor events (and their derived labels) mean nothing there.
+METRICS = ("detection", "tracking", "events")
 REQUIRED_FIELDS = ("id", "source", "scene", "camera", "session", "conditions", "corridor", "gt", "license")
 
 
@@ -39,7 +42,11 @@ class Clip:
     negative: bool = False
     gt_events: str | None = None
     fps: float | None = None
+    metrics: tuple[str, ...] = METRICS
     raw: dict = field(default_factory=dict)
+
+    def scored_on(self, metric: str) -> bool:
+        return metric in self.metrics
 
     @property
     def base_scene(self) -> str:
@@ -75,10 +82,17 @@ def load_manifest(path: str | Path) -> Manifest:
         unknown = [t for t in c["conditions"] if t not in CONDITIONS]
         if unknown:
             raise ManifestError(f"{p}: clip {c['id']!r} has unknown conditions {unknown}; use {list(CONDITIONS)}")
+        metrics = c.get("metrics", list(METRICS))
+        if (not isinstance(metrics, list) or not metrics or len(set(metrics)) != len(metrics)
+                or any(m not in METRICS for m in metrics)):
+            raise ManifestError(f"{p}: clip {c['id']!r} metrics must be a non-empty subset of {list(METRICS)}, got {metrics!r}")
+        if c.get("negative") and "events" not in metrics:
+            raise ManifestError(f"{p}: clip {c['id']!r} is negative but not scored on events; a negative clip only means something for events")
         clips.append(Clip(
             id=c["id"], source=c["source"], scene=c["scene"], camera=c["camera"], session=c["session"],
             conditions=list(c["conditions"]), corridor=c["corridor"], gt=c["gt"], license=c["license"],
-            negative=bool(c.get("negative", False)), gt_events=c.get("gt_events"), fps=c.get("fps"), raw=c,
+            negative=bool(c.get("negative", False)), gt_events=c.get("gt_events"), fps=c.get("fps"),
+            metrics=tuple(m for m in METRICS if m in metrics), raw=c,
         ))
     return Manifest(split=str(data.get("split", "")), clips=clips, path=str(p))
 
@@ -99,6 +113,8 @@ def coverage_check(test: Manifest, min_clips: int = 12, difficult: tuple[str, ..
         "occlusion_crowding", "camera_motion_blur", "low_light_compression")) -> dict:
     present = sorted({t for c in test.clips for t in c.conditions})
     diff_present = [t for t in difficult if t in present]
+    ev = [c for c in test.clips if c.scored_on("events")]
+    ev_present = sorted({t for c in ev for t in c.conditions})
     return {
         "n_clips": len(test.clips),
         "meets_min_clips": len(test.clips) >= min_clips,
@@ -107,6 +123,10 @@ def coverage_check(test: Manifest, min_clips: int = 12, difficult: tuple[str, ..
         "meets_three_difficult": len(diff_present) >= 3,
         "negative_clips": sum(1 for c in test.clips if c.negative),
         "has_negative_set": any(c.negative for c in test.clips),
+        # what the EVENT metrics actually rest on, once detection/tracking-only clips are set aside
+        "clips_scored_on": {m: sum(1 for c in test.clips if c.scored_on(m)) for m in METRICS},
+        "event_conditions_present": ev_present,
+        "event_difficult_conditions_present": [t for t in difficult if t in ev_present],
     }
 
 
@@ -159,7 +179,11 @@ def lock_manifest(manifest_path: str | Path, out_path: str | Path, root: str | P
         if c.gt_events:
             entry["gt_events_sha256"] = sha256_file(root / c.gt_events)
         entries.append(entry)
-    body = {"version": 1, "split": man.split, "clips": entries}
+    coverage = coverage_check(man)
+    complete = coverage["meets_min_clips"] and coverage["meets_three_difficult"] and coverage["has_negative_set"]
+    # a DRAFT lock is allowed (it exercises the protocol early) but `tune` refuses it
+    body = {"version": 1, "split": man.split, "clips": entries, "coverage": coverage,
+            "status": "final" if complete else "draft"}
     if eval_config is not None:
         body["eval_config"] = str(eval_config)
         body["eval_config_sha256"] = sha256_file(root / eval_config)
@@ -169,6 +193,24 @@ def lock_manifest(manifest_path: str | Path, out_path: str | Path, root: str | P
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(locked, indent=1))
+    return locked
+
+
+def require_final_lock(lock_path: str | Path, root: str | Path = ".") -> dict:
+    """The locked held-out set tuning may rely on: complete (status final) and unchanged since locking."""
+    lp = Path(lock_path)
+    if not lp.is_file():
+        raise ManifestError(f"locked held-out manifest {lp} does not exist: run `lock-manifest` BEFORE tuning")
+    locked = json.loads(lp.read_text())
+    if locked.get("status") != "final":
+        cov = locked.get("coverage") or {}
+        raise ManifestError(
+            f"{lp} is a DRAFT lock (status={locked.get('status', 'missing')!r}, coverage={json.dumps(cov)}). "
+            "Complete the held-out set (>=12 clips, 3 difficult conditions, a negative set), re-run "
+            "`lock-manifest`, and only then tune.")
+    problems = verify_lock(lp, root)
+    if problems:
+        raise ManifestError("held-out set changed since locking, refusing:\n  " + "\n  ".join(problems))
     return locked
 
 

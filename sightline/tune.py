@@ -29,7 +29,7 @@ from sightline.evaluation import tracking as trk_eval
 from sightline.evaluation.events import event_metrics, match_events
 from sightline.evaluation.run import ClipData, ClipResult, evaluate_clip, get_detections, prepare_clip, write_json
 from sightline.ingest import iter_frames
-from sightline.manifest import ManifestError, load_manifest, split_check
+from sightline.manifest import ManifestError, load_manifest, require_final_lock, split_check
 from sightline.quality import measure_quality
 
 
@@ -51,9 +51,7 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
          cache_dir: Path, detector_factory, out_path: Path, tuning_dir: Path, progress=print) -> dict:
     root = Path(root)
     lock_path = Path(locked_test)
-    if not lock_path.is_file():
-        raise ManifestError(f"locked held-out manifest {lock_path} does not exist: run `lock-manifest` BEFORE tuning")
-    locked = json.loads(lock_path.read_text())
+    locked = require_final_lock(lock_path, root)  # refuses a missing, draft or changed lock
     val = load_manifest(val_manifest)
     test = load_manifest(lock_path)
     problems = split_check(val, test)
@@ -64,13 +62,17 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
     progress(f"tuning on {len(val.clips)} val clips (held-out manifest {locked['manifest_sha256'][:12]} is locked)")
     cds: list[ClipData] = [prepare_clip(c, root, eval_cfg) for c in val.clips]
     dets = {cd.clip.id: get_detections(cd, cfg, root, cache_dir, detector_factory) for cd in cds}
-    notes: list[str] = []
+    # each stage tunes only on the clips the manifest scores on that metric
+    cds_det = [cd for cd in cds if cd.clip.scored_on("detection")]
+    cds_trk = [cd for cd in cds if cd.clip.scored_on("tracking")]
+    cds_ev = [cd for cd in cds if cd.clip.scored_on("events")]
+    notes: list[str] = [f"clips per stage: detection={len(cds_det)} tracking={len(cds_trk)} events={len(cds_ev)}"]
 
     # 1. detector operating threshold ---------------------------------------------------
     sweep = []
     for t in [round(0.30 + 0.05 * i, 2) for i in range(13)]:
         tp = fp = fn = 0
-        for cd in cds:
+        for cd in cds_det:
             frames = list(range(1, cd.n_frames + 1, cfg.pipeline.frame_stride))
             m = det_eval.evaluate_detections(cd.gt, cd.ignore, dets[cd.clip.id], t, frames, eval_cfg["detection"]["iou"])
             tp, fp, fn = tp + m["tp"], fp + m["fp"], fn + m["fn"]
@@ -97,7 +99,7 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
             c = copy.deepcopy(cfg)
             tc = c.tracker if kind == "bytetrack" else c.baseline_tracker
             tc.max_age, tc.min_hits, tc.match_iou = max_age, min_hits, match_iou
-            res = [evaluate_clip(cd, c, dets[cd.clip.id], eval_cfg, root, trackers=(kind,)) for cd in cds]
+            res = [evaluate_clip(cd, c, dets[cd.clip.id], eval_cfg, root, trackers=(kind,)) for cd in cds_trk]
             idf1, sw = _pooled_idf1(res, kind)
             row = {"max_age": max_age, "min_hits": min_hits, "match_iou": match_iou, "idf1": idf1, "id_switches": sw}
             tracker_grid[kind].append(row)
@@ -115,7 +117,7 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
     for n_open, m_close, cooldown in itertools.product((2, 3, 4), (3, 5, 8), (10, 15, 30)):
         c = copy.deepcopy(cfg)
         c.events.n_open, c.events.m_close, c.events.cooldown = n_open, m_close, cooldown
-        res = [evaluate_clip(cd, c, dets[cd.clip.id], eval_cfg, root, trackers=("bytetrack",)) for cd in cds]
+        res = [evaluate_clip(cd, c, dets[cd.clip.id], eval_cfg, root, trackers=("bytetrack",)) for cd in cds_ev]
         f1, lat = _event_f1(res, "bytetrack")
         row = {"n_open": n_open, "m_close": m_close, "cooldown": cooldown, "event_f1": f1, "median_latency_frames": lat}
         ev_grid.append(row)
@@ -127,7 +129,7 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
     progress(f"events: {best_ev}")
 
     # 4. image-quality thresholds from where detection actually fails on val ----------------------
-    qrows = _quality_vs_recall(cds, dets, cfg, root)
+    qrows = _quality_vs_recall(cds_det, dets, cfg, root)
     write_json(tuning_dir / "quality_vs_recall_val.json", qrows)
     overall_recall = best["recall"]
     for key, field_name in (("luminance", "min_luminance"), ("sharpness", "min_sharpness")):

@@ -1,0 +1,43 @@
+{
+ "val": "configs/manifests/val.json",
+ "test": "configs/manifests/test.json",
+ "leakage_problems": [],
+ "val_clips_scored_on": {
+  "detection": 5,
+  "tracking": 5,
+  "events": 2
+ },
+ "val_event_clips": [
+  "MOT17-02-FRCNN",
+  "MOT17-04-FRCNN"
+ ],
+ "test_coverage": {
+  "n_clips": 2,
+  "meets_min_clips": false,
+  "conditions_present": [
+   "camera_motion_blur",
+   "clear",
+   "low_light_compression"
+  ],
+  "difficult_conditions_present": [
+   "camera_motion_blur",
+   "low_light_compression"
+  ],
+  "meets_three_difficult": false,
+  "negative_clips": 0,
+  "has_negative_set": false,
+  "clips_scored_on": {
+   "detection": 2,
+   "tracking": 2,
+   "events": 1
+  },
+  "event_conditions_present": [
+   "clear"
+  ],
+  "event_difficult_conditions_present": []
+ },
+ "test_event_clips": [
+  "MOT17-09-FRCNN"
+ ],
+ "checked_at_utc": "2026-10-12T13:29:19Z"
+}

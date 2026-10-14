@@ -100,9 +100,10 @@ The demo is synthetic. It checks the code, not real-world performance.
 ## Splits, tuning, evaluation (order matters)
 
 ```bash
-python -m sightline split-check --val configs/manifests/val.json --test configs/manifests/test.json
-python -m sightline lock-manifest configs/manifests/test.json      # BEFORE tuning
-python -m sightline detect-eval --manifest configs/manifests/val.json   # detector P/R/F1 vs threshold
+python -m sightline split-check --val configs/manifests/val.json --test configs/manifests/test.json --out results/split/split_check.json
+python -m sightline detect-eval --manifest configs/manifests/val.json --out <file>   # val only: P/R/F1 vs threshold
+python -m sightline stride-eval --strides 1 2 3 --out <file>      # val only: event recall/latency vs frame skipping
+python -m sightline lock-manifest configs/manifests/test.json      # BEFORE tuning; "draft" until coverage is met
 python -m sightline tune                                           # val only -> results/frozen_config.yaml
 python -m sightline evaluate                                       # locked held-out set, once
 python -m sightline benchmark <clips> --corridor <corridor.yaml>   # fps / latency on THIS machine
@@ -111,8 +112,13 @@ python -m sightline errors                                         # picks failu
 python -m sightline plots                                          # all plots from saved results
 ```
 
-`tune` refuses to run without a locked held-out manifest and writes
-`results/frozen_config.yaml` with provenance. `evaluate` refuses if the lock or
+`detect-eval`, `stride-eval`, `benchmark` and `threads` accept `--detector NAME` and
+`--input-size W H` to compare detector candidates without editing the config.
+`benchmark --max-frames N` times only the first N frames of each clip and says so
+in the report. `threads <clip>` times the detector at several torch thread counts.
+
+`tune` refuses to run unless the held-out lock is **final** (coverage met) and
+unchanged, and writes `results/frozen_config.yaml` with provenance. `evaluate` refuses if the lock or
 config provenance does not match, and a second run needs `--allow-rerun` (logged).
 
 ## Replay one clip

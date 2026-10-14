@@ -138,6 +138,14 @@ def cmd_split_check(a) -> int:
     cov = coverage_check(test)
     _p(f"val clips={len(val.clips)} test clips={len(test.clips)}")
     _p(f"coverage: {json.dumps(cov)}")
+    if a.out:
+        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.out).write_text(json.dumps({
+            "val": a.val, "test": a.test, "leakage_problems": problems,
+            "val_clips_scored_on": coverage_check(val)["clips_scored_on"],
+            "val_event_clips": [c.id for c in val.clips if c.scored_on("events")],
+            "test_coverage": cov, "test_event_clips": [c.id for c in test.clips if c.scored_on("events")],
+            "checked_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, indent=1))
     if problems:
         for pr in problems:
             _p(f"LEAK: {pr}")
@@ -153,7 +161,10 @@ def cmd_lock(a) -> int:
         locked = lock_manifest(a.manifest, a.out, a.root, eval_config=a.eval_config)
     except (ManifestError, FileNotFoundError) as exc:
         return _unavailable(None, f"cannot lock: {exc}")
-    _p(f"locked {len(locked['clips'])} clips -> {a.out}  sha256={locked['manifest_sha256'][:16]}  git={locked['git_commit']}")
+    _p(f"locked {len(locked['clips'])} clips -> {a.out}  status={locked['status'].upper()}  "
+       f"sha256={locked['manifest_sha256'][:16]}  git={locked['git_commit']}")
+    if locked["status"] != "final":
+        _p("DRAFT lock: the held-out set does not meet the coverage bar yet; `tune` will refuse it")
     _p(f"coverage vs the bar: {json.dumps(cov)}")
     return 0
 
@@ -203,6 +214,23 @@ def cmd_detect_eval(a) -> int:
     return 0
 
 
+def cmd_stride_eval(a) -> int:
+    from sightline.evaluation.run import load_eval_config, write_json
+    from sightline.evaluation.stride import stride_sweep
+
+    try:
+        cfg = _load_cfg(a)
+        man = load_manifest(a.manifest)
+    except (ConfigError, ManifestError) as exc:
+        return _unavailable(None, str(exc))
+    out = stride_sweep(man, cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache), _detector_factory(cfg),
+                       a.strides, progress=_p)
+    if a.out:
+        write_json(a.out, out)
+        _p(f"wrote {a.out}")
+    return 0
+
+
 def cmd_tune(a) -> int:
     from sightline.evaluation.run import load_eval_config
     from sightline.tune import tune
@@ -232,7 +260,9 @@ def cmd_evaluate(a) -> int:
     except (ConfigError, ManifestError, FileNotFoundError, json.JSONDecodeError) as exc:
         return _unavailable(None, f"cannot start evaluation: {exc}")
 
-    # the held-out set must be locked, unchanged, and fixed BEFORE the config was tuned
+    # the held-out set must be locked, complete, unchanged, and fixed BEFORE the config was tuned
+    if lock.get("status") != "final":
+        return _unavailable(None, f"{a.lock} is a draft lock; the held-out set is incomplete")
     if not prov.get("frozen") or prov.get("locked_test_manifest_sha256") != lock["manifest_sha256"]:
         return _unavailable(None, "frozen config was not tuned against THIS locked manifest (provenance mismatch)")
     problems = verify_lock(a.lock, root)
@@ -462,6 +492,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("split-check", cmd_split_check, "fail if val and test leak")
     sp.add_argument("--val", required=True)
     sp.add_argument("--test", required=True)
+    sp.add_argument("--out", help="also save the leakage result and coverage as JSON")
 
     sp = add("lock-manifest", cmd_lock, "hash and lock the held-out manifest")
     sp.add_argument("manifest")
@@ -480,6 +511,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = add("detect-eval", cmd_detect_eval, "detector P/R/F1 vs threshold on a manifest (use val)")
     sp.add_argument("--manifest", default="configs/manifests/val.json")
+    sp.add_argument("--out")
+    _add_detector_overrides(sp)
+    common(sp)
+
+    sp = add("stride-eval", cmd_stride_eval, "event recall/latency vs frame_stride on a manifest (use val); tunes nothing")
+    sp.add_argument("--manifest", default="configs/manifests/val.json")
+    sp.add_argument("--strides", type=int, nargs="+", default=[1, 2, 3])
     sp.add_argument("--out")
     _add_detector_overrides(sp)
     common(sp)
