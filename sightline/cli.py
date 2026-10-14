@@ -182,36 +182,48 @@ def cmd_verify_lock(a) -> int:
 
 def cmd_detect_eval(a) -> int:
     from sightline.evaluation.detection import sweep_thresholds
-    from sightline.evaluation.run import get_detections, load_eval_config, prepare_clip, write_json
+    from sightline.evaluation.run import get_detections, in_scope_view, load_eval_config, prepare_clip, write_json
 
     cfg, eval_cfg, root = _load_cfg(a), load_eval_config(a.eval_config), Path(a.root)
     man = load_manifest(a.manifest)
-    rows_all, per_clip, n_frames = [], {}, 0
+    from sightline.evaluation.detection import counts_to_metrics
+
+    clips = [c for c in man.clips if c.scored_on("detection")]
     ths = [round(0.30 + 0.05 * i, 2) for i in range(13)]
-    tot = {t: [0, 0, 0] for t in ths}
-    for c in man.clips:
+    views = {"all": {}, "in_scope": {}}  # view -> clip id -> sweep rows
+    n_frames = 0
+    for c in clips:
         cd = prepare_clip(c, root, eval_cfg)
         dets = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
         frames = list(range(1, cd.n_frames + 1, cfg.pipeline.frame_stride))
         n_frames += len(frames)
-        per_clip[c.id] = sweep_thresholds(cd.gt, cd.ignore, dets, ths, frames)
-        for r in per_clip[c.id]:
-            for k, i in zip(("tp", "fp", "fn"), range(3)):
-                tot[r["threshold"]][i] += r[k]
-    from sightline.evaluation.detection import counts_to_metrics
-    for t in ths:
-        m = counts_to_metrics(*tot[t], threshold=t)
-        rows_all.append(m)
-        _p(f"thr={t:.2f} P={m['precision']:.3f} R={m['recall']:.3f} F1={m['f1']:.3f}")
+        views["all"][c.id] = sweep_thresholds(cd.gt, cd.ignore, dets, ths, frames)
+        views["in_scope"][c.id] = sweep_thresholds(*in_scope_view(cd), dets, ths, frames)
+    overall = {}
+    for view, per_clip in views.items():
+        tot = {t: [0, 0, 0] for t in ths}
+        for rows in per_clip.values():
+            for r in rows:
+                for i, k in enumerate(("tp", "fp", "fn")):
+                    tot[r["threshold"]][i] += r[k]
+        overall[view] = [counts_to_metrics(*tot[t], threshold=t) for t in ths]
+    for m_all, m_in in zip(overall["all"], overall["in_scope"]):
+        _p(f"thr={m_all['threshold']:.2f}  all boxes P={m_all['precision']:.3f} R={m_all['recall']:.3f} F1={m_all['f1']:.3f}"
+           f"  |  in scope P={m_in['precision']:.3f} R={m_in['recall']:.3f} F1={m_in['f1']:.3f}")
     if a.out:
         write_json(a.out, {
             "what": f"person detection P/R/F1 at IoU {eval_cfg['detection']['iou']} vs score threshold, pooled over clips",
             "manifest": a.manifest, "detector": cfg.detector.name, "input_size": list(cfg.detector.input_size),
             "min_score": cfg.detector.min_score, "frame_stride": cfg.pipeline.frame_stride,
-            "clips": [c.id for c in man.clips], "frames_evaluated": n_frames,
-            "overall": rows_all, "per_clip": per_clip,
+            "clips": [c.id for c in clips], "frames_evaluated": n_frames,
+            "ground_truth": "MOTChallenge rules as of 2026-10-14: class 1 conf 1 scored; classes 2,7,8,12 and conf-0 "
+                            "pedestrians ignored; other classes dropped",
+            "in_scope_rule": eval_cfg.get("in_scope"),
+            "overall": overall["all"], "overall_in_scope": overall["in_scope"],
+            "per_clip": views["all"], "per_clip_in_scope": views["in_scope"],
         })
     return 0
+
 
 
 def cmd_stride_eval(a) -> int:

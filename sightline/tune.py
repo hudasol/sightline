@@ -27,7 +27,8 @@ from sightline.detector import Detector
 from sightline.evaluation import detection as det_eval
 from sightline.evaluation import tracking as trk_eval
 from sightline.evaluation.events import event_metrics, match_events
-from sightline.evaluation.run import ClipData, ClipResult, evaluate_clip, get_detections, prepare_clip, write_json
+from sightline.evaluation.run import (ClipData, ClipResult, evaluate_clip, get_detections, in_scope_view, prepare_clip,
+                                      write_json)
 from sightline.ingest import iter_frames
 from sightline.manifest import ManifestError, load_manifest, require_final_lock, split_check
 from sightline.quality import measure_quality
@@ -66,7 +67,8 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
     cds_det = [cd for cd in cds if cd.clip.scored_on("detection")]
     cds_trk = [cd for cd in cds if cd.clip.scored_on("tracking")]
     cds_ev = [cd for cd in cds if cd.clip.scored_on("events")]
-    notes: list[str] = [f"clips per stage: detection={len(cds_det)} tracking={len(cds_trk)} events={len(cds_ev)}"]
+    notes: list[str] = [f"clips per stage: detection={len(cds_det)} tracking={len(cds_trk)} events={len(cds_ev)}",
+                        "detector threshold swept on in-scope boxes (PLAN.md amendment A1)"]
 
     # 1. detector operating threshold ---------------------------------------------------
     sweep = []
@@ -74,7 +76,8 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
         tp = fp = fn = 0
         for cd in cds_det:
             frames = list(range(1, cd.n_frames + 1, cfg.pipeline.frame_stride))
-            m = det_eval.evaluate_detections(cd.gt, cd.ignore, dets[cd.clip.id], t, frames, eval_cfg["detection"]["iou"])
+            # the bar is judged in scope (PLAN.md amendment A1), so the threshold is chosen in scope too
+            m = det_eval.evaluate_detections(*in_scope_view(cd), dets[cd.clip.id], t, frames, eval_cfg["detection"]["iou"])
             tp, fp, fn = tp + m["tp"], fp + m["fp"], fn + m["fn"]
         sweep.append(det_eval.counts_to_metrics(tp, fp, fn, t))
     bar = eval_cfg["bar"]
