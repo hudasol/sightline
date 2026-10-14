@@ -1,0 +1,122 @@
+{
+ "rule": "UNRESOLVED events whose track was lost while the event was open (close_reason track_lost; stream_end is not a failure). Worst first = longest open before the loss (close_frame - open_frame), ties broken by clip id then frame. Fixed before any strip was looked at.",
+ "run": "configs/manifests/val.json | detector yolox_s @[640, 640] | detect_every 2 | score threshold 0.5 | config configs/default.yaml (untuned)",
+ "requested": 10,
+ "selected": 6,
+ "items": [
+  {
+   "type": "unresolved_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 279,
+   "event_id": 1,
+   "track_id": 3,
+   "open_frame": 5,
+   "first_inside_frame": 1,
+   "last_inside_frame": 248,
+   "open_frames_before_loss": 274,
+   "evidence": {
+    "inside_detected": 124,
+    "inside_predicted": 122,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "image": "01_unresolved_MOT17-02-FRCNN_ev1_f279.png"
+  },
+  {
+   "type": "unresolved_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 589,
+   "event_id": 10,
+   "track_id": 37,
+   "open_frame": 414,
+   "first_inside_frame": 412,
+   "last_inside_frame": 558,
+   "open_frames_before_loss": 175,
+   "evidence": {
+    "inside_detected": 61,
+    "inside_predicted": 62,
+    "opened_on_prediction": true,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "image": "02_unresolved_MOT17-02-FRCNN_ev10_f589.png"
+  },
+  {
+   "type": "unresolved_event",
+   "clip": "MOT17-04-FRCNN",
+   "frame": 623,
+   "event_id": 6,
+   "track_id": 3,
+   "open_frame": 549,
+   "first_inside_frame": 547,
+   "last_inside_frame": 592,
+   "open_frames_before_loss": 74,
+   "evidence": {
+    "inside_detected": 23,
+    "inside_predicted": 23,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "image": "03_unresolved_MOT17-04-FRCNN_ev6_f623.png"
+  },
+  {
+   "type": "unresolved_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 209,
+   "event_id": 5,
+   "track_id": 16,
+   "open_frame": 163,
+   "first_inside_frame": 159,
+   "last_inside_frame": 178,
+   "open_frames_before_loss": 46,
+   "evidence": {
+    "inside_detected": 10,
+    "inside_predicted": 8,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "image": "04_unresolved_MOT17-02-FRCNN_ev5_f209.png"
+  },
+  {
+   "type": "unresolved_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 279,
+   "event_id": 7,
+   "track_id": 26,
+   "open_frame": 241,
+   "first_inside_frame": 237,
+   "last_inside_frame": 248,
+   "open_frames_before_loss": 38,
+   "evidence": {
+    "inside_detected": 6,
+    "inside_predicted": 4,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "image": "05_unresolved_MOT17-02-FRCNN_ev7_f279.png"
+  },
+  {
+   "type": "unresolved_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 471,
+   "event_id": 12,
+   "track_id": 2,
+   "open_frame": 437,
+   "first_inside_frame": 435,
+   "last_inside_frame": 440,
+   "open_frames_before_loss": 34,
+   "evidence": {
+    "inside_detected": 3,
+    "inside_predicted": 3,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "image": "06_unresolved_MOT17-02-FRCNN_ev12_f471.png"
+  }
+ ]
+}
