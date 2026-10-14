@@ -186,10 +186,10 @@ def cmd_detect_eval(a) -> int:
 
     cfg, eval_cfg, root = _load_cfg(a), load_eval_config(a.eval_config), Path(a.root)
     man = load_manifest(a.manifest)
-    from sightline.evaluation.detection import counts_to_metrics
+    from sightline.evaluation.detection import THRESHOLDS, counts_to_metrics
 
     clips = [c for c in man.clips if c.scored_on("detection")]
-    ths = [round(0.30 + 0.05 * i, 2) for i in range(13)]
+    ths = THRESHOLDS
     views = {"all": {}, "in_scope": {}}  # view -> clip id -> sweep rows
     n_frames = 0
     for c in clips:

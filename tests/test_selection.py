@@ -15,6 +15,12 @@ def _write(root, tag, p, r, fps):
         {"frames_processed": 100, "wall_seconds": 100 / fps, "inference_ms_p50": 50.0}]}))
 
 
+def test_threshold_grid_stays_above_the_detection_floor(cfg):
+    from sightline.evaluation.detection import THRESHOLDS
+
+    assert min(THRESHOLDS) > cfg.detector.min_score and THRESHOLDS[0] == 0.15 and THRESHOLDS[-1] == 0.9
+
+
 def test_fastest_candidate_meeting_both_bars_is_chosen(tmp_path):
     _write(tmp_path, "slow_good", 0.9, 0.9, 11.0)
     _write(tmp_path, "fast_good", 0.85, 0.82, 20.0)
