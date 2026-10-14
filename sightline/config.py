@@ -6,7 +6,9 @@ silent defaults.
 
 from __future__ import annotations
 
+import copy
 import hashlib
+import math
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 from typing import Any
@@ -45,9 +47,12 @@ class TrackerConfig:
     match_iou: float = 0.3  # minimum IoU for first-stage association
     low_match_iou: float = 0.5  # minimum IoU for the low-confidence stage
     tentative_match_iou: float = 0.5
-    max_age: int = 30  # processed frames a track may go unmatched before it expires
-    min_hits: int = 3  # hits before a tentative track is confirmed
+    max_age: int = 30  # detector frames a track may go unmatched before it expires
+    min_hits: int = 3  # detector hits before a tentative track is confirmed (evidence, so a count, not time)
     trajectory_len: int = 30
+    # time-based alternative (seconds); when set it wins over max_age and is converted per clip into
+    # DETECTOR frames: max_age = max_age_s * fps / detect_every, so patience in seconds is the same at any k
+    max_age_s: float | None = None
 
 
 @dataclass
@@ -56,6 +61,11 @@ class EventConfig:
     m_close: int = 5  # consecutive outside frames before it closes
     cooldown: int = 15  # re-entry within this many frames reopens the SAME event
     edge_margin_frac: float = 0.05  # lost near the frame border counts as "left view"
+    # time-based alternatives (seconds); when set they win over the frame counts above and are
+    # converted per clip at its own fps (every frame is processed, detected or predicted)
+    open_s: float | None = None
+    close_s: float | None = None
+    cooldown_s: float | None = None
 
 
 @dataclass
@@ -113,6 +123,11 @@ class Config:
         _check(e.m_close >= 1, "events.m_close must be >= 1")
         _check(e.cooldown >= 0, "events.cooldown must be >= 0")
         _check(0.0 <= e.edge_margin_frac < 0.5, "events.edge_margin_frac must be in [0, 0.5)")
+        for name in ("open_s", "close_s"):
+            v = getattr(e, name)
+            _check(v is None or (isinstance(v, (int, float)) and v > 0), f"events.{name} must be null or > 0 seconds")
+        _check(e.cooldown_s is None or (isinstance(e.cooldown_s, (int, float)) and e.cooldown_s >= 0),
+               "events.cooldown_s must be null or >= 0 seconds")
         _check(h.min_fps > 0, "health.min_fps must be > 0")
         _check(h.gap_factor > 1, "health.gap_factor must be > 1")
         _check(h.stall_seconds > 0, "health.stall_seconds must be > 0")
@@ -145,6 +160,42 @@ def _validate_tracker(t: "TrackerConfig", label: str) -> None:
     _check(t.max_age >= 1, f"{label}.max_age must be >= 1")
     _check(t.min_hits >= 1, f"{label}.min_hits must be >= 1")
     _check(t.trajectory_len >= 2, f"{label}.trajectory_len must be >= 2")
+    _check(t.max_age_s is None or (isinstance(t.max_age_s, (int, float)) and t.max_age_s > 0),
+           f"{label}.max_age_s must be null or > 0 seconds")
+
+
+def _frames(seconds: float, fps: float) -> int:
+    """Seconds -> frames, rounding half UP (Python's round() would send 2.5 to 2)."""
+    return int(math.floor(seconds * fps + 0.5))
+
+
+def resolve_timing(cfg: "Config", fps: float, detect_every: int | None = None) -> "Config":
+    """A copy of cfg whose frame counts come from its time-based settings at this clip's fps.
+
+    Events count every processed frame (detected or predicted), so open/close/cooldown use fps.
+    Tracker misses count DETECTOR frames, so max_age uses fps / detect_every. Settings left as
+    null keep their frame counts. The result is what actually ran; runs record it.
+    """
+    out = copy.deepcopy(cfg)
+    k = detect_every or cfg.pipeline.detect_every
+    e = out.events
+    if e.open_s is not None:
+        e.n_open = max(1, _frames(e.open_s, fps))
+    if e.close_s is not None:
+        e.m_close = max(1, _frames(e.close_s, fps))
+    if e.cooldown_s is not None:
+        e.cooldown = max(0, _frames(e.cooldown_s, fps))
+    for t in (out.tracker, out.baseline_tracker):
+        if t.max_age_s is not None:
+            t.max_age = max(1, _frames(t.max_age_s, fps / k))
+    return out
+
+
+def timing_summary(cfg: "Config") -> dict:
+    return {"n_open": cfg.events.n_open, "m_close": cfg.events.m_close, "cooldown": cfg.events.cooldown,
+            "max_age_detector_frames": cfg.tracker.max_age, "min_hits": cfg.tracker.min_hits,
+            "baseline_max_age_detector_frames": cfg.baseline_tracker.max_age,
+            "detect_every": cfg.pipeline.detect_every}
 
 
 def _build(cls, data: Any, path: str):

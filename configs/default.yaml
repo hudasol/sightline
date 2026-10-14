@@ -16,14 +16,20 @@ tracker:
   match_iou: 0.3
   low_match_iou: 0.5
   tentative_match_iou: 0.5
-  max_age: 30               # FROZEN-ON-VAL
+  max_age: 30               # detector frames; superseded by max_age_s when set
+  max_age_s: 1.0            # FROZEN-ON-VAL. seconds; = 30 frames at 30 fps with detect_every 1
   min_hits: 3               # FROZEN-ON-VAL
   trajectory_len: 30
 
 events:
-  n_open: 3                 # FROZEN-ON-VAL
-  m_close: 5                # FROZEN-ON-VAL
+  # frame counts below are superseded by the *_s seconds, converted at each clip's fps.
+  # The seconds equal the frame counts at 30 fps, so behaviour there is unchanged.
+  n_open: 3
+  m_close: 5
   cooldown: 15
+  open_s: 0.1               # FROZEN-ON-VAL (3 frames at 30 fps)
+  close_s: 0.167            # FROZEN-ON-VAL (5 frames at 30 fps)
+  cooldown_s: 0.5           # (15 frames at 30 fps)
   edge_margin_frac: 0.05
 
 health:
@@ -53,4 +59,5 @@ baseline_tracker:
   new_track_score: 0.6
   match_iou: 0.3
   max_age: 30
+  max_age_s: 1.0            # same time-based patience as the chosen tracker
   min_hits: 3
