@@ -30,7 +30,7 @@ event labels derived from the polygon, mean nothing. Those clips therefore carry
 `"metrics": ["detection", "tracking"]` plus a `metrics_note` saying why. Today that
 is MOT17-05, 11 and 13 (val) and MOT17-10 (test).
 
-- `aggregate`, `tune` and `stride-eval` pool each family only over its own clips.
+- `aggregate`, `tune` and `interval-eval` pool each family only over its own clips.
   The false-CLEAR safety figure follows events.
 - `split-check` reports clips per family, and which difficult conditions the
   **event** metrics actually rest on (`results/split/split_check.json`).
@@ -49,7 +49,21 @@ scene, or a ground-plane corridor.
 3. Draw the corridor polygon on a frame and save it as `configs/corridors/<camera>.yaml`
    (`name`, `frame_size: [w, h]`, `polygon: [[x, y], ...]`).
 4. Annotate person boxes in `annotations/<id>/gt.txt` in MOTChallenge format
-   (`frame,id,x,y,w,h,1,1,visibility`, frames 1-based).
+   (`frame,id,x,y,w,h,1,1,visibility`, frames 1-based). Give every box a real
+   visibility value; the in-scope rule needs it (PLAN.md A1, `docs/DATA_CARD.md`).
+   From CVAT, export "MOT 1.1" and convert it, stating which frames were annotated:
+
+   ```bash
+   python -m sightline import-cvat export.zip --out annotations/<id> --frames 1-600:10
+   ```
+
+   This writes `gt.txt`, `annotated_frames.json` and `import_provenance.json`. It
+   refuses boxes on frames you did not declare, and warns if every box says
+   visibility 1.0. If only some frames were annotated, add
+   `"annotated_frames": "annotations/<id>/annotated_frames.json"` to the entry.
+   Only those frames are scored. An annotated frame with no boxes is a real
+   negative; an unannotated frame is never scored. A sparsely annotated clip must
+   have hand-labelled `gt_events` (step 5) if it counts for events.
 5. Hand-label events in `annotations/<id>/events.json`:
    `[{"first_inside_frame": 41, "last_inside_frame": 97}, ...]` (feet inside the polygon).
    A negative clip gets `[]`.
