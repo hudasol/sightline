@@ -86,5 +86,33 @@ defaults (score threshold 0.5, A3 time-based settings).
 - `rests_on_prediction` was at most 1 event per row: almost every event had at
   least one detector frame inside the corridor.
 
+## Detection on a worker thread: latency before and after
+Source: `results/runtime/async/{before_sync,after_sync,after_async}/summary.json`, produced by `sightline runtime-summary`.
+
+**Protocol.** `benchmark --realtime`: frames arrive on the clip's own clock. A frame that arrives while a detector frame is still being processed waits, or is dropped once it lags past the 100 ms budget. Each config ran 3 times on the first 150 frames of the five val scenes.
+- "before" = the synchronous pipeline, at commit fe15d93.
+- "after_sync" = the same synchronous code path at 9ff5dad, as a control.
+- "after_async" = 9ff5dad with `--async-detection`.
+- Values are the median of 3 runs (min-max). Latency is the worst per-clip p95 and the overall maximum.
+
+| Config | Mode | Throughput fps | Worst clip p95 ms | Max ms | Frames dropped (of 750) | Detector frames skipped, worker busy |
+|---|---|---|---|---|---|---|
+| YOLOX-s @640, k = 2 | before | 6.25 (6.13-7.61) | 354 (315-551) | 700 (465-721) | 546 | 0 of 375 |
+| | after_sync | 6.74 (5.87-7.25) | 380 (350-381) | 393 (364-440) | 530 | 0 of 375 |
+| | after_async | 23.78 | 15 (12-36) | 27 (17-93) | 0 | 237 of 375 |
+| YOLOX-s @640, k = 3 | before | 10.46 (10.23-10.65) | 294 (291-314) | 347 (334-470) | 415 | 0 of 250 |
+| | after_sync | 12.27 (12.18-12.39) | 254 (253-265) | 336 (263-362) | 357 | 0 of 250 |
+| | after_async | 23.78 | 26 (21-27) | 54 (42-79) | 0 | 120 of 250 |
+| MobileNetV3-320 @640x360, k = 2 | before | 6.36 (6.19-6.49) | 330 (310-350) | 397 (350-430) | 543 | 0 of 375 |
+| | after_sync | 7.18 (6.85-7.34) | 296 (295-300) | 314 (304-318) | 517 | 0 of 375 |
+| | after_async | 23.78 | 13 (13-17) | 20 (17-34) | 0 | 259 of 375 |
+
+What this does and does not show:
+- **It removes blocking.** With the worker, no frame waits for the detector: no frame is dropped, and p95 latency falls from about 250-380 ms to 13-26 ms.
+- **It does not make the detector faster.** In async runs, 23.78 fps is the source rate of these clips (30, 30, 14, 30 and 25 fps), so every frame was processed in time. But 48-69% of the detector frames were skipped because the worker was still busy, so detections happen only as often as the detector can run. Between them the tracker predicts for longer than k frames.
+- **Its effect on accuracy is not measured.** When a result arrives depends on wall-clock timing, so cached-detection evaluation cannot reproduce async runs. Event recall and latency in async mode are untested.
+- **Synchronous real time does not keep up.** Even YOLOX-s at k = 3 dropped about half of all frames (415 of 750) in sync mode.
+- **Timing is noisy.** The control (same synchronous code) differs from "before" by up to 17% in throughput.
+
 ## Error analysis
 `sightline errors` selects failures worst-first from saved results. The "why" column is written by a human after looking at the frames; it is not generated.
