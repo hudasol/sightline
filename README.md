@@ -88,6 +88,47 @@ python -m sightline ingest data/own/ --out results/ingest      # a folder
 Writes `<clip>.ingest.json` with fps, frame count, resolution, codec, and a
 timestamp per frame. Corrupt or non-monotonic frames are recorded, not hidden.
 
+## Own footage: from phone to labelled clip
+
+Phones record variable frame rate (VFR), often HEVC, sometimes with rotation
+metadata, and `check-clip` flags all three. Convert every recording once with
+ffmpeg, which is free (ffmpeg.org; on Windows `winget install Gyan.FFmpeg`). This
+gives a constant 30 fps, 1920x1080, H.264 file and **keeps the original
+untouched**.
+
+Keep originals in `data/own/originals/` (git-ignored). `-n` refuses to overwrite
+an existing file.
+
+```bash
+ffmpeg -n -i data/own/originals/IMG_1234.MOV -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=30" -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -an -movflags +faststart data/own/own-corridorA-20261014-03.mp4
+```
+
+- `fps=30` makes the frame rate constant by repeating or dropping frames. Timing
+  shifts by at most one frame (33 ms).
+- `scale` and `pad` keep the aspect ratio. Record in landscape, because a
+  portrait clip ends up with black side bars.
+- ffmpeg applies the phone's rotation metadata while it re-encodes.
+- `-an` drops the audio track. It is not used, and voices are personal data.
+
+Then, per clip:
+
+```bash
+python -m sightline check-clip data/own/own-corridorA-20261014-03.mp4
+python -m sightline draw-corridor data/own/own-corridorA-20261014-03.mp4 --out configs/corridors/own-corridorA-tripod1.yaml
+python -m sightline label-events data/own/own-corridorA-20261014-03.mp4 --corridor configs/corridors/own-corridorA-tripod1.yaml --out annotations/own-corridorA-20261014-03/events.json
+python -m sightline import-cvat export.zip --out annotations/own-corridorA-20261014-03 --frames 1-900:10
+```
+
+- `check-clip` exits 1 if anything would break ingest.
+- Draw the corridor once per camera position, not once per clip.
+- `draw-corridor` and `label-events` open an OpenCV window. The project installs
+  `opencv-python-headless`, which has no window support. On the machine where you
+  label, swap it for the GUI build of the same version:
+  `pip uninstall -y opencv-python-headless` and then
+  `pip install opencv-python==<version>`.
+- See `docs/RECORDING_GUIDE.md` for what to film, and
+  `configs/manifests/own_clip.template.json` for the manifest entry.
+
 ## Try it with no data and no model
 
 ```bash
