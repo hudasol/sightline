@@ -26,6 +26,18 @@ Split by whole **scene / camera / recording session**, never by frame or by clip
 - Known label limits: MOT17 GT is not a corridor annotation; derived events are a proxy. Own-clip event labels are single-annotator unless stated.
 - **MOT17 classes (checked 2026-10-14):** class 1 conf 1 is scored. Classes 2, 7, 8 and 12, and conf-0 pedestrians, are ignore regions. All other classes are dropped. See PLAN.md amendment A1.
 
+## Who is "in scope" (PLAN.md amendment A1, fixed 2026-10-14)
+A scored pedestrian is **in scope** when both hold:
+- box height >= **10% of the source frame height**: at least 108 px at 1080p, 48 px at 480p, 36 px at 360p
+- visibility (column 9) >= **0.65**
+
+The thresholds live in `configs/eval.yaml` under `in_scope`; that file is hashed into the held-out lock. They follow the Caltech Pedestrian "Reasonable" subset (>= 50 px of a 480 px frame, >= 65% visible), expressed relative to frame height. They were fixed before any in-scope number was computed.
+
+- **Ignore, not penalise.** For in-scope scoring, an out-of-scope person becomes an **ignore region**. A detection on them is neither a hit nor a false positive, and missing them is not a miss.
+- **Two reports.** Detection and tracking are reported **in scope** and on **all boxes**.
+- **The bar.** The detection bar is judged on held-out own clips, in scope. MOT17 is reported, not judged.
+- **Events** use every scored person, whatever their scope. A person inside the corridor counts even if small or occluded.
+
 ## Own-clip annotation rules (PLAN.md amendment A1)
 - **Every person box records visibility** (0-1, the visible fraction of the person) in column 9. The in-scope test (height >= 10% of the frame and visibility >= 0.65) needs it. A box with no real visibility estimate must not be exported as 1.0.
 - Label every person in view, in scope or not. Out-of-scope people become ignore regions, so a detection on them is never counted as a false positive.
