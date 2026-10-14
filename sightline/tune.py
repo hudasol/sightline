@@ -93,41 +93,42 @@ def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, ev
     progress(f"detector threshold -> {best['threshold']} (P={best['precision']:.3f} R={best['recall']:.3f} F1={best['f1']:.3f})")
 
     # 2. trackers, same grid ------------------------------------------------------------------
-    grid = list(itertools.product((15, 30, 45), (1, 2, 3), (0.2, 0.3, 0.4)))
+    # time-based (PLAN.md A3): max_age in seconds, converted per clip at its fps and detection interval
+    grid = list(itertools.product((0.5, 1.0, 1.5), (1, 2, 3), (0.2, 0.3, 0.4)))
     tracker_grid = {"bytetrack": [], "iou": []}
     best_params = {}
     for kind in ("bytetrack", "iou"):
         best_key, best_row = None, None
-        for max_age, min_hits, match_iou in grid:
+        for max_age_s, min_hits, match_iou in grid:
             c = copy.deepcopy(cfg)
             tc = c.tracker if kind == "bytetrack" else c.baseline_tracker
-            tc.max_age, tc.min_hits, tc.match_iou = max_age, min_hits, match_iou
+            tc.max_age_s, tc.min_hits, tc.match_iou = max_age_s, min_hits, match_iou
             res = [evaluate_clip(cd, c, dets[cd.clip.id], eval_cfg, root, trackers=(kind,)) for cd in cds_trk]
             idf1, sw = _pooled_idf1(res, kind)
-            row = {"max_age": max_age, "min_hits": min_hits, "match_iou": match_iou, "idf1": idf1, "id_switches": sw}
+            row = {"max_age_s": max_age_s, "min_hits": min_hits, "match_iou": match_iou, "idf1": idf1, "id_switches": sw}
             tracker_grid[kind].append(row)
             key = (idf1, -sw)
             if best_key is None or key > best_key:
                 best_key, best_row = key, row
         best_params[kind] = best_row
         tc = cfg.tracker if kind == "bytetrack" else cfg.baseline_tracker
-        tc.max_age, tc.min_hits, tc.match_iou = best_row["max_age"], best_row["min_hits"], best_row["match_iou"]
+        tc.max_age_s, tc.min_hits, tc.match_iou = best_row["max_age_s"], best_row["min_hits"], best_row["match_iou"]
         progress(f"{kind}: {best_row}")
     write_json(tuning_dir / "tracker_grid_val.json", tracker_grid)
 
-    # 3. event debounce ----------------------------------------------------------------------
+    # 3. event debounce, in seconds (PLAN.md A3); the grid equals the old frame grid at 30 fps ------
     ev_grid, best_ev, best_ev_key = [], None, None
-    for n_open, m_close, cooldown in itertools.product((2, 3, 4), (3, 5, 8), (10, 15, 30)):
+    for open_s, close_s, cooldown_s in itertools.product((0.067, 0.1, 0.133), (0.1, 0.167, 0.267), (0.333, 0.5, 1.0)):
         c = copy.deepcopy(cfg)
-        c.events.n_open, c.events.m_close, c.events.cooldown = n_open, m_close, cooldown
+        c.events.open_s, c.events.close_s, c.events.cooldown_s = open_s, close_s, cooldown_s
         res = [evaluate_clip(cd, c, dets[cd.clip.id], eval_cfg, root, trackers=("bytetrack",)) for cd in cds_ev]
         f1, lat = _event_f1(res, "bytetrack")
-        row = {"n_open": n_open, "m_close": m_close, "cooldown": cooldown, "event_f1": f1, "median_latency_frames": lat}
+        row = {"open_s": open_s, "close_s": close_s, "cooldown_s": cooldown_s, "event_f1": f1, "median_latency_frames": lat}
         ev_grid.append(row)
         key = (f1 if lat <= bar["median_event_latency_frames"] else f1 - 1.0, -lat)
         if best_ev_key is None or key > best_ev_key:
             best_ev_key, best_ev = key, row
-    cfg.events.n_open, cfg.events.m_close, cfg.events.cooldown = best_ev["n_open"], best_ev["m_close"], best_ev["cooldown"]
+    cfg.events.open_s, cfg.events.close_s, cfg.events.cooldown_s = best_ev["open_s"], best_ev["close_s"], best_ev["cooldown_s"]
     write_json(tuning_dir / "event_grid_val.json", ev_grid)
     progress(f"events: {best_ev}")
 

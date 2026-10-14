@@ -1,0 +1,371 @@
+{
+ "what": "event recall/precision and latency vs pipeline.detect_every (PLAN.md A2), on cached detections; nothing tuned",
+ "manifest": "configs\\manifests\\val.json",
+ "event_clips": [
+  "MOT17-02-FRCNN",
+  "MOT17-04-FRCNN"
+ ],
+ "excluded_not_scored_on_events": [
+  "MOT17-05-FRCNN",
+  "MOT17-11-FRCNN",
+  "MOT17-13-FRCNN"
+ ],
+ "detector": "fasterrcnn_mobilenet_v3_large_320_fpn",
+ "input_size": [
+  640,
+  360
+ ],
+ "score_threshold": 0.5,
+ "tracker": "bytetrack",
+ "tracker_params": {
+  "kind": "bytetrack",
+  "new_track_score": 0.6,
+  "match_iou": 0.3,
+  "low_match_iou": 0.5,
+  "tentative_match_iou": 0.5,
+  "max_age": 30,
+  "min_hits": 3,
+  "trajectory_len": 30
+ },
+ "event_params": {
+  "n_open": 3,
+  "m_close": 5,
+  "cooldown": 15,
+  "edge_margin_frac": 0.05
+ },
+ "rows": [
+  {
+   "detect_every": 1,
+   "event_recall": 1.0,
+   "event_precision": 0.47619047619047616,
+   "events_tp": 20,
+   "events_fp": 22,
+   "events_fn": 0,
+   "events_unresolved": 22,
+   "events_total": 42,
+   "events_opened_on_prediction": 0,
+   "events_resting_on_prediction": 0,
+   "tp_events_resting_on_prediction": 0,
+   "latency_frames": {
+    "median": 23.0,
+    "p95": 162.50000000000006,
+    "n": 20
+   },
+   "latency_ms": {
+    "median": 766.6666666666667,
+    "p95": 5416.666666666669,
+    "n": 20
+   },
+   "per_clip": [
+    {
+     "clip": "MOT17-02-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 30.0,
+     "gt_events": 11,
+     "tp": 11,
+     "fp": 16,
+     "fn": 0,
+     "latencies_frames": [
+      158,
+      6,
+      25,
+      31,
+      74,
+      1,
+      9,
+      248,
+      73,
+      67,
+      2
+     ]
+    },
+    {
+     "clip": "MOT17-04-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 30.0,
+     "gt_events": 9,
+     "tp": 9,
+     "fp": 6,
+     "fn": 0,
+     "latencies_frames": [
+      0,
+      3,
+      21,
+      79,
+      30,
+      27,
+      -4,
+      -1,
+      -5
+     ]
+    }
+   ]
+  },
+  {
+   "detect_every": 2,
+   "event_recall": 1.0,
+   "event_precision": 0.6451612903225806,
+   "events_tp": 20,
+   "events_fp": 11,
+   "events_fn": 0,
+   "events_unresolved": 14,
+   "events_total": 31,
+   "events_opened_on_prediction": 6,
+   "events_resting_on_prediction": 0,
+   "tp_events_resting_on_prediction": 0,
+   "latency_frames": {
+    "median": 4.5,
+    "p95": 77.65,
+    "n": 20
+   },
+   "latency_ms": {
+    "median": 150.0,
+    "p95": 2588.333333333334,
+    "n": 20
+   },
+   "per_clip": [
+    {
+     "clip": "MOT17-02-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 15.0,
+     "gt_events": 11,
+     "tp": 11,
+     "fp": 8,
+     "fn": 0,
+     "latencies_frames": [
+      22,
+      6,
+      21,
+      -15,
+      52,
+      -36,
+      2,
+      5,
+      75,
+      77,
+      -64
+     ]
+    },
+    {
+     "clip": "MOT17-04-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 15.0,
+     "gt_events": 9,
+     "tp": 9,
+     "fp": 3,
+     "fn": 0,
+     "latencies_frames": [
+      0,
+      4,
+      21,
+      90,
+      19,
+      -22,
+      -3,
+      -1,
+      -5
+     ]
+    }
+   ]
+  },
+  {
+   "detect_every": 3,
+   "event_recall": 1.0,
+   "event_precision": 0.6666666666666666,
+   "events_tp": 20,
+   "events_fp": 10,
+   "events_fn": 0,
+   "events_unresolved": 16,
+   "events_total": 30,
+   "events_opened_on_prediction": 20,
+   "events_resting_on_prediction": 0,
+   "tp_events_resting_on_prediction": 0,
+   "latency_frames": {
+    "median": 8.0,
+    "p95": 67.15000000000003,
+    "n": 20
+   },
+   "latency_ms": {
+    "median": 266.66666666666663,
+    "p95": 2238.3333333333344,
+    "n": 20
+   },
+   "per_clip": [
+    {
+     "clip": "MOT17-02-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 10.0,
+     "gt_events": 11,
+     "tp": 11,
+     "fp": 8,
+     "fn": 0,
+     "latencies_frames": [
+      23,
+      5,
+      18,
+      65,
+      21,
+      36,
+      5,
+      64,
+      41,
+      3,
+      -107
+     ]
+    },
+    {
+     "clip": "MOT17-04-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 10.0,
+     "gt_events": 9,
+     "tp": 9,
+     "fp": 2,
+     "fn": 0,
+     "latencies_frames": [
+      1,
+      11,
+      3,
+      13,
+      -21,
+      108,
+      -13,
+      0,
+      -6
+     ]
+    }
+   ]
+  },
+  {
+   "detect_every": 4,
+   "event_recall": 0.95,
+   "event_precision": 0.6785714285714286,
+   "events_tp": 19,
+   "events_fp": 9,
+   "events_fn": 1,
+   "events_unresolved": 13,
+   "events_total": 28,
+   "events_opened_on_prediction": 18,
+   "events_resting_on_prediction": 0,
+   "tp_events_resting_on_prediction": 0,
+   "latency_frames": {
+    "median": 13,
+    "p95": 114.30000000000013,
+    "n": 19
+   },
+   "latency_ms": {
+    "median": 433.33333333333337,
+    "p95": 3810.0000000000045,
+    "n": 19
+   },
+   "per_clip": [
+    {
+     "clip": "MOT17-02-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 7.5,
+     "gt_events": 11,
+     "tp": 11,
+     "fp": 7,
+     "fn": 0,
+     "latencies_frames": [
+      22,
+      28,
+      37,
+      22,
+      10,
+      198,
+      13,
+      51,
+      7,
+      39,
+      4
+     ]
+    },
+    {
+     "clip": "MOT17-04-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 7.5,
+     "gt_events": 9,
+     "tp": 8,
+     "fp": 2,
+     "fn": 1,
+     "latencies_frames": [
+      -8,
+      -4,
+      3,
+      96,
+      -24,
+      105,
+      -3,
+      -1
+     ]
+    }
+   ]
+  },
+  {
+   "detect_every": 6,
+   "event_recall": 0.95,
+   "event_precision": 0.7037037037037037,
+   "events_tp": 19,
+   "events_fp": 8,
+   "events_fn": 1,
+   "events_unresolved": 12,
+   "events_total": 27,
+   "events_opened_on_prediction": 15,
+   "events_resting_on_prediction": 0,
+   "tp_events_resting_on_prediction": 0,
+   "latency_frames": {
+    "median": 12,
+    "p95": 138.00000000000006,
+    "n": 19
+   },
+   "latency_ms": {
+    "median": 400.0,
+    "p95": 4600.000000000002,
+    "n": 19
+   },
+   "per_clip": [
+    {
+     "clip": "MOT17-02-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 5.0,
+     "gt_events": 11,
+     "tp": 10,
+     "fp": 7,
+     "fn": 1,
+     "latencies_frames": [
+      12,
+      32,
+      134,
+      5,
+      3,
+      52,
+      -49,
+      82,
+      -43,
+      67
+     ]
+    },
+    {
+     "clip": "MOT17-04-FRCNN",
+     "source_fps": 30.0,
+     "detector_runs_per_second": 5.0,
+     "gt_events": 9,
+     "tp": 9,
+     "fp": 1,
+     "fn": 0,
+     "latencies_frames": [
+      2,
+      -5,
+      28,
+      174,
+      99,
+      48,
+      -13,
+      7,
+      1
+     ]
+    }
+   ]
+  }
+ ]
+}

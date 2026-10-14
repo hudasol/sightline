@@ -15,7 +15,7 @@ from itertools import islice
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from sightline.config import Config, CorridorConfig
+from sightline.config import Config, CorridorConfig, timing_summary
 from sightline.detector import Detector
 from sightline.events import Event
 from sightline.ingest import IngestError, SourceInfo, iter_frames, prefetch, probe
@@ -104,6 +104,7 @@ def run_clip(
     run.policy["decode_thread"] = cfg.pipeline.decode_thread
 
     pipe = Pipeline(cfg, corridor, detector, (info.width, info.height), nominal_fps=info.fps, clock=clock)
+    run.policy["resolved_timing"] = timing_summary(pipe.cfg)  # the frame counts that actually ran
     rec = RuntimeRecorder(warmup=cfg.health.warmup_frames, budget_s=1.0 / cfg.health.min_fps)
     health_log = (out / "health.jsonl").open("w") if out else None
     events_log = (out / "events.jsonl").open("w") if out else None

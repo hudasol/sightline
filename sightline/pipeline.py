@@ -14,7 +14,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from sightline.config import Config, CorridorConfig
+from sightline.config import Config, CorridorConfig, resolve_timing
 from sightline.detector import Detector
 from sightline.events import EventEngine, EventRecord
 from sightline.geometry import box_ref_point
@@ -75,6 +75,8 @@ class Pipeline:
         nominal_fps: float | None = None,
         clock: Callable[[], float] = time.perf_counter,
     ) -> None:
+        # time-based settings become frame counts for THIS clip's fps (and detection interval)
+        cfg = resolve_timing(cfg, nominal_fps) if nominal_fps else cfg
         self.cfg = cfg
         self.clock = clock
         self.detector = detector
