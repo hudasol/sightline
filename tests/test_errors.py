@@ -45,4 +45,6 @@ def test_unresolved_strips_on_val_style_run(clip, cached, tmp_path):
     out = analyze_unresolved(res, Path("."), man, cache, detector_tag(cfg), 0.5, 10, "test run")
     index = json.loads((out / "index.json").read_text())
     assert index["rule"].startswith("UNRESOLVED") and (out / "INDEX.md").is_file()
+    assert index["requested"] == 10 and index["selected"] == len(index["items"])
+    assert f"Requested 10; {index['selected']} event(s)" in (out / "INDEX.md").read_text()
     assert all((out / it["image"]).is_file() for it in index["items"] if it["image"])

@@ -238,8 +238,10 @@ def analyze_unresolved(results_dir: Path, root: Path, manifest_path: Path, cache
         png = out_dir / f"{k:02d}_unresolved_{it['clip']}_ev{it['event_id']}_f{it['frame']}.png"
         ok = render_strip(it, root, manifest_path, cache_dir, detector_tag, threshold, results_dir / "tracks", png)
         rows.append({**it, "image": png.name if ok else None})
-    (out_dir / "index.json").write_text(json.dumps({"rule": UNRESOLVED_RULE, "run": run_note, "items": rows}, indent=1))
+    (out_dir / "index.json").write_text(json.dumps({"rule": UNRESOLVED_RULE, "run": run_note, "requested": n,
+                                                    "selected": len(rows), "items": rows}, indent=1))
     md = ["# Unresolved events (auto-selected, worst first)", "", f"Selection: {UNRESOLVED_RULE}", "", f"Run: {run_note}", "",
+          f"Requested {n}; {len(rows)} event(s) met the selection rule.", "",
           "Legend: green polygon = corridor, green boxes = ground truth, grey = detections >= threshold, "
           "light blue = reported tracks, red = the event's track. These frames are not to be published (they show faces).",
           "The **Why it happened** column is for a human who has looked at the strip. No setting was changed from it.", "",
