@@ -23,6 +23,18 @@ def test_fastest_candidate_meeting_both_bars_is_chosen(tmp_path):
     assert t["choice"] == "fast_good"
 
 
+def test_selection_is_judged_on_the_in_scope_view(tmp_path):
+    _write(tmp_path, "a", 0.9, 0.9, 20.0)  # passes on all boxes...
+    f = tmp_path / "detector_selection" / "detect_eval_val_a.json"
+    d = json.loads(f.read_text())
+    d["overall_in_scope"] = [{"threshold": 0.5, "precision": 0.9, "recall": 0.6, "f1": 0.72, "tp": 1, "fp": 1, "fn": 1}]
+    f.write_text(json.dumps(d))  # ...but not in scope
+    t = build_table(tmp_path, ["a"], 0.8, 0.8, 10.0, 0.5)
+    assert t["rows"][0]["judged_view"] == "in_scope" and t["choice"] is None
+    md = to_markdown(t)
+    assert "### In scope" in md and "### All boxes" in md
+
+
 def test_no_candidate_means_sampling_not_a_lower_bar(tmp_path):
     _write(tmp_path, "a", 0.9, 0.3, 5.0)
     t = build_table(tmp_path, ["a", "missing"], 0.8, 0.8, 10.0, 0.5)

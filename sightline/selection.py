@@ -33,6 +33,16 @@ def _timing(run_dir: Path) -> dict | None:
             "files": [str(f.as_posix()) for f in files]}
 
 
+VIEWS = {"in_scope": "overall_in_scope", "all_boxes": "overall"}
+
+
+def _view(overall: list[dict], bar_p: float, bar_r: float, default_threshold: float) -> dict:
+    return {"best_f1": max(overall, key=lambda r: r["f1"]),
+            "at_default_threshold": next((r for r in overall if abs(r["threshold"] - default_threshold) < 1e-9), None),
+            "max_recall": max(r["recall"] for r in overall),
+            "thresholds_meeting_pr_bar": [r["threshold"] for r in overall if r["precision"] >= bar_p and r["recall"] >= bar_r]}
+
+
 def build_table(results: Path, tags: list[str], bar_p: float, bar_r: float, min_fps: float,
                 default_threshold: float) -> dict:
     rows = []
@@ -41,14 +51,15 @@ def build_table(results: Path, tags: list[str], bar_p: float, bar_r: float, min_
         row: dict = {"candidate": tag, "timing": _timing(results / "runtime" / "candidates" / tag)}
         if de.is_file():
             d = json.loads(de.read_text())
-            overall = d["overall"]
-            best = max(overall, key=lambda r: r["f1"])
-            at_default = next((r for r in overall if abs(r["threshold"] - default_threshold) < 1e-9), None)
-            meets = [r["threshold"] for r in overall if r["precision"] >= bar_p and r["recall"] >= bar_r]
             row.update({"detector": d["detector"], "input_size": d["input_size"], "frames_evaluated": d["frames_evaluated"],
-                        "best_f1": best, "at_default_threshold": at_default,
-                        "max_recall": max(r["recall"] for r in overall),
-                        "thresholds_meeting_pr_bar": meets, "detect_eval_file": str(de.as_posix())})
+                        "detect_eval_file": str(de.as_posix()), "in_scope_rule": d.get("in_scope_rule")})
+            for view, key in VIEWS.items():
+                if key in d:
+                    row[view] = _view(d[key], bar_p, bar_r, default_threshold)
+            # the bar's population is in scope (PLAN.md amendment A1); older files only have all boxes
+            judged = row.get("in_scope") or row.get("all_boxes")
+            row["judged_view"] = "in_scope" if "in_scope" in row else "all_boxes"
+            row["thresholds_meeting_pr_bar"] = judged["thresholds_meeting_pr_bar"]
         else:
             row["detect_eval_file"] = None
             row["pending"] = "no detect-eval result saved yet"
@@ -59,7 +70,9 @@ def build_table(results: Path, tags: list[str], bar_p: float, bar_r: float, min_
     qualifying = [r for r in rows if r["meets_pr_bar"] and r["meets_fps_bar"]]
     choice = max(qualifying, key=lambda r: r["timing"]["fps"])["candidate"] if qualifying else None
     return {"what": "detector candidates on VAL: detection quality vs end-to-end speed; built from saved files only",
-            "rule": f"fastest candidate with P>={bar_p} and R>={bar_r} at some threshold on val AND >={min_fps} fps (PLAN.md s5)",
+            "rule": (f"fastest candidate with P>={bar_p} and R>={bar_r} at some threshold on val (in-scope boxes) AND "
+                     f">={min_fps} fps (PLAN.md s5, A1). Val holds only MOT17 so far: the bar itself is judged on held-out "
+                     "own corridor clips."),
             "rows": rows, "choice": choice,
             "verdict": (f"chosen: {choice}" if choice else
                         "NO candidate meets the rule; per PLAN.md s5 document a frame-sampling strategy and "
@@ -70,15 +83,22 @@ def to_markdown(t: dict) -> str:
     def f(v, nd=3):
         return "n/a" if v is None else f"{v:.{nd}f}"
 
-    lines = ["| Candidate | Frames | Thr @ best F1 | P | R | F1 | P / R @ 0.50 | Max R (any thr) | P,R >= bar? | fps (end to end) | Infer p50 ms |",
-             "|---|---|---|---|---|---|---|---|---|---|---|"]
-    for r in t["rows"]:
-        tm = r["timing"] or {}
-        if "pending" in r:
-            lines.append(f"| {r['candidate']} | pending | | | | | | | | {f(tm.get('fps'), 2)} | {f(tm.get('inference_ms_p50_frame_weighted'), 0)} |")
-            continue
-        b, d = r["best_f1"], r["at_default_threshold"] or {}
-        lines.append(f"| {r['candidate']} | {r['frames_evaluated']} | {b['threshold']:.2f} | {f(b['precision'])} | {f(b['recall'])} | "
-                     f"{f(b['f1'])} | {f(d.get('precision'))} / {f(d.get('recall'))} | {f(r['max_recall'])} | "
-                     f"{'yes' if r['meets_pr_bar'] else 'no'} | {f(tm.get('fps'), 2)} | {f(tm.get('inference_ms_p50_frame_weighted'), 0)} |")
-    return "\n".join(lines) + f"\n\n{t['rule']}\n\n**{t['verdict']}**\n"
+    out = []
+    for view, title in (("in_scope", "In scope (judged view)"), ("all_boxes", "All boxes")):
+        lines = [f"### {title}", "",
+                 "| Candidate | Frames | Thr @ best F1 | P | R | F1 | P / R @ 0.50 | Max R (any thr) | P,R >= bar? | fps (end to end) | Infer p50 ms |",
+                 "|---|---|---|---|---|---|---|---|---|---|---|"]
+        for r in t["rows"]:
+            tm = r["timing"] or {}
+            v = r.get(view)
+            if v is None:
+                why = "pending" if "pending" in r else "not saved"
+                lines.append(f"| {r['candidate']} | {why} | | | | | | | | {f(tm.get('fps'), 2)} | {f(tm.get('inference_ms_p50_frame_weighted'), 0)} |")
+                continue
+            b, d = v["best_f1"], v["at_default_threshold"] or {}
+            lines.append(f"| {r['candidate']} | {r['frames_evaluated']} | {b['threshold']:.2f} | {f(b['precision'])} | {f(b['recall'])} | "
+                         f"{f(b['f1'])} | {f(d.get('precision'))} / {f(d.get('recall'))} | {f(v['max_recall'])} | "
+                         f"{'yes' if v['thresholds_meeting_pr_bar'] else 'no'} | {f(tm.get('fps'), 2)} | "
+                         f"{f(tm.get('inference_ms_p50_frame_weighted'), 0)} |")
+        out.append("\n".join(lines))
+    return "\n\n".join(out) + f"\n\n{t['rule']}\n\n**{t['verdict']}**\n"
