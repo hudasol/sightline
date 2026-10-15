@@ -21,6 +21,11 @@
     "closed_on_prediction": false,
     "rests_on_prediction": false
    },
+   "matched_gt_event": 1,
+   "matched_gt_frames": [
+    1,
+    459
+   ],
    "image": "01_unresolved_MOT17-02-FRCNN_ev1_f279.png"
   },
   {
@@ -40,6 +45,11 @@
     "closed_on_prediction": false,
     "rests_on_prediction": false
    },
+   "matched_gt_event": 6,
+   "matched_gt_frames": [
+    413,
+    600
+   ],
    "image": "02_unresolved_MOT17-02-FRCNN_ev10_f589.png"
   },
   {
@@ -59,6 +69,11 @@
     "closed_on_prediction": false,
     "rests_on_prediction": false
    },
+   "matched_gt_event": 2,
+   "matched_gt_frames": [
+    550,
+    606
+   ],
    "image": "03_unresolved_MOT17-04-FRCNN_ev6_f623.png"
   },
   {
@@ -78,6 +93,8 @@
     "closed_on_prediction": false,
     "rests_on_prediction": false
    },
+   "matched_gt_event": null,
+   "matched_gt_frames": null,
    "image": "04_unresolved_MOT17-02-FRCNN_ev5_f209.png"
   },
   {
@@ -97,6 +114,8 @@
     "closed_on_prediction": false,
     "rests_on_prediction": false
    },
+   "matched_gt_event": null,
+   "matched_gt_frames": null,
    "image": "05_unresolved_MOT17-02-FRCNN_ev7_f279.png"
   },
   {
@@ -116,6 +135,8 @@
     "closed_on_prediction": false,
     "rests_on_prediction": false
    },
+   "matched_gt_event": null,
+   "matched_gt_frames": null,
    "image": "06_unresolved_MOT17-02-FRCNN_ev12_f471.png"
   }
  ]
