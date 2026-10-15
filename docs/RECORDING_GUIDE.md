@@ -3,6 +3,7 @@
 What to film so the own clips can carry the protocol: the held-out bar (PLAN.md
 section 3, amendment A1) and the detector choice (amendment A4). Read this
 before the first session. Nothing here may be decided after looking at results.
+Filming only yourself? See the short [SOLO_RECORDING_GUIDE.md](SOLO_RECORDING_GUIDE.md).
 
 ## What the protocol needs from you
 
