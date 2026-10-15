@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from sightline.errors import select_unresolved
+from sightline.errors import select_false_events, select_unresolved
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -34,6 +34,22 @@ def test_unresolved_selection_is_worst_first_and_skips_non_failures(tmp_path):
     assert select_unresolved(tmp_path, n=1)[0]["open_frames_before_loss"] == 80
 
 
+def test_false_event_selection_is_longest_open_first_and_names_overlapping_gt(tmp_path):
+    (tmp_path / "bytetrack").mkdir()
+    (tmp_path / "bytetrack" / "b.json").write_text(json.dumps({
+        "clip": "b", "events_predicted": [_ev(1, 10, 40, "CLOSED", "left_corridor"), _ev(2, 12, 90), _ev(3, 200, 260)],
+        "event_pairs": [[5, 1]], "false_events": [2, 3],
+        "events_gt": [{"id": 5, "first_inside_frame": 9, "last_inside_frame": 50}]}))
+    (tmp_path / "bytetrack" / "a.json").write_text(json.dumps({
+        "clip": "a", "events_predicted": [_ev(7, 10, 70, "CLOSED", "left_corridor")], "event_pairs": [],
+        "false_events": [7], "events_gt": []}))
+    got = select_false_events(tmp_path, n=10)
+    assert [(x["clip"], x["event_id"]) for x in got] == [("b", 2), ("a", 7), ("b", 3)]  # 78, 60, 60 (tie by clip)
+    assert got[0]["overlapping_gt_events"] == [{"gt_event": 5, "gt_frames": [9, 50], "matched_to_event": 1}]
+    assert got[2]["overlapping_gt_events"] == [] and got[1]["status"] == "CLOSED"
+    assert len(select_false_events(tmp_path, n=1)) == 1
+
+
 def test_unresolved_strips_on_val_style_run(clip, cached, tmp_path):
     """End to end on the synthetic clip: details from cached detections, then strips and an index."""
     from sightline.config import load_config
@@ -58,3 +74,8 @@ def test_unresolved_strips_on_val_style_run(clip, cached, tmp_path):
     assert index["requested"] == 10 and index["selected"] == len(index["items"])
     assert f"Requested 10; {index['selected']} event(s)" in (out / "INDEX.md").read_text()
     assert all((out / it["image"]).is_file() for it in index["items"] if it["image"])
+    from sightline.errors import analyze_false_events
+
+    fe = json.loads((analyze_false_events(res, Path("."), man, cache, detector_tag(cfg), 0.5, 10, "test run")
+                     / "index.json").read_text())
+    assert fe["rule"].startswith("False events") and fe["selected"] == len(fe["items"])
