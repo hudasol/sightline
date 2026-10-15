@@ -131,6 +131,21 @@ What this does and does not show:
 - **Synchronous real time does not keep up.** Even YOLOX-s at k = 3 dropped about half of all frames (415 of 750) in sync mode.
 - **Timing is noisy.** The control (same synchronous code) differs from "before" by up to 17% in throughput.
 
+## How UNRESOLVED events are scored
+**Rule** (`sightline/evaluation/events.py`, `match_events`):
+- **Matching ignores status.** Every predicted event is matched the same way, whatever its status (CLOSED, UNRESOLVED or still ACTIVE). Matching is one-to-one, on temporal overlap of the [first inside, last inside] frames, largest overlap first.
+- **What counts as what.** A matched predicted event is a true positive, an unmatched one a false event, an unmatched GT event a miss.
+- **UNRESOLVED changes nothing in the score.** An UNRESOLVED event that overlaps a not-yet-matched GT event counts as a TP; otherwise it is a false event. `events_unresolved` is reported alongside as a count only.
+
+**The six track-lost UNRESOLVED events** (val, YOLOX-s @640, k = 2): `results/error_analysis/val_unresolved_yolox_s_640x640_k2/index.json`.
+- **3 were matched to a GT event and count as TPs:** MOT17-02 event 1 (GT 1), MOT17-02 event 10 (GT 6) and MOT17-04 event 6 (GT 2).
+- **3 were not matched and count as false events:** MOT17-02 events 5, 7 and 12.
+
+**The 31-frame gap.** All six went UNRESOLVED exactly 31 frames after their last inside frame, which `max_age` and k explain:
+- That run's `max_age` was 15 detector frames (1.0 s at 30 fps with k = 2, recorded in the run's `policy.resolved_timing`). A track expires on its 16th missed detector frame (`tracking/state.py`), 32 frames after its last detection.
+- Every last-inside frame is even. At k = 2 the detector runs on odd frames, so each one was the predicted frame just after the last detection, which gives 31.
+- **Lost inside the zone.** UNRESOLVED (`track_lost`) is only assigned to an event whose phase was "active" at expiry, so each track's last observed position was inside the zone. Where the person went after that is not observed.
+
 ## Error analysis
 `sightline errors` selects failures worst-first from saved results. The "why" column is written by a human after looking at the frames; it is not generated.
 
