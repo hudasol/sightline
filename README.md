@@ -50,6 +50,47 @@ pip install -e ".[dev]"
 
 Model weights download on first use (torchvision, COCO). They are git-ignored.
 
+### OpenCV with a GUI (for `draw-corridor` and `label-events`)
+
+The default install uses `opencv-python-headless`, which has no window support.
+The interactive tools need `opencv-python`, which the `gui` extra installs. Both
+packages ship the same `cv2` folder, so they must never be installed together.
+- A plain `pip install -e ".[...]"` (re)installs the headless package as a core
+  dependency, and it overwrites the GUI build's files (`GUI: NONE`), even though
+  `opencv-python` still shows in `pip list`.
+- Uninstalling only one of the two deletes files the other needs.
+
+So the swap is always the **last** step, in this order (Windows PowerShell, venv
+active):
+
+```powershell
+pip install -e ".[detector,onnx,dev,gui]"
+$v = (pip show opencv-python-headless | Select-String '^Version:').ToString().Split(':')[1].Trim()
+pip uninstall -y opencv-python-headless opencv-python
+pip install "opencv-python==$v"
+python -c "import cv2; print([l.strip() for l in cv2.getBuildInformation().splitlines() if l.strip().startswith('GUI')])"
+```
+
+On macOS / Linux, the same steps:
+
+```bash
+pip install -e ".[detector,onnx,dev,gui]"
+v=$(pip show opencv-python-headless | sed -n 's/^Version: //p')
+pip uninstall -y opencv-python-headless opencv-python
+pip install "opencv-python==$v"
+python -c "import cv2; print([l.strip() for l in cv2.getBuildInformation().splitlines() if l.strip().startswith('GUI')])"
+```
+
+- **Check:** the last line must print a GUI backend (`WIN32UI` on Windows), not `NONE`.
+- **Expected warning:** `pip check` then reports that sightline requires
+  `opencv-python-headless`. That is expected here and harmless: `opencv-python`
+  provides the same `cv2`.
+- **Reinstalling the project code later:** use `pip install -e . --no-deps`, which
+  leaves OpenCV alone.
+- **Reinstalling with dependencies or extras:** this brings the headless package
+  back, so repeat the last four lines.
+- **Servers and CI:** keep the headless default and skip this section.
+
 ## Data preparation
 
 Raw video and frames are **not** in git (licences differ from the code's).
@@ -122,11 +163,9 @@ python -m sightline import-cvat export.zip --out annotations/own-corridorA-20261
 
 - `check-clip` exits 1 if anything would break ingest.
 - Draw the corridor once per camera position, not once per clip.
-- `draw-corridor` and `label-events` open an OpenCV window. The project installs
-  `opencv-python-headless`, which has no window support. On the machine where you
-  label, swap it for the GUI build of the same version:
-  `pip uninstall -y opencv-python-headless` and then
-  `pip install opencv-python==<version>`.
+- `draw-corridor` and `label-events` open an OpenCV window. The default headless
+  OpenCV has none: on the machine where you label, follow "OpenCV with a GUI" under
+  Setup, in that order. Uninstalling only the headless package is not enough.
 - See `docs/RECORDING_GUIDE.md` for what to film, and
   `configs/manifests/own_clip.template.json` for the manifest entry.
 
