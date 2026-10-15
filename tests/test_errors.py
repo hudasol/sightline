@@ -16,6 +16,16 @@ def _ev(eid, open_f, close_f, status="UNRESOLVED", reason="track_lost"):
             "first_inside_frame": open_f - 2, "last_inside_frame": close_f - 5, "close_frame": close_f}
 
 
+def test_unresolved_items_say_which_gt_event_they_matched(tmp_path):
+    (tmp_path / "bytetrack").mkdir()
+    (tmp_path / "bytetrack" / "c.json").write_text(json.dumps({
+        "clip": "c", "events_predicted": [_ev(1, 10, 40), _ev(2, 10, 30)],
+        "event_pairs": [[5, 1]], "events_gt": [{"id": 5, "first_inside_frame": 9, "last_inside_frame": 50}]}))
+    got = {x["event_id"]: x for x in select_unresolved(tmp_path)}
+    assert got[1]["matched_gt_event"] == 5 and got[1]["matched_gt_frames"] == [9, 50]
+    assert got[2]["matched_gt_event"] is None and got[2]["matched_gt_frames"] is None
+
+
 def test_unresolved_selection_is_worst_first_and_skips_non_failures(tmp_path):
     _per_clip(tmp_path, "b", [_ev(1, 10, 20), _ev(2, 10, 90), _ev(3, 5, 400, reason="stream_end")])
     _per_clip(tmp_path, "a", [_ev(7, 10, 20), _ev(8, 10, 50, status="CLOSED", reason="left_corridor")])

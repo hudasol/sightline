@@ -157,6 +157,15 @@ def collect_details(manifest_path: Path, cfg, eval_cfg: dict, root: Path, cache_
     return done
 
 
+def _gt_match(d: dict, event_id: int) -> dict:
+    """The ground-truth event this predicted event was matched to by the scorer (event_pairs), if any.
+    Matching (evaluation/events.py) is the same for every status, UNRESOLVED included."""
+    gid = next((g for g, p in d.get("event_pairs", []) if p == event_id), None)
+    g = next((x for x in d.get("events_gt", []) if x["id"] == gid), None) if gid is not None else None
+    return {"matched_gt_event": gid,
+            "matched_gt_frames": [g["first_inside_frame"], g["last_inside_frame"]] if g else None}
+
+
 def select_unresolved(per_clip_dir: Path, n: int = 10) -> list[dict]:
     items = []
     for f in sorted((per_clip_dir / "bytetrack").glob("*.json")):
@@ -167,7 +176,7 @@ def select_unresolved(per_clip_dir: Path, n: int = 10) -> list[dict]:
                               "event_id": e["event_id"], "track_id": e["track_id"], "open_frame": e["open_frame"],
                               "first_inside_frame": e["first_inside_frame"], "last_inside_frame": e["last_inside_frame"],
                               "open_frames_before_loss": e["close_frame"] - e["open_frame"],
-                              "evidence": e.get("evidence")})
+                              "evidence": e.get("evidence"), **_gt_match(d, e["event_id"])})
     items.sort(key=lambda x: (-x["open_frames_before_loss"], x["clip"], x["frame"]))
     return items[:n]
 
@@ -245,10 +254,12 @@ def analyze_unresolved(results_dir: Path, root: Path, manifest_path: Path, cache
           "Legend: green polygon = corridor, green boxes = ground truth, grey = detections >= threshold, "
           "light blue = reported tracks, red = the event's track. These frames are not to be published (they show faces).",
           "The **Why it happened** column is for a human who has looked at the strip. No setting was changed from it.", "",
-          "| # | Clip | Event | Open frames before loss | Opened / last inside / unresolved | Why it happened |",
-          "|---|---|---|---|---|---|"]
+          "| # | Clip | Event | Open frames before loss | Opened / last inside / unresolved | Matched GT event | Why it happened |",
+          "|---|---|---|---|---|---|---|"]
     for k, r in enumerate(rows, start=1):
+        gt = (f"{r['matched_gt_event']} (frames {r['matched_gt_frames'][0]}-{r['matched_gt_frames'][1]})"
+              if r.get("matched_gt_event") is not None else "none")
         md.append(f"| {k} | {r['clip']} | {r['event_id']} (track #{r['track_id']}) | {r['open_frames_before_loss']} | "
-                  f"{r['open_frame']} / {r['last_inside_frame']} / {r['frame']} | TODO(human): look at `{r['image']}` |")
+                  f"{r['open_frame']} / {r['last_inside_frame']} / {r['frame']} | {gt} | TODO(human): look at `{r['image']}` |")
     (out_dir / "INDEX.md").write_text("\n".join(md) + "\n")
     return out_dir
