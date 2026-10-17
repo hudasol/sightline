@@ -201,6 +201,21 @@ def cmd_select_detector(a) -> int:
     return 0 if c and out["verdict"] == "valid" else 1
 
 
+def cmd_ablate(a) -> int:
+    from sightline.ablation import run_ablation
+    from sightline.evaluation.run import load_eval_config, write_json
+
+    try:
+        cfg = load_config(a.config)
+        out = run_ablation(Path(a.manifest), cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache), _p)
+    except (ConfigError, ManifestError, RuntimeError, FileNotFoundError) as exc:
+        return _unavailable(None, f"ablate: {exc}")
+    out["config"] = a.config
+    write_json(Path(a.out), out)
+    _p(f"wrote {a.out}")
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -707,6 +722,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--runtime-summary", default="results/runtime/a4_selection/summary.json")
     sp.add_argument("--eval-config", default="configs/eval.yaml")
     sp.add_argument("--out", default="results/detector_selection/a4_choice.json")
+
+    sp = add("ablate", cmd_ablate, "switch tracker parts off one at a time on cached detections (analysis only)")
+    sp.add_argument("--manifest", default="results/heldout_manifest.json")
+    sp.add_argument("--config", default="results/frozen_config.yaml")
+    sp.add_argument("--eval-config", default="configs/eval.yaml")
+    sp.add_argument("--root", default=".")
+    sp.add_argument("--cache", default="results/detections")
+    sp.add_argument("--out", default="results/ablation/ablation_heldout.json")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")

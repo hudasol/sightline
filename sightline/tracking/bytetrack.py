@@ -56,7 +56,7 @@ class ByteTracker(BaseTracker):
         # 3. second association: tracks that were tracked last frame and are still
         #    unmatched, against LOW-score detections. This is the part that keeps a
         #    partly-occluded or blurred person's identity alive.
-        remaining = [pool[i] for i in ut1 if pool[i].id in was_tracked]
+        remaining = [pool[i] for i in ut1 if pool[i].id in was_tracked] if cfg.use_low_stage else []
         m2, ut2, _ud2 = associate([t.box for t in remaining], [d.box for d in low], cfg.low_match_iou)
         matched2 = set()
         for ti, di in m2:
@@ -81,6 +81,8 @@ class ByteTracker(BaseTracker):
         return self._retire()
 
     def _predicted_box(self, t):
+        if not self.cfg.use_motion:
+            return t.box  # ablation: no motion model, hold the last box
         assert t.mean is not None and t.cov is not None
         t.mean, t.cov = self.kf.predict(t.mean, t.cov)
         return mean_to_box(t.mean)

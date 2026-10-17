@@ -53,6 +53,9 @@ class TrackerConfig:
     # time-based alternative (seconds); when set it wins over max_age and is converted per clip into
     # DETECTOR frames: max_age = max_age_s * fps / detect_every, so patience in seconds is the same at any k
     max_age_s: float | None = None
+    # ablation switches (sightline ablate); both on in every shipped config
+    use_low_stage: bool = True  # ByteTrack's second association on low-score detections
+    use_motion: bool = True  # Kalman prediction; off = hold the last box, as the IoU baseline does
 
 
 @dataclass
@@ -166,6 +169,8 @@ def _validate_tracker(t: "TrackerConfig", label: str) -> None:
     _check(t.max_age >= 1, f"{label}.max_age must be >= 1")
     _check(t.min_hits >= 1, f"{label}.min_hits must be >= 1")
     _check(t.trajectory_len >= 2, f"{label}.trajectory_len must be >= 2")
+    _check(isinstance(t.use_low_stage, bool) and isinstance(t.use_motion, bool),
+           f"{label}.use_low_stage and {label}.use_motion must be true or false")
     _check(t.max_age_s is None or (isinstance(t.max_age_s, (int, float)) and t.max_age_s > 0),
            f"{label}.max_age_s must be null or > 0 seconds")
 
