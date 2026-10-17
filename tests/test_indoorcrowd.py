@@ -61,3 +61,16 @@ def test_duplicate_frame_numbers_are_refused(tmp_path):
     _write_site(raw, "acs_eg", [_row("r1", 1, []), _row("r1", 1, [])])
     with pytest.raises(IndoorCrowdError, match="duplicate frame numbers"):
         import_tracking(raw, tmp_path / "out", ("acs_eg",))
+
+
+def test_ingest_names_a_sequence_by_its_seqinfo_name_not_its_folder(tmp_path):
+    from sightline.ingest import ingest
+
+    raw = tmp_path / "raw"
+    _write_site(raw, "acs_eg", [_row("clip_1", 1, [])])
+    _write_site(raw, "acs_ec", [_row("clip_1", 1, [])])
+    import_tracking(raw, tmp_path / "out", ("acs_eg", "acs_ec"))
+    for site in ("acs_eg", "acs_ec"):
+        ingest(tmp_path / "out" / site / "clip_1", out_dir=tmp_path / "ingest")
+    assert sorted(p.name for p in (tmp_path / "ingest").iterdir()) == [
+        "IC-acs_ec-clip_1.ingest.json", "IC-acs_eg-clip_1.ingest.json"]

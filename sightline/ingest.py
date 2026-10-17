@@ -117,7 +117,7 @@ def _probe_sequence(p: Path, fps_override: float | None) -> SourceInfo:
     files = _sequence_files(p)
     if not files:
         raise IngestError(f"no images found in {p}")
-    fps, fps_source, w, h = None, "seqinfo.ini", 0, 0
+    fps, fps_source, w, h, name = None, "seqinfo.ini", 0, 0, p.name
     ini = p / "seqinfo.ini"
     if ini.is_file():
         cp = configparser.ConfigParser()
@@ -126,6 +126,7 @@ def _probe_sequence(p: Path, fps_override: float | None) -> SourceInfo:
             seq = cp["Sequence"]
             fps = float(seq.get("frameRate", 0) or 0) or None
             w, h = int(seq.get("imWidth", 0) or 0), int(seq.get("imHeight", 0) or 0)
+            name = seq.get("name", name) or name
     if fps_override is not None:
         fps, fps_source = float(fps_override), "override"
     if not fps or fps <= 0:
@@ -137,7 +138,7 @@ def _probe_sequence(p: Path, fps_override: float | None) -> SourceInfo:
         h, w = first.shape[:2]
     listing = hashlib.sha256("\n".join(f"{f.name}:{f.stat().st_size}" for f in files).encode()).hexdigest()
     return SourceInfo(str(p), "image_sequence", w, h, float(fps), len(files), "images",
-                      sum(f.stat().st_size for f in files), fps_source, {"listing_sha256": listing})
+                      sum(f.stat().st_size for f in files), fps_source, {"listing_sha256": listing, "name": name})
 
 
 def iter_frames(
@@ -291,7 +292,8 @@ def ingest(path: str | Path, out_dir: str | Path | None = None, fps_override: fl
     if out_dir is not None:
         out = Path(out_dir)
         out.mkdir(parents=True, exist_ok=True)
-        (out / f"{p.name}.ingest.json").write_text(json.dumps(record, indent=1))
+        # a sequence is named by its seqinfo.ini: folder names can repeat across sites
+        (out / f"{info.extra.get('name', p.name)}.ingest.json").write_text(json.dumps(record, indent=1))
     return record
 
 
