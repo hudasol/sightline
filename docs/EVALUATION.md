@@ -148,6 +148,13 @@ Each item addresses a named risk.
 - **Stress suite** (risk: unknown behaviour under blur, compression, low light and shake). The frozen
   system was rerun on degraded held-out clips, with nothing retuned (`results/stress/`,
   `docs/RESULTS.md`).
+  - **Known limit of the suite:** only the detector sees the degraded frames. The pipeline replay that
+    computes tracking, events and health reads the clean frames (`sightline/stress.py` passes
+    degraded detections to `evaluate_clip`, which reads the original source). So the stress rows show
+    how detection, tracking and events degrade, but their "non-OK fraction" does not show whether
+    health would flag the degraded video.
+  - Health's reaction to dark, blurry and corrupt input is pinned by tests instead
+    (`tests/test_health.py`).
 
 ## What these results do not show
 - **Not robot footage.** No own corridor footage at robot height was evaluated. IndoorCrowd is the
