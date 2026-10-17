@@ -240,6 +240,23 @@ def cmd_report(a) -> int:
     return 0
 
 
+def cmd_timeline(a) -> int:
+    from sightline.timeline import list_events, timeline
+
+    try:
+        fps = next(c.fps or probe(Path(a.root) / c.source).fps for c in load_manifest(a.lock).clips if c.id == a.clip)
+        if a.event is None:
+            for e in list_events(Path(a.results), a.clip):
+                _p(f"event {e['event_id']} (track #{e['track_id']}, {e['status']}): matched GT event "
+                   f"{e['matched_gt_event']}, latency {e['latency_frames']} frames")
+            return 0
+        for line in timeline(Path(a.results), a.clip, a.event, fps):
+            _p(line)
+    except (StopIteration, KeyError, FileNotFoundError) as exc:
+        return _unavailable(None, f"timeline: {exc!r}")
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -772,6 +789,13 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("report", cmd_report, "markdown tables generated from saved results only (docs/RESULTS.md)")
     sp.add_argument("--results", default="results")
     sp.add_argument("--out", default="docs/RESULTS.md")
+
+    sp = add("timeline", cmd_timeline, "one corridor event from approach to close/lost, from saved results")
+    sp.add_argument("clip")
+    sp.add_argument("--event", type=int, help="omit to list the clip's events")
+    sp.add_argument("--lock", default="results/heldout_manifest.json")
+    sp.add_argument("--results", default="results")
+    sp.add_argument("--root", default=".")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
