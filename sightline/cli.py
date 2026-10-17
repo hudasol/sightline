@@ -424,6 +424,7 @@ def cmd_tune(a) -> int:
 def cmd_evaluate(a) -> int:
     from sightline.evaluation.run import (aggregate, bar_check, evaluate_clip, get_detections, load_eval_config,
                                           per_clip_details, prepare_clip, write_json)
+    from sightline.runtime import code_version
 
     root, results = Path(a.root), Path(a.results)
     final_path = results / "final_metrics.json"
@@ -454,9 +455,12 @@ def cmd_evaluate(a) -> int:
     eval_cfg = load_eval_config(a.eval_config)
     cds = [prepare_clip(c, root, eval_cfg) for c in man.clips]
     _p(f"evaluating {len(cds)} held-out clips with frozen config {hashlib.sha256(cfg_text.encode()).hexdigest()[:12]}")
-    all_results, dets_by_clip = [], {}
+    all_results, dets_by_clip, dets_by_source = [], {}, {}
     for cd in cds:
-        dets = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
+        # a negative corridor on footage already processed reuses its detections (same frames, same model)
+        if cd.clip.source not in dets_by_source:
+            dets_by_source[cd.clip.source] = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
+        dets = dets_by_source[cd.clip.source]
         dets_by_clip[cd.clip.id] = dets
         r = evaluate_clip(cd, cfg, dets, eval_cfg, root, out_root=results / "tracks")
         all_results.append(r)
@@ -476,6 +480,8 @@ def cmd_evaluate(a) -> int:
     agg["locked_manifest_sha256"] = lock["manifest_sha256"]
     agg["detector"] = {"name": cfg.detector.name, "score_threshold": cfg.detector.score_threshold}
     agg["detect_every"] = cfg.pipeline.detect_every
+    agg["code"] = code_version(root)
+    agg["runtime_report_used"] = str(rp) if runtime is not None else None
     agg["bar"] = bar_check(agg, cov, eval_cfg, runtime=runtime)
     write_json(final_path, agg)
     write_json(results / "bar_check.json", agg["bar"])
