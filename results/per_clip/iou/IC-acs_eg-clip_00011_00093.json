@@ -1,0 +1,867 @@
+{
+ "clip": "IC-acs_eg-clip_00011_00093",
+ "tags": [
+  "clear"
+ ],
+ "negative": false,
+ "tracker": "iou",
+ "detection": {
+  "tp": 105,
+  "fp": 6,
+  "fn": 24,
+  "precision": 0.9459459459459459,
+  "recall": 0.813953488372093,
+  "f1": 0.875,
+  "threshold": 0.3
+ },
+ "detection_in_scope": {
+  "tp": 98,
+  "fp": 6,
+  "fn": 7,
+  "precision": 0.9423076923076923,
+  "recall": 0.9333333333333333,
+  "f1": 0.937799043062201,
+  "threshold": 0.3
+ },
+ "dataset": "indoorcrowd",
+ "id_switches": [
+  {
+   "frame": 7,
+   "gt_id": 3,
+   "track_id": 5
+  },
+  {
+   "frame": 7,
+   "gt_id": 4,
+   "track_id": 6
+  },
+  {
+   "frame": 9,
+   "gt_id": 3,
+   "track_id": 6
+  },
+  {
+   "frame": 10,
+   "gt_id": 4,
+   "track_id": 8
+  },
+  {
+   "frame": 10,
+   "gt_id": 7,
+   "track_id": 2
+  },
+  {
+   "frame": 13,
+   "gt_id": 3,
+   "track_id": 8
+  },
+  {
+   "frame": 13,
+   "gt_id": 4,
+   "track_id": 9
+  },
+  {
+   "frame": 13,
+   "gt_id": 7,
+   "track_id": 5
+  },
+  {
+   "frame": 16,
+   "gt_id": 3,
+   "track_id": 9
+  },
+  {
+   "frame": 16,
+   "gt_id": 7,
+   "track_id": 6
+  },
+  {
+   "frame": 16,
+   "gt_id": 8,
+   "track_id": 2
+  },
+  {
+   "frame": 19,
+   "gt_id": 7,
+   "track_id": 8
+  },
+  {
+   "frame": 19,
+   "gt_id": 8,
+   "track_id": 5
+  },
+  {
+   "frame": 22,
+   "gt_id": 7,
+   "track_id": 10
+  },
+  {
+   "frame": 22,
+   "gt_id": 8,
+   "track_id": 6
+  },
+  {
+   "frame": 25,
+   "gt_id": 8,
+   "track_id": 8
+  },
+  {
+   "frame": 28,
+   "gt_id": 2,
+   "track_id": 12
+  },
+  {
+   "frame": 28,
+   "gt_id": 7,
+   "track_id": 11
+  },
+  {
+   "frame": 28,
+   "gt_id": 8,
+   "track_id": 10
+  },
+  {
+   "frame": 31,
+   "gt_id": 8,
+   "track_id": 11
+  },
+  {
+   "frame": 34,
+   "gt_id": 3,
+   "track_id": 13
+  },
+  {
+   "frame": 37,
+   "gt_id": 3,
+   "track_id": 14
+  },
+  {
+   "frame": 37,
+   "gt_id": 4,
+   "track_id": 13
+  },
+  {
+   "frame": 40,
+   "gt_id": 3,
+   "track_id": 15
+  },
+  {
+   "frame": 40,
+   "gt_id": 4,
+   "track_id": 14
+  },
+  {
+   "frame": 43,
+   "gt_id": 4,
+   "track_id": 15
+  },
+  {
+   "frame": 55,
+   "gt_id": 8,
+   "track_id": 16
+  },
+  {
+   "frame": 58,
+   "gt_id": 7,
+   "track_id": 16
+  },
+  {
+   "frame": 64,
+   "gt_id": 11,
+   "track_id": 18
+  },
+  {
+   "frame": 67,
+   "gt_id": 11,
+   "track_id": 19
+  },
+  {
+   "frame": 67,
+   "gt_id": 12,
+   "track_id": 18
+  },
+  {
+   "frame": 70,
+   "gt_id": 11,
+   "track_id": 20
+  },
+  {
+   "frame": 70,
+   "gt_id": 12,
+   "track_id": 19
+  },
+  {
+   "frame": 70,
+   "gt_id": 13,
+   "track_id": 18
+  },
+  {
+   "frame": 73,
+   "gt_id": 11,
+   "track_id": 21
+  },
+  {
+   "frame": 73,
+   "gt_id": 12,
+   "track_id": 20
+  },
+  {
+   "frame": 73,
+   "gt_id": 13,
+   "track_id": 19
+  }
+ ],
+ "events_predicted": [
+  {
+   "event_id": 1,
+   "track_id": 2,
+   "status": "UNRESOLVED",
+   "type": null,
+   "first_inside_frame": 1,
+   "open_frame": 1,
+   "open_ts": 0.0,
+   "last_inside_frame": 18,
+   "close_frame": 25,
+   "close_reason": "track_lost",
+   "entry_edge": 2,
+   "exit_edge": null,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 4,
+    "inside_predicted": 8,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 2,
+   "track_id": 5,
+   "status": "UNRESOLVED",
+   "type": null,
+   "first_inside_frame": 4,
+   "open_frame": 4,
+   "open_ts": 0.6,
+   "last_inside_frame": 21,
+   "close_frame": 28,
+   "close_reason": "track_lost",
+   "entry_edge": 2,
+   "exit_edge": null,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 4,
+    "inside_predicted": 8,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 3,
+   "track_id": 1,
+   "status": "UNRESOLVED",
+   "type": null,
+   "first_inside_frame": 7,
+   "open_frame": 7,
+   "open_ts": 1.2,
+   "last_inside_frame": 15,
+   "close_frame": 22,
+   "close_reason": "track_lost",
+   "entry_edge": 1,
+   "exit_edge": null,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 2,
+    "inside_predicted": 4,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 4,
+   "track_id": 6,
+   "status": "UNRESOLVED",
+   "type": null,
+   "first_inside_frame": 7,
+   "open_frame": 7,
+   "open_ts": 1.2,
+   "last_inside_frame": 24,
+   "close_frame": 31,
+   "close_reason": "track_lost",
+   "entry_edge": 2,
+   "exit_edge": null,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 4,
+    "inside_predicted": 8,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 5,
+   "track_id": 8,
+   "status": "UNRESOLVED",
+   "type": null,
+   "first_inside_frame": 10,
+   "open_frame": 10,
+   "open_ts": 1.8,
+   "last_inside_frame": 27,
+   "close_frame": 34,
+   "close_reason": "track_lost",
+   "entry_edge": 2,
+   "exit_edge": null,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 4,
+    "inside_predicted": 8,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 6,
+   "track_id": 9,
+   "status": "CLOSED",
+   "type": "crossing",
+   "first_inside_frame": 13,
+   "open_frame": 13,
+   "open_ts": 2.4,
+   "last_inside_frame": 21,
+   "close_frame": 22,
+   "close_reason": "left_corridor",
+   "entry_edge": 0,
+   "exit_edge": 2,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 3,
+    "inside_predicted": 6,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 7,
+   "track_id": 10,
+   "status": "UNRESOLVED",
+   "type": null,
+   "first_inside_frame": 22,
+   "open_frame": 22,
+   "open_ts": 4.2,
+   "last_inside_frame": 30,
+   "close_frame": 37,
+   "close_reason": "track_lost",
+   "entry_edge": 2,
+   "exit_edge": null,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 3,
+    "inside_predicted": 6,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 8,
+   "track_id": 11,
+   "status": "CLOSED",
+   "type": "crossing",
+   "first_inside_frame": 28,
+   "open_frame": 28,
+   "open_ts": 5.4,
+   "last_inside_frame": 33,
+   "close_frame": 34,
+   "close_reason": "left_corridor",
+   "entry_edge": 3,
+   "exit_edge": 2,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 2,
+    "inside_predicted": 4,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 9,
+   "track_id": 17,
+   "status": "CLOSED",
+   "type": "crossing",
+   "first_inside_frame": 61,
+   "open_frame": 61,
+   "open_ts": 12.0,
+   "last_inside_frame": 66,
+   "close_frame": 67,
+   "close_reason": "left_corridor",
+   "entry_edge": 2,
+   "exit_edge": 1,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 2,
+    "inside_predicted": 4,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 10,
+   "track_id": 18,
+   "status": "CLOSED",
+   "type": "entry",
+   "first_inside_frame": 67,
+   "open_frame": 67,
+   "open_ts": 13.2,
+   "last_inside_frame": 69,
+   "close_frame": 70,
+   "close_reason": "left_corridor",
+   "entry_edge": 2,
+   "exit_edge": 2,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 1,
+    "inside_predicted": 2,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 11,
+   "track_id": 19,
+   "status": "CLOSED",
+   "type": "entry",
+   "first_inside_frame": 70,
+   "open_frame": 70,
+   "open_ts": 13.8,
+   "last_inside_frame": 72,
+   "close_frame": 73,
+   "close_reason": "left_corridor",
+   "entry_edge": 2,
+   "exit_edge": 2,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 1,
+    "inside_predicted": 2,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 12,
+   "track_id": 20,
+   "status": "UNRESOLVED",
+   "type": null,
+   "first_inside_frame": 73,
+   "open_frame": 73,
+   "open_ts": 14.4,
+   "last_inside_frame": 73,
+   "close_frame": 73,
+   "close_reason": "stream_end",
+   "entry_edge": 2,
+   "exit_edge": null,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 1,
+    "inside_predicted": 0,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  }
+ ],
+ "events_gt": [
+  {
+   "id": 1,
+   "first_inside_frame": 1,
+   "last_inside_frame": 21
+  },
+  {
+   "id": 2,
+   "first_inside_frame": 1,
+   "last_inside_frame": 19
+  },
+  {
+   "id": 3,
+   "first_inside_frame": 5,
+   "last_inside_frame": 29
+  },
+  {
+   "id": 4,
+   "first_inside_frame": 12,
+   "last_inside_frame": 33
+  },
+  {
+   "id": 5,
+   "first_inside_frame": 59,
+   "last_inside_frame": 62
+  },
+  {
+   "id": 6,
+   "first_inside_frame": 65,
+   "last_inside_frame": 73
+  }
+ ],
+ "event_pairs": [
+  [
+   1,
+   1
+  ],
+  [
+   3,
+   4
+  ],
+  [
+   2,
+   2
+  ],
+  [
+   4,
+   5
+  ],
+  [
+   6,
+   10
+  ],
+  [
+   5,
+   9
+  ]
+ ],
+ "false_events": [
+  3,
+  6,
+  7,
+  8,
+  11,
+  12
+ ],
+ "missed_events": [],
+ "event_latencies_frames": [
+  0,
+  2,
+  3,
+  -2,
+  2,
+  2
+ ],
+ "false_positives": [
+  {
+   "frame": 10,
+   "box": [
+    1204.18,
+    213.35,
+    1279.16,
+    562.86
+   ],
+   "score": 0.8354
+  },
+  {
+   "frame": 19,
+   "box": [
+    437.03,
+    210.98,
+    623.26,
+    565.68
+   ],
+   "score": 0.8744
+  },
+  {
+   "frame": 25,
+   "box": [
+    780.52,
+    293.03,
+    816.17,
+    424.85
+   ],
+   "score": 0.3019
+  },
+  {
+   "frame": 58,
+   "box": [
+    0.4,
+    434.06,
+    63.41,
+    720
+   ],
+   "score": 0.5976
+  },
+  {
+   "frame": 73,
+   "box": [
+    884.68,
+    310.23,
+    926.49,
+    440.63
+   ],
+   "score": 0.6896
+  },
+  {
+   "frame": 73,
+   "box": [
+    798.36,
+    200.13,
+    862.6,
+    463.44
+   ],
+   "score": 0.4887
+  }
+ ],
+ "misses": [
+  {
+   "frame": 1,
+   "gt_id": 1,
+   "box": [
+    755.66,
+    354.03,
+    777.76,
+    413.23999999999995
+   ]
+  },
+  {
+   "frame": 1,
+   "gt_id": 4,
+   "box": [
+    950.84,
+    226.93,
+    1035.23,
+    543.53
+   ]
+  },
+  {
+   "frame": 1,
+   "gt_id": 6,
+   "box": [
+    778.84,
+    356.29,
+    794.96,
+    391.19
+   ]
+  },
+  {
+   "frame": 4,
+   "gt_id": 1,
+   "box": [
+    757.15,
+    354.93,
+    778.09,
+    412.76
+   ]
+  },
+  {
+   "frame": 4,
+   "gt_id": 6,
+   "box": [
+    779.32,
+    356.63,
+    794.2700000000001,
+    391.15999999999997
+   ]
+  },
+  {
+   "frame": 7,
+   "gt_id": 1,
+   "box": [
+    758.08,
+    354.47,
+    779.1700000000001,
+    411.74
+   ]
+  },
+  {
+   "frame": 7,
+   "gt_id": 6,
+   "box": [
+    779.04,
+    356.68,
+    794.98,
+    391.6
+   ]
+  },
+  {
+   "frame": 16,
+   "gt_id": 1,
+   "box": [
+    759.57,
+    357.73,
+    780.87,
+    413.05
+   ]
+  },
+  {
+   "frame": 16,
+   "gt_id": 2,
+   "box": [
+    787.7,
+    357.75,
+    811.94,
+    418.36
+   ]
+  },
+  {
+   "frame": 16,
+   "gt_id": 6,
+   "box": [
+    779.99,
+    358.76,
+    795.91,
+    389.69
+   ]
+  },
+  {
+   "frame": 19,
+   "gt_id": 2,
+   "box": [
+    796.2,
+    376.66,
+    812.62,
+    421.57000000000005
+   ]
+  },
+  {
+   "frame": 19,
+   "gt_id": 5,
+   "box": [
+    899.96,
+    334.02,
+    922.51,
+    440.22999999999996
+   ]
+  },
+  {
+   "frame": 22,
+   "gt_id": 1,
+   "box": [
+    758.94,
+    357.23,
+    781.9300000000001,
+    412.37
+   ]
+  },
+  {
+   "frame": 22,
+   "gt_id": 2,
+   "box": [
+    785.05,
+    359.15,
+    808.13,
+    420.92999999999995
+   ]
+  },
+  {
+   "frame": 22,
+   "gt_id": 6,
+   "box": [
+    781.89,
+    357.19,
+    803.4499999999999,
+    390.06
+   ]
+  },
+  {
+   "frame": 25,
+   "gt_id": 2,
+   "box": [
+    790.48,
+    369.48,
+    810.2,
+    421.71000000000004
+   ]
+  },
+  {
+   "frame": 28,
+   "gt_id": 1,
+   "box": [
+    760.72,
+    357.92,
+    781.15,
+    413.65000000000003
+   ]
+  },
+  {
+   "frame": 31,
+   "gt_id": 1,
+   "box": [
+    758.5,
+    357.34,
+    780.32,
+    414.87
+   ]
+  },
+  {
+   "frame": 34,
+   "gt_id": 7,
+   "box": [
+    390.19,
+    266.47,
+    453.57,
+    526.53
+   ]
+  },
+  {
+   "frame": 43,
+   "gt_id": 1,
+   "box": [
+    756.09,
+    352.84,
+    773.3100000000001,
+    414.53
+   ]
+  },
+  {
+   "frame": 43,
+   "gt_id": 3,
+   "box": [
+    -5.61,
+    415.9,
+    44.2,
+    722.3
+   ]
+  },
+  {
+   "frame": 52,
+   "gt_id": 7,
+   "box": [
+    181.4,
+    403.2,
+    232.0,
+    630.4
+   ]
+  },
+  {
+   "frame": 73,
+   "gt_id": 2,
+   "box": [
+    797.93,
+    353.67,
+    835.66,
+    449.91
+   ]
+  },
+  {
+   "frame": 73,
+   "gt_id": 5,
+   "box": [
+    889.26,
+    349.53,
+    918.72,
+    437.34
+   ]
+  }
+ ],
+ "final_health": "OK",
+ "health_frame_counts": {
+  "OK": 73
+ },
+ "corridor_frame_counts": {
+  "OCCUPIED": 49,
+  "CLEAR": 24
+ }
+}
