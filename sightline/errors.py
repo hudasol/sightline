@@ -157,6 +157,15 @@ def collect_details(manifest_path: Path, cfg, eval_cfg: dict, root: Path, cache_
     return done
 
 
+def _gt_match(d: dict, event_id: int) -> dict:
+    """The ground-truth event this predicted event was matched to by the scorer (event_pairs), if any.
+    Matching (evaluation/events.py) is the same for every status, UNRESOLVED included."""
+    gid = next((g for g, p in d.get("event_pairs", []) if p == event_id), None)
+    g = next((x for x in d.get("events_gt", []) if x["id"] == gid), None) if gid is not None else None
+    return {"matched_gt_event": gid,
+            "matched_gt_frames": [g["first_inside_frame"], g["last_inside_frame"]] if g else None}
+
+
 def select_unresolved(per_clip_dir: Path, n: int = 10) -> list[dict]:
     items = []
     for f in sorted((per_clip_dir / "bytetrack").glob("*.json")):
@@ -167,15 +176,17 @@ def select_unresolved(per_clip_dir: Path, n: int = 10) -> list[dict]:
                               "event_id": e["event_id"], "track_id": e["track_id"], "open_frame": e["open_frame"],
                               "first_inside_frame": e["first_inside_frame"], "last_inside_frame": e["last_inside_frame"],
                               "open_frames_before_loss": e["close_frame"] - e["open_frame"],
-                              "evidence": e.get("evidence")})
+                              "evidence": e.get("evidence"), **_gt_match(d, e["event_id"])})
     items.sort(key=lambda x: (-x["open_frames_before_loss"], x["clip"], x["frame"]))
     return items[:n]
 
 
 def render_strip(item: dict, root: Path, manifest_path: Path, cache_dir: Path, detector_tag: str, threshold: float,
-                 tracks_root: Path, out_png: Path, n_frames: int = 6, tile_w: int = 480) -> bool:
+                 tracks_root: Path, out_png: Path, n_frames: int = 6, tile_w: int = 480,
+                 span: tuple[int, int] | None = None, title: str | None = None) -> bool:
     """n_frames evenly spaced from 10 frames before the person was last inside to the frame the event went
-    UNRESOLVED. Green = GT, grey = detections >= threshold, light blue = reported tracks, red = the event's track."""
+    UNRESOLVED (or over `span`, first to last frame). Green = GT, grey = detections >= threshold, light blue =
+    reported tracks, red = the event's track."""
     import numpy as np
 
     from sightline.config import load_corridor
@@ -193,8 +204,8 @@ def render_strip(item: dict, root: Path, manifest_path: Path, cache_dir: Path, d
         for line in tfile.read_text().splitlines():
             f, tid, x, y, w, h, *_ = line.split(",")
             tracks.setdefault(int(f), []).append((int(tid), float(x), float(y), float(x) + float(w), float(y) + float(h)))
-    start = max(1, min(item["last_inside_frame"], item["frame"]) - 10)
-    frames = sorted({int(round(v)) for v in np.linspace(start, item["frame"], n_frames)})
+    start, end = span or (max(1, min(item["last_inside_frame"], item["frame"]) - 10), item["frame"])
+    frames = sorted({int(round(v)) for v in np.linspace(start, end, n_frames)})
     tiles = []
     for fidx in frames:
         img = read_frame(src, fidx, info, clip.fps)
@@ -220,9 +231,9 @@ def render_strip(item: dict, root: Path, manifest_path: Path, cache_dir: Path, d
         return False
     strip = np.hstack(tiles)
     head = np.zeros((28, strip.shape[1], 3), np.uint8)
-    cv2.putText(head, f"{item['clip']}  event {item['event_id']} (track #{item['track_id']})  opened {item['open_frame']}, "
-                f"last inside {item['last_inside_frame']}, UNRESOLVED at {item['frame']}", (6, 19),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255), 1)
+    title = title or (f"{item['clip']}  event {item['event_id']} (track #{item['track_id']})  opened {item['open_frame']}, "
+                      f"last inside {item['last_inside_frame']}, UNRESOLVED at {item['frame']}")
+    cv2.putText(head, title, (6, 19), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 255), 1)
     out_png.parent.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(out_png), np.vstack([head, strip]))
     return True
@@ -245,10 +256,82 @@ def analyze_unresolved(results_dir: Path, root: Path, manifest_path: Path, cache
           "Legend: green polygon = corridor, green boxes = ground truth, grey = detections >= threshold, "
           "light blue = reported tracks, red = the event's track. These frames are not to be published (they show faces).",
           "The **Why it happened** column is for a human who has looked at the strip. No setting was changed from it.", "",
-          "| # | Clip | Event | Open frames before loss | Opened / last inside / unresolved | Why it happened |",
-          "|---|---|---|---|---|---|"]
+          "| # | Clip | Event | Open frames before loss | Opened / last inside / unresolved | Matched GT event | Why it happened |",
+          "|---|---|---|---|---|---|---|"]
     for k, r in enumerate(rows, start=1):
+        gt = (f"{r['matched_gt_event']} (frames {r['matched_gt_frames'][0]}-{r['matched_gt_frames'][1]})"
+              if r.get("matched_gt_event") is not None else "none")
         md.append(f"| {k} | {r['clip']} | {r['event_id']} (track #{r['track_id']}) | {r['open_frames_before_loss']} | "
-                  f"{r['open_frame']} / {r['last_inside_frame']} / {r['frame']} | TODO(human): look at `{r['image']}` |")
+                  f"{r['open_frame']} / {r['last_inside_frame']} / {r['frame']} | {gt} | TODO(human): look at `{r['image']}` |")
+    (out_dir / "INDEX.md").write_text("\n".join(md) + "\n")
+    return out_dir
+
+
+# -- false events (predicted events the scorer left unmatched) as frame strips -----------------------
+
+FALSE_EVENT_RULE = ("False events: predicted events left unmatched by the event scorer (false_events in the per-clip "
+                    "details; status plays no part, as in matching). Worst first = longest open (close_frame - "
+                    "open_frame), ties broken by clip id then frame. Fixed before any strip was looked at.")
+
+
+def _gt_overlaps(d: dict, e: dict) -> list[dict]:
+    """GT events whose inside span overlaps this event's, and which predicted event (if any) the scorer gave each."""
+    to_pred = {g: p for g, p in d.get("event_pairs", [])}
+    return [{"gt_event": g["id"], "gt_frames": [g["first_inside_frame"], g["last_inside_frame"]],
+             "matched_to_event": to_pred.get(g["id"])}
+            for g in d.get("events_gt", [])
+            if min(e["last_inside_frame"], g["last_inside_frame"]) >= max(e["first_inside_frame"], g["first_inside_frame"])]
+
+
+def select_false_events(per_clip_dir: Path, n: int = 10) -> list[dict]:
+    items = []
+    for f in sorted((per_clip_dir / "bytetrack").glob("*.json")):
+        d = json.loads(f.read_text())
+        by_p = {e["event_id"]: e for e in d["events_predicted"]}
+        for pid in d["false_events"]:
+            e = by_p[pid]
+            items.append({"type": "false_event", "clip": d["clip"], "frame": e["open_frame"], "event_id": pid,
+                          "track_id": e["track_id"], "status": e["status"], "close_reason": e["close_reason"],
+                          "open_frame": e["open_frame"], "close_frame": e["close_frame"],
+                          "first_inside_frame": e["first_inside_frame"], "last_inside_frame": e["last_inside_frame"],
+                          "open_frames": e["close_frame"] - e["open_frame"], "evidence": e.get("evidence"),
+                          "overlapping_gt_events": _gt_overlaps(d, e)})
+    items.sort(key=lambda x: (-x["open_frames"], x["clip"], x["frame"]))
+    return items[:n]
+
+
+def analyze_false_events(results_dir: Path, root: Path, manifest_path: Path, cache_dir: Path, detector_tag: str,
+                         threshold: float, n: int, run_note: str) -> Path:
+    """Same strip format as analyze_unresolved; each strip runs from 10 frames before the person was first
+    inside to the frame the event closed."""
+    out_dir = results_dir / "error_analysis" / "false_events"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    items = select_false_events(results_dir / "per_clip", n)
+    rows = []
+    for k, it in enumerate(items, start=1):
+        png = out_dir / f"{k:02d}_false_event_{it['clip']}_ev{it['event_id']}_f{it['frame']}.png"
+        title = (f"{it['clip']}  FALSE event {it['event_id']} (track #{it['track_id']})  first inside "
+                 f"{it['first_inside_frame']}, opened {it['open_frame']}, {it['status']} at {it['close_frame']}")
+        ok = render_strip(it, root, manifest_path, cache_dir, detector_tag, threshold, results_dir / "tracks", png,
+                          span=(max(1, it["first_inside_frame"] - 10), it["close_frame"]), title=title)
+        rows.append({**it, "image": png.name if ok else None})
+    (out_dir / "index.json").write_text(json.dumps({"rule": FALSE_EVENT_RULE, "run": run_note, "requested": n,
+                                                    "selected": len(rows), "items": rows}, indent=1))
+    md = ["# False events (auto-selected, worst first)", "", f"Selection: {FALSE_EVENT_RULE}", "", f"Run: {run_note}", "",
+          f"Requested {n}; {len(rows)} event(s) met the selection rule.", "",
+          "Legend: green polygon = corridor, green boxes = ground truth, grey = detections >= threshold, "
+          "light blue = reported tracks, red = the event's track. These frames are not to be published (they show faces).",
+          "\"Overlapping GT events\" lists GT events whose inside span overlaps this one, and the predicted event the "
+          "scorer matched each to (matching is one-to-one, so an overlap already taken leaves this one unmatched).",
+          "The **Why it happened** column is for a human who has looked at the strip. No setting was changed from it.", "",
+          "| # | Clip | Event | Open frames | First inside / opened / closed (status, reason) | Overlapping GT events | Why it happened |",
+          "|---|---|---|---|---|---|---|"]
+    for k, r in enumerate(rows, start=1):
+        ov = "; ".join(f"{o['gt_event']} (frames {o['gt_frames'][0]}-{o['gt_frames'][1]}, matched to "
+                       f"{'event ' + str(o['matched_to_event']) if o['matched_to_event'] is not None else 'nothing'})"
+                       for o in r["overlapping_gt_events"]) or "none"
+        md.append(f"| {k} | {r['clip']} | {r['event_id']} (track #{r['track_id']}) | {r['open_frames']} | "
+                  f"{r['first_inside_frame']} / {r['open_frame']} / {r['close_frame']} ({r['status']}, {r['close_reason']}) | "
+                  f"{ov} | TODO(human): look at `{r['image']}` |")
     (out_dir / "INDEX.md").write_text("\n".join(md) + "\n")
     return out_dir
