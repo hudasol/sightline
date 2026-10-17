@@ -24,7 +24,9 @@ dependencies = [
 detector = ["torch>=2.4", "torchvision>=0.19"]
 # YOLOX ONNX exports (Apache-2.0) through ONNX Runtime (MIT); weights go in weights/yolox/
 onnx = ["onnxruntime>=1.20"]
-dev = ["pytest>=8.0", "torch>=2.4", "torchvision>=0.19"]
+# IndoorCrowd ships as parquet; only the importer needs this
+indoorcrowd = ["pyarrow>=15"]
+dev = ["pytest>=8.0", "torch>=2.4", "torchvision>=0.19", "pyarrow>=15"]
 # OpenCV with window support, for draw-corridor and label-events. It ships the same `cv2`
 # package as the headless default, so the two must never be installed together: after
 # installing this extra, follow the README ("OpenCV with a GUI") to keep only this one.

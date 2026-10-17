@@ -18,7 +18,7 @@ import yaml
 from sightline import __version__
 from sightline.config import Config, ConfigError, load_config, load_corridor
 from sightline.detector import DetectorUnavailable, make_detector, read_detection_cache
-from sightline.ingest import IngestError, discover_sources, ingest
+from sightline.ingest import IngestError, discover_sources, ingest, probe
 from sightline.manifest import ManifestError, coverage_check, load_manifest, lock_manifest, split_check, verify_lock
 from sightline.runner import run_clip
 
@@ -144,6 +144,47 @@ def cmd_import_cvat(a) -> int:
     for w in rep["warnings"]:
         _p(f"WARNING: {w}")
     _p('manifest entry: "gt": "<out>/gt.txt", "annotated_frames": "<out>/annotated_frames.json" (plus hand-labelled gt_events)')
+    return 0
+
+
+def cmd_import_indoorcrowd(a) -> int:
+    from sightline.evaluation.run import write_json
+    from sightline.indoorcrowd import IndoorCrowdError, import_tracking
+
+    try:
+        rep = import_tracking(Path(a.raw), Path(a.out), tuple(a.sites), a.revision)
+    except IndoorCrowdError as exc:
+        return _unavailable(None, f"import-indoorcrowd: {exc}")
+    write_json(Path(a.summary), rep)
+    for c in rep["clips"]:
+        _p(f"{c['id']}: {c['frames']} frames, {c['boxes']} boxes, {c['track_ids']} ids -> {c['path']}")
+    _p(f"{len(rep['clips'])} clips written; summary in {a.summary}. Split by site: every clip of a site goes to one split.")
+    return 0
+
+
+def cmd_decimate(a) -> int:
+    from sightline.decimate import decimate_cache, decimate_sequence
+    from sightline.evaluation.run import write_json
+
+    report = []
+    for src in a.sources:
+        src = Path(src)
+        try:
+            name = f"{probe(src).extra.get('name', src.name)}-{a.target_fps:g}fps"
+            r = decimate_sequence(src, Path(a.out_root) / name, a.target_fps, name)
+        except IngestError as exc:
+            return _unavailable(None, f"decimate: {exc}")
+        r["caches"] = {}
+        for tag_dir in sorted(p for p in Path(a.cache).iterdir() if p.is_dir()) if Path(a.cache).is_dir() else []:
+            orig = tag_dir / f"{src.name}.jsonl"
+            if orig.is_file():
+                r["caches"][tag_dir.name] = decimate_cache(orig, tag_dir / f"{name}.jsonl", r["step"], probe(src).frame_count_reported,
+                                                           "frame-rate-matched val copy (PLAN.md A6.3)")
+        report.append(r)
+        _p(f"{name}: every {r['step']}th frame of {src} -> {r['frames']} frames at {r['fps']:g} fps; "
+           f"caches renumbered: {sorted(r['caches']) or 'none'}")
+    if a.summary:
+        write_json(Path(a.summary), {"target_fps": a.target_fps, "sequences": report})
     return 0
 
 
@@ -625,6 +666,21 @@ def build_parser() -> argparse.ArgumentParser:
                     help="which frames were annotated: 1-600, 1-600:10, comma-separated parts, or a file of frame numbers")
     sp.add_argument("--person-labels", nargs="+", default=["person", "pedestrian"])
     sp.add_argument("--ignore-labels", nargs="*", default=[], help="labels to keep as ignore regions (never scored)")
+
+    sp = add("import-indoorcrowd", cmd_import_indoorcrowd,
+             "convert the downloaded IndoorCrowd `tracking` parquet files into MOT sequences")
+    sp.add_argument("--raw", default="data/indoorcrowd/raw", help="folder holding tracking/<site>-*.parquet")
+    sp.add_argument("--out", default="data/indoorcrowd")
+    sp.add_argument("--sites", nargs="+", default=["acs_ec", "acs_eg", "ie_central", "r_central"])
+    sp.add_argument("--revision", help="the dataset commit the files came from, recorded in the summary")
+    sp.add_argument("--summary", default="results/ingest/indoorcrowd_import.json")
+
+    sp = add("decimate", cmd_decimate, "frame-rate-matched copies of image sequences, with their detection caches (A6.3)")
+    sp.add_argument("sources", nargs="+", help="MOT-style sequence folders")
+    sp.add_argument("--target-fps", type=float, default=5.0)
+    sp.add_argument("--out-root", default="data/mot17_5fps")
+    sp.add_argument("--cache", default="results/detections", help="detection caches to renumber, one folder per detector tag")
+    sp.add_argument("--summary", help="write a JSON report here")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")

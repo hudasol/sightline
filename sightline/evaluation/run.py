@@ -56,6 +56,16 @@ class ClipData:
         return [f for f in frames if self.annotated is None or f in self.annotated]
 
 
+def gt_event_rule_frames(rule: dict, fps: float) -> tuple[int, int]:
+    """The label rule in frames at this clip's fps (PLAN.md A6). Given in seconds it means the same time
+    on every clip, as the system's own settings do (A3); at 30 fps it is exactly the old 3 and 5 frames."""
+    from sightline.config import _frames
+
+    min_frames = max(1, _frames(rule["min_s"], fps)) if rule.get("min_s") is not None else rule["min_frames"]
+    gap = max(0, _frames(rule["merge_gap_s"], fps)) if rule.get("merge_gap_s") is not None else rule["merge_gap"]
+    return min_frames, gap
+
+
 def prepare_clip(clip: Clip, root: Path, eval_cfg: dict) -> ClipData:
     info = probe(root / clip.source, clip.fps)
     corridor = load_corridor(root / clip.corridor)
@@ -67,8 +77,7 @@ def prepare_clip(clip: Clip, root: Path, eval_cfg: dict) -> ClipData:
     if clip.gt_events:
         gt_events = load_gt_events(root / clip.gt_events)
     else:
-        rule = eval_cfg["gt_events"]
-        gt_events = derive_gt_events(gt, corridor.polygon, rule["min_frames"], rule["merge_gap"])
+        gt_events = derive_gt_events(gt, corridor.polygon, *gt_event_rule_frames(eval_cfg["gt_events"], info.fps))
     n = info.frame_count_reported or (max(gt) if gt else 0)
     tags = list(clip.conditions) + (["negative_corridor"] if clip.negative else [])
     annotated = load_annotated_frames(root / clip.raw["annotated_frames"]) if clip.raw.get("annotated_frames") else None

@@ -1,6 +1,6 @@
 {
  "split": "test",
- "note": "Held-out set. MOT17 base scenes 09 and 10 chosen on 2026-10-12 before any detector, tracker or event metric existed. Own corridor clips are appended here (see configs/manifests/README.md) and the manifest is re-locked BEFORE tuning. Condition tags for MOT17 come from the official MOTChallenge sequence descriptions and are to be confirmed by looking at the frames.",
+ "note": "Held-out set. MOT17 base scenes 09 and 10 chosen on 2026-10-12 before any detector, tracker or event metric existed. IndoorCrowd (all four sites, split by site, PLAN.md A6) added on 2026-10-17 before any detector, tracker or event output on it existed. Entries ending in -neg are negative corridor configurations on the same footage, not extra clips. Condition tags for MOT17 come from the MOTChallenge sequence descriptions; for IndoorCrowd from the dataset card's site descriptions.",
  "clips": [
   {
    "id": "MOT17-09-FRCNN",
@@ -8,7 +8,9 @@
    "scene": "MOT17-09",
    "camera": "mot17-09",
    "session": "mot17-09",
-   "conditions": ["clear"],
+   "conditions": [
+    "clear"
+   ],
    "conditions_source": "MOTChallenge: 'A pedestrian street scene filmed from a low angle.' static camera, 525 frames @ 30 fps, 1920x1080",
    "corridor": "configs/corridors/MOT17-09.yaml",
    "gt": "data/mot17/MOT17-09-FRCNN/gt/gt.txt",
@@ -21,14 +23,392 @@
    "scene": "MOT17-10",
    "camera": "mot17-10",
    "session": "mot17-10",
-   "conditions": ["camera_motion_blur", "low_light_compression"],
+   "conditions": [
+    "camera_motion_blur",
+    "low_light_compression"
+   ],
    "conditions_source": "MOTChallenge: 'A pedestrian scene filmed at night by a moving camera', 654 frames @ 30 fps, 1920x1080",
    "corridor": "configs/corridors/MOT17-10.yaml",
    "gt": "data/mot17/MOT17-10-FRCNN/gt/gt.txt",
    "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
    "negative": false,
-   "metrics": ["detection", "tracking"],
+   "metrics": [
+    "detection",
+    "tracking"
+   ],
    "metrics_note": "moving camera: the image-space corridor polygon does not stay on the floor, so corridor events and their rule-derived labels are not meaningful; scored on detection and tracking only"
+  },
+  {
+   "id": "IC-acs_ec-clip_00001_00051",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_ec/clip_00001_00051",
+   "scene": "indoorcrowd-acs_ec",
+   "camera": "indoorcrowd-acs_ec",
+   "session": "indoorcrowd-acs_ec-clip_00001_00051",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "dataset card: 'A dense multi-level atrium setting with small instance scales and high occlusion (79.3% dense frames)'; fixed webcam, 51 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-acs_ec.yaml",
+   "gt": "data/indoorcrowd/acs_ec/clip_00001_00051/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-acs_ec-clip_00001_00082",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_ec/clip_00001_00082",
+   "scene": "indoorcrowd-acs_ec",
+   "camera": "indoorcrowd-acs_ec",
+   "session": "indoorcrowd-acs_ec-clip_00001_00082",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "dataset card: 'A dense multi-level atrium setting with small instance scales and high occlusion (79.3% dense frames)'; fixed webcam, 82 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-acs_ec.yaml",
+   "gt": "data/indoorcrowd/acs_ec/clip_00001_00082/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-acs_ec-clip_00026_00091",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_ec/clip_00026_00091",
+   "scene": "indoorcrowd-acs_ec",
+   "camera": "indoorcrowd-acs_ec",
+   "session": "indoorcrowd-acs_ec-clip_00026_00091",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "dataset card: 'A dense multi-level atrium setting with small instance scales and high occlusion (79.3% dense frames)'; fixed webcam, 41 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-acs_ec.yaml",
+   "gt": "data/indoorcrowd/acs_ec/clip_00026_00091/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-acs_eg-clip_00001_00061",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_eg/clip_00001_00061",
+   "scene": "indoorcrowd-acs_eg",
+   "camera": "indoorcrowd-acs_eg",
+   "session": "indoorcrowd-acs_eg-clip_00001_00061",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "dataset card: 'A narrow ground-level corridor with substantial person scale variations lengthways'; fixed webcam, 61 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-acs_eg.yaml",
+   "gt": "data/indoorcrowd/acs_eg/clip_00001_00061/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-acs_eg-clip_00011_00093",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_eg/clip_00011_00093",
+   "scene": "indoorcrowd-acs_eg",
+   "camera": "indoorcrowd-acs_eg",
+   "session": "indoorcrowd-acs_eg-clip_00011_00093",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "dataset card: 'A narrow ground-level corridor with substantial person scale variations lengthways'; fixed webcam, 73 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-acs_eg.yaml",
+   "gt": "data/indoorcrowd/acs_eg/clip_00011_00093/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-acs_eg-clip_00056_00191",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_eg/clip_00056_00191",
+   "scene": "indoorcrowd-acs_eg",
+   "camera": "indoorcrowd-acs_eg",
+   "session": "indoorcrowd-acs_eg-clip_00056_00191",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "dataset card: 'A narrow ground-level corridor with substantial person scale variations lengthways'; fixed webcam, 81 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-acs_eg.yaml",
+   "gt": "data/indoorcrowd/acs_eg/clip_00056_00191/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-ie_central-clip_00001_00061",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/ie_central/clip_00001_00061",
+   "scene": "indoorcrowd-ie_central",
+   "camera": "indoorcrowd-ie_central",
+   "session": "indoorcrowd-ie_central-clip_00001_00061",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "dataset card: 'An intermediate seating/entrance hall environment'; fixed webcam, 61 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-ie_central.yaml",
+   "gt": "data/indoorcrowd/ie_central/clip_00001_00061/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-ie_central-clip_00001_00094",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/ie_central/clip_00001_00094",
+   "scene": "indoorcrowd-ie_central",
+   "camera": "indoorcrowd-ie_central",
+   "session": "indoorcrowd-ie_central-clip_00001_00094",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "dataset card: 'An intermediate seating/entrance hall environment'; fixed webcam, 94 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-ie_central.yaml",
+   "gt": "data/indoorcrowd/ie_central/clip_00001_00094/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-ie_central-clip_00001_00381",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/ie_central/clip_00001_00381",
+   "scene": "indoorcrowd-ie_central",
+   "camera": "indoorcrowd-ie_central",
+   "session": "indoorcrowd-ie_central-clip_00001_00381",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "dataset card: 'An intermediate seating/entrance hall environment'; fixed webcam, 381 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-ie_central.yaml",
+   "gt": "data/indoorcrowd/ie_central/clip_00001_00381/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-r_central-clip_00001_00090",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/r_central/clip_00001_00090",
+   "scene": "indoorcrowd-r_central",
+   "camera": "indoorcrowd-r_central",
+   "session": "indoorcrowd-r_central-clip_00001_00090",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "dataset card: 'An overhead-view atrium with prominent structural columns causing regular occlusions'; fixed webcam, 90 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-r_central.yaml",
+   "gt": "data/indoorcrowd/r_central/clip_00001_00090/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-r_central-clip_00001_00134",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/r_central/clip_00001_00134",
+   "scene": "indoorcrowd-r_central",
+   "camera": "indoorcrowd-r_central",
+   "session": "indoorcrowd-r_central-clip_00001_00134",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "dataset card: 'An overhead-view atrium with prominent structural columns causing regular occlusions'; fixed webcam, 134 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-r_central.yaml",
+   "gt": "data/indoorcrowd/r_central/clip_00001_00134/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-r_central-clip_00001_00156",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/r_central/clip_00001_00156",
+   "scene": "indoorcrowd-r_central",
+   "camera": "indoorcrowd-r_central",
+   "session": "indoorcrowd-r_central-clip_00001_00156",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "dataset card: 'An overhead-view atrium with prominent structural columns causing regular occlusions'; fixed webcam, 156 frames @ 5 fps, 1280x720, faces blurred by the authors",
+   "corridor": "configs/corridors/IC-r_central.yaml",
+   "gt": "data/indoorcrowd/r_central/clip_00001_00156/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": false
+  },
+  {
+   "id": "IC-acs_ec-clip_00001_00051-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_ec/clip_00001_00051",
+   "scene": "indoorcrowd-acs_ec",
+   "camera": "indoorcrowd-acs_ec",
+   "session": "indoorcrowd-acs_ec-clip_00001_00051",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "same footage as IC-acs_ec-clip_00001_00051",
+   "corridor": "configs/corridors/IC-acs_ec-neg.yaml",
+   "gt": "data/indoorcrowd/acs_ec/clip_00001_00051/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
+  },
+  {
+   "id": "IC-acs_ec-clip_00001_00082-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_ec/clip_00001_00082",
+   "scene": "indoorcrowd-acs_ec",
+   "camera": "indoorcrowd-acs_ec",
+   "session": "indoorcrowd-acs_ec-clip_00001_00082",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "same footage as IC-acs_ec-clip_00001_00082",
+   "corridor": "configs/corridors/IC-acs_ec-neg.yaml",
+   "gt": "data/indoorcrowd/acs_ec/clip_00001_00082/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
+  },
+  {
+   "id": "IC-acs_ec-clip_00026_00091-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/acs_ec/clip_00026_00091",
+   "scene": "indoorcrowd-acs_ec",
+   "camera": "indoorcrowd-acs_ec",
+   "session": "indoorcrowd-acs_ec-clip_00026_00091",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "same footage as IC-acs_ec-clip_00026_00091",
+   "corridor": "configs/corridors/IC-acs_ec-neg.yaml",
+   "gt": "data/indoorcrowd/acs_ec/clip_00026_00091/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
+  },
+  {
+   "id": "IC-ie_central-clip_00001_00061-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/ie_central/clip_00001_00061",
+   "scene": "indoorcrowd-ie_central",
+   "camera": "indoorcrowd-ie_central",
+   "session": "indoorcrowd-ie_central-clip_00001_00061",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "same footage as IC-ie_central-clip_00001_00061",
+   "corridor": "configs/corridors/IC-ie_central-neg.yaml",
+   "gt": "data/indoorcrowd/ie_central/clip_00001_00061/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
+  },
+  {
+   "id": "IC-ie_central-clip_00001_00094-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/ie_central/clip_00001_00094",
+   "scene": "indoorcrowd-ie_central",
+   "camera": "indoorcrowd-ie_central",
+   "session": "indoorcrowd-ie_central-clip_00001_00094",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "same footage as IC-ie_central-clip_00001_00094",
+   "corridor": "configs/corridors/IC-ie_central-neg.yaml",
+   "gt": "data/indoorcrowd/ie_central/clip_00001_00094/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
+  },
+  {
+   "id": "IC-ie_central-clip_00001_00381-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/ie_central/clip_00001_00381",
+   "scene": "indoorcrowd-ie_central",
+   "camera": "indoorcrowd-ie_central",
+   "session": "indoorcrowd-ie_central-clip_00001_00381",
+   "conditions": [
+    "clear"
+   ],
+   "conditions_source": "same footage as IC-ie_central-clip_00001_00381",
+   "corridor": "configs/corridors/IC-ie_central-neg.yaml",
+   "gt": "data/indoorcrowd/ie_central/clip_00001_00381/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
+  },
+  {
+   "id": "IC-r_central-clip_00001_00090-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/r_central/clip_00001_00090",
+   "scene": "indoorcrowd-r_central",
+   "camera": "indoorcrowd-r_central",
+   "session": "indoorcrowd-r_central-clip_00001_00090",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "same footage as IC-r_central-clip_00001_00090",
+   "corridor": "configs/corridors/IC-r_central-neg.yaml",
+   "gt": "data/indoorcrowd/r_central/clip_00001_00090/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
+  },
+  {
+   "id": "IC-r_central-clip_00001_00134-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/r_central/clip_00001_00134",
+   "scene": "indoorcrowd-r_central",
+   "camera": "indoorcrowd-r_central",
+   "session": "indoorcrowd-r_central-clip_00001_00134",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "same footage as IC-r_central-clip_00001_00134",
+   "corridor": "configs/corridors/IC-r_central-neg.yaml",
+   "gt": "data/indoorcrowd/r_central/clip_00001_00134/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
+  },
+  {
+   "id": "IC-r_central-clip_00001_00156-neg",
+   "dataset": "indoorcrowd",
+   "source": "data/indoorcrowd/r_central/clip_00001_00156",
+   "scene": "indoorcrowd-r_central",
+   "camera": "indoorcrowd-r_central",
+   "session": "indoorcrowd-r_central-clip_00001_00156",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "same footage as IC-r_central-clip_00001_00156",
+   "corridor": "configs/corridors/IC-r_central-neg.yaml",
+   "gt": "data/indoorcrowd/r_central/clip_00001_00156/gt/gt.txt",
+   "license": "IndoorCrowd, fair-noncommercial-research-license: non-commercial research only, no surveillance, no re-identification (docs/licences/INDOORCROWD_LICENSE.txt)",
+   "negative": true,
+   "metrics": [
+    "events"
+   ],
+   "metrics_note": "negative corridor configuration on footage that is already a held-out clip: scored on events only so detection and tracking are not counted twice (PLAN.md A6.7)"
   }
  ]
 }

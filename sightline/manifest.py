@@ -21,7 +21,7 @@ CONDITIONS = ("clear", "occlusion_crowding", "camera_motion_blur", "low_light_co
 # what a clip is scored on. A moving-camera clip drops "events": its image-space corridor polygon
 # does not stay on the floor, so corridor events (and their derived labels) mean nothing there.
 METRICS = ("detection", "tracking", "events")
-DATASETS = ("own", "mot17", "synthetic")
+DATASETS = ("own", "mot17", "indoorcrowd", "synthetic")
 REQUIRED_FIELDS = ("id", "source", "scene", "camera", "session", "conditions", "corridor", "gt", "license")
 
 
@@ -51,8 +51,9 @@ class Clip:
 
     @property
     def dataset(self) -> str:
-        """"own" or "mot17". The detection bar is judged on "own" clips (PLAN.md amendment A1).
-        An explicit "dataset" field wins; otherwise a MOT scene id means mot17."""
+        """"own", "mot17" or "indoorcrowd". The detection bar is judged on the dataset named in
+        configs/eval.yaml (PLAN.md A1, A6). An explicit "dataset" field wins; otherwise a MOT scene
+        id means mot17."""
         explicit = self.raw.get("dataset")
         if explicit:
             return str(explicit)
@@ -130,13 +131,18 @@ def coverage_check(test: Manifest, min_clips: int = 12, difficult: tuple[str, ..
     diff_present = [t for t in difficult if t in present]
     ev = [c for c in test.clips if c.scored_on("events")]
     ev_present = sorted({t for c in ev for t in c.conditions})
+    # a clip is a distinct piece of footage: a second corridor on the same source (a negative
+    # corridor configuration, PLAN.md A6.7) is another entry, not another clip
+    n_sources = len({str(Path(c.source)) for c in test.clips})
     return {
-        "n_clips": len(test.clips),
-        "meets_min_clips": len(test.clips) >= min_clips,
+        "n_clips": n_sources,
+        "n_entries": len(test.clips),
+        "meets_min_clips": n_sources >= min_clips,
         "conditions_present": present,
         "difficult_conditions_present": diff_present,
         "meets_three_difficult": len(diff_present) >= 3,
         "negative_clips": sum(1 for c in test.clips if c.negative),
+        "negative_frames_note": "negative entries may reuse footage of scored clips with a second corridor",
         "has_negative_set": any(c.negative for c in test.clips),
         # what the EVENT metrics actually rest on, once detection/tracking-only clips are set aside
         "clips_scored_on": {m: sum(1 for c in test.clips if c.scored_on(m)) for m in METRICS},

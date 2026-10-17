@@ -33,7 +33,10 @@ class InScope:
     frame_height: int
 
     def contains(self, box: Box, visibility: float) -> bool:
-        return (box[3] - box[1]) >= self.min_height_frac * self.frame_height and visibility >= self.min_visibility
+        """A negative visibility means UNKNOWN (MOT convention, e.g. IndoorCrowd): judged by height alone,
+        so an occluded person of unknown visibility stays someone the detector must find."""
+        tall = (box[3] - box[1]) >= self.min_height_frac * self.frame_height
+        return tall and (visibility < 0 or visibility >= self.min_visibility)
 
 
 def load_mot_gt(path: str | Path, min_visibility: float = 0.0,
@@ -60,7 +63,7 @@ def load_mot_gt(path: str | Path, min_visibility: float = 0.0,
             ignore[frame].append(box)
         elif cls == PEDESTRIAN and in_scope is not None and not in_scope.contains(box, vis):
             ignore[frame].append(box)  # a real person, but out of scope: neither a hit nor a false positive
-        elif cls == PEDESTRIAN and vis >= min_visibility:
+        elif cls == PEDESTRIAN and (vis < 0 or vis >= min_visibility):  # vis < 0: unknown, kept
             gt[frame].append((tid, box))
         # any other class is not a person: dropped, so a detection on it counts as a false positive
     return dict(gt), dict(ignore)

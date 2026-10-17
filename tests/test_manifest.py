@@ -118,3 +118,19 @@ def test_own_clip_template_entries_are_complete(tmp_path):
 def test_missing_file_rejected(tmp_path):
     with pytest.raises((ManifestError, FileNotFoundError)):
         load_manifest(tmp_path / "none.json")
+
+
+def test_a_second_corridor_on_the_same_footage_is_an_entry_not_a_clip(tmp_path):
+    from sightline.manifest import coverage_check
+
+    def entry(cid, src, neg=False):
+        e = {"id": cid, "source": src, "scene": "s", "camera": "c", "session": "x", "conditions": ["clear"],
+             "corridor": "c.yaml", "gt": "gt.txt", "license": "t"}
+        return {**e, "negative": True, "metrics": ["events"]} if neg else e
+
+    p = tmp_path / "test.json"
+    p.write_text(json.dumps({"split": "test", "clips": [entry("a", "data/a"), entry("a-neg", "data/a", True),
+                                                        entry("b", "data/b")]}))
+    cov = coverage_check(load_manifest(p), min_clips=3)
+    assert (cov["n_clips"], cov["n_entries"], cov["negative_clips"]) == (2, 3, 1)
+    assert cov["meets_min_clips"] is False

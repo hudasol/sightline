@@ -8,10 +8,22 @@
 - **Licence:** the archive contains no licence or readme file, and the MOTChallenge site is now a static archive ("currently offline") that does not show licence text on the home or MOT17 pages. The CC BY-NC-SA 3.0 listing below is the commonly cited licence and is **not re-verified from a primary source**. Treat it as non-commercial, research use only.
 - Corridors: `configs/corridors/MOT17-XX.yaml`, drafted from the first frame and ground-truth foot traces only, before any system output existed. Label-derived event counts: `results/labels/mot17_gt_events_draft.json`.
 
+## IndoorCrowd acquisition (2026-10-17)
+- **What:** the `tracking` config only of `sebnae/IndoorCrowd` (Hugging Face, gated), commit `87049647f27c4419dcba051474dcfc0fcecad8e0`. Four parquet files, one per site, downloaded with the Hugging Face CLI under Huda's account after accepting the gate. No detection/segmentation config was downloaded.
+- **Converted** with `python -m sightline import-indoorcrowd` into `data/indoorcrowd/<site>/<recording>/` (MOT format). File hashes, frame counts and box counts: `results/ingest/indoorcrowd_import.json`. 12 recordings, 1,305 frames, 9,837 boxes, 1280x720, 5 fps.
+- **Recordings are distinct videos.** Two recordings of one site can share frame numbers (both start at `frame_00001`), so this was checked before splitting: frames with the same number differ by 6 to 63 grey levels on average (64x36 thumbnails), so no recording repeats another's frames. Frame numbers within each recording are contiguous.
+- **Cameras are fixed** (project page: "Fixed webcam at 1280 x 720 px"), one per site, so an image-space corridor stays on the floor.
+- **Visibility is not given.** Boxes are written with visibility -1 (unknown), never a made-up 1.0. The in-scope rule judges them by height alone (A1 and A6 in PLAN.md).
+- **Labels** were made by the dataset authors: foundation-model auto-labelling, then human correction of false positives, missing boxes and identity switches, with linear interpolation of gaps (dataset card). Interpolated boxes are not marked, so a box can be interpolated rather than seen.
+- **Faces** are blurred in the source by the dataset authors. Sightline still publishes no IndoorCrowd frame.
+- **Licence:** `docs/licences/INDOORCROWD_LICENSE.txt`. The dataset declares `fair-noncommercial-research-license` and its card says it is for non-commercial computer vision research only and prohibits surveillance and any re-identification of individuals. Sightline applies the **stricter reading** of the card and the licence text together: offline evaluation only, never a live feed, monitoring or counting of real people, no re-identification (anonymous per-clip ids from geometry only), no redistribution of frames or labels, no commercial use of any result.
+- **Open question for the project owner:** whether this task (an internship training task) counts as "non-commercial computer vision research" for IndoorCrowd and MOT17 is for Huda and the mentor to confirm. It is not decided here.
+
 ## Sources
 | Source | Use | Licence | Notes |
 |---|---|---|---|
 | MOT17 train scenes (02, 04, 05, 09, 10, 11, 13) | public labelled pedestrian video; tuning and some held-out | CC BY-NC-SA 3.0 (commonly cited; no licence text found in the archive or on the archived site, 2026-10-12) | One detector copy per scene only. DPM/FRCNN/SDP copies are the same video and count as ONE scene. Non-commercial: do not redistribute inside a commercial product. |
+| IndoorCrowd `tracking` config (sites ACS-EC, ACS-EG, IE-Central, R-Central) | indoor, fixed-camera labelled tracking video: the primary held-out evaluation set (PLAN.md A6) | fair-noncommercial-research-license (`docs/licences/INDOORCROWD_LICENSE.txt`); non-commercial research only, no surveillance, no re-identification | Gated. Split by site, never by frame or recording. Faces blurred by the authors; no frame published. |
 | Self-recorded indoor corridor clips | the real target domain | own footage | Consent of anyone identifiable required; no faces published. |
 
 ## Split rule

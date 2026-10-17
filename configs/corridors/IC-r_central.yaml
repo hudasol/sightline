@@ -1,0 +1,8 @@
+# IndoorCrowd r_central: a band across the hall floor; people walking towards or away from the camera cross it.
+# Image-space polygon, original pixels, fixed camera. Placed on 2026-10-17 from the first frame
+# and the ground-truth foot traces only (no detector/tracker output existed).
+# Every recording of this site has ground-truth foot points inside it.
+# Event labels are derived from this polygon, so it is hashed into the held-out lock.
+name: IC-r_central
+frame_size: [1280, 720]
+polygon: [[330, 440], [1000, 440], [1010, 540], [300, 540]]

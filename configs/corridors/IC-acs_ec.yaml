@@ -1,0 +1,8 @@
+# IndoorCrowd acs_ec: a band across both atrium walkways (the diagonal path and the lower path).
+# Image-space polygon, original pixels, fixed camera. Placed on 2026-10-17 from the first frame
+# and the ground-truth foot traces only (no detector/tracker output existed).
+# Every recording of this site has ground-truth foot points inside it.
+# Event labels are derived from this polygon, so it is hashed into the held-out lock.
+name: IC-acs_ec
+frame_size: [1280, 720]
+polygon: [[560, 360], [660, 360], [660, 660], [560, 660]]

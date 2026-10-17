@@ -1,0 +1,8 @@
+# IndoorCrowd acs_eg: a band across the ground-level corridor floor; people walking along the corridor cross it.
+# Image-space polygon, original pixels, fixed camera. Placed on 2026-10-17 from the first frame
+# and the ground-truth foot traces only (no detector/tracker output existed).
+# Every recording of this site has ground-truth foot points inside it.
+# Event labels are derived from this polygon, so it is hashed into the held-out lock.
+name: IC-acs_eg
+frame_size: [1280, 720]
+polygon: [[560, 480], [1120, 480], [1240, 590], [440, 590]]
