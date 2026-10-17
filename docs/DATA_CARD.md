@@ -1,6 +1,6 @@
 # Data card
 
-**Status: MOT17 downloaded and split (2026-10-12); own corridor clips not yet recorded or annotated.** Fill in the bracketed fields as clips are added (`configs/manifests/*.json` is the source of truth).
+**Status (2026-10-17):** MOT17 (val and part of held-out) and IndoorCrowd (held-out, PLAN.md A6) are split and the held-out manifest is locked (`results/heldout_manifest.json`). Own corridor clips are not recorded; a later version adds them with a fresh lock. `configs/manifests/*.json` is the source of truth.
 
 ## MOT17 acquisition (2026-10-12)
 - Downloaded `https://motchallenge.net/data/MOT17.zip`, 5,860,214,001 bytes (matches the server's Content-Length; server Last-Modified 18 Dec 2020). Every extracted member passed the zip CRC check.
@@ -55,11 +55,54 @@ The thresholds live in `configs/eval.yaml` under `in_scope`; that file is hashed
 - Label every person in view, in scope or not. Out-of-scope people become ignore regions, so a detection on them is never counted as a false positive.
 - Record which frames were annotated. Unannotated frames are not scored, and empty annotated frames are real negatives.
 
-## Counts (fill in)
-| Split | Clips | Frames | Minutes | Events | Negative minutes |
-|---|---|---|---|---|---|
-| val | [ ] | [ ] | [ ] | [ ] | [ ] |
-| held-out | [ ] | [ ] | [ ] | [ ] | [ ] |
+## Counts (computed 2026-10-17 from the manifests and ground truth, not typed)
+| Split | Distinct clips | Frames | Minutes | GT events | Negative entries | Negative minutes |
+|---|---|---|---|---|---|---|
+| val | 10 entries: 5 MOT17 scenes and their 5 about-5 fps copies | 4,991 | 5.83 | 41 (02: 11, 04: 9, 02-5fps: 12, 04-5fps: 9) | 0 | 0 |
+| held-out | 14 (MOT17-09, MOT17-10, 12 IndoorCrowd) | 2,484 | 5.00 | 80 (MOT17-09: 14, IndoorCrowd: 66) | 9 | 3.63 |
+
+GT events are counted on entries scored on events, using the label rule in seconds (A6.5). The 5 fps copy of
+MOT17-02 has 12 events where the original has 11. The copy keeps every 6th frame and the rule is then 1 frame
+inside with a 1-frame merge gap, so derived events need not match one for one; which event splits or appears
+was not examined.
+
+Per entry:
+
+| Split | Entry | Dataset | fps | Frames | Seconds | GT boxes | GT events | Scored on | Negative | Conditions |
+|---|---|---|---|---|---|---|---|---|---|---|
+| val | MOT17-02-FRCNN | mot17 | 30.0 | 600 | 20.0 | 18581 | 11 | detection,tracking,events |  | occlusion_crowding |
+| val | MOT17-04-FRCNN | mot17 | 30.0 | 1050 | 35.0 | 47557 | 9 | detection,tracking,events |  | occlusion_crowding,low_light_compression |
+| val | MOT17-05-FRCNN | mot17 | 14.0 | 837 | 59.8 | 6917 | - | detection,tracking |  | camera_motion_blur |
+| val | MOT17-11-FRCNN | mot17 | 30.0 | 900 | 30.0 | 9436 | - | detection,tracking |  | camera_motion_blur |
+| val | MOT17-13-FRCNN | mot17 | 25.0 | 750 | 30.0 | 11642 | - | detection,tracking |  | camera_motion_blur,occlusion_crowding |
+| val | MOT17-02-FRCNN-5fps | mot17 | 5.0 | 100 | 20.0 | 3092 | 12 | tracking,events |  | occlusion_crowding |
+| val | MOT17-04-FRCNN-5fps | mot17 | 5.0 | 175 | 35.0 | 7920 | 9 | tracking,events |  | occlusion_crowding,low_light_compression |
+| val | MOT17-05-FRCNN-5fps | mot17 | 4.67 | 279 | 59.8 | 2302 | - | tracking |  | camera_motion_blur |
+| val | MOT17-11-FRCNN-5fps | mot17 | 5.0 | 150 | 30.0 | 1571 | - | tracking |  | camera_motion_blur |
+| val | MOT17-13-FRCNN-5fps | mot17 | 5.0 | 150 | 30.0 | 2335 | - | tracking |  | camera_motion_blur,occlusion_crowding |
+| held-out | MOT17-09-FRCNN | mot17 | 30.0 | 525 | 17.5 | 5325 | 14 | detection,tracking,events |  | clear |
+| held-out | MOT17-10-FRCNN | mot17 | 30.0 | 654 | 21.8 | 12839 | - | detection,tracking |  | camera_motion_blur,low_light_compression |
+| held-out | IC-acs_ec-clip_00001_00051 | indoorcrowd | 5.0 | 51 | 10.2 | 222 | 3 | detection,tracking,events |  | occlusion_crowding |
+| held-out | IC-acs_ec-clip_00001_00082 | indoorcrowd | 5.0 | 82 | 16.4 | 2191 | 11 | detection,tracking,events |  | occlusion_crowding |
+| held-out | IC-acs_ec-clip_00026_00091 | indoorcrowd | 5.0 | 41 | 8.2 | 539 | 5 | detection,tracking,events |  | occlusion_crowding |
+| held-out | IC-acs_eg-clip_00001_00061 | indoorcrowd | 5.0 | 61 | 12.2 | 282 | 4 | detection,tracking,events |  | clear |
+| held-out | IC-acs_eg-clip_00011_00093 | indoorcrowd | 5.0 | 73 | 14.6 | 365 | 6 | detection,tracking,events |  | clear |
+| held-out | IC-acs_eg-clip_00056_00191 | indoorcrowd | 5.0 | 81 | 16.2 | 587 | 11 | detection,tracking,events |  | clear |
+| held-out | IC-ie_central-clip_00001_00061 | indoorcrowd | 5.0 | 61 | 12.2 | 356 | 3 | detection,tracking,events |  | clear |
+| held-out | IC-ie_central-clip_00001_00094 | indoorcrowd | 5.0 | 94 | 18.8 | 687 | 2 | detection,tracking,events |  | clear |
+| held-out | IC-ie_central-clip_00001_00381 | indoorcrowd | 5.0 | 381 | 76.2 | 2039 | 9 | detection,tracking,events |  | clear |
+| held-out | IC-r_central-clip_00001_00090 | indoorcrowd | 5.0 | 90 | 18.0 | 550 | 3 | detection,tracking,events |  | occlusion_crowding |
+| held-out | IC-r_central-clip_00001_00134 | indoorcrowd | 5.0 | 134 | 26.8 | 1147 | 5 | detection,tracking,events |  | occlusion_crowding |
+| held-out | IC-r_central-clip_00001_00156 | indoorcrowd | 5.0 | 156 | 31.2 | 872 | 4 | detection,tracking,events |  | occlusion_crowding |
+| held-out | IC-acs_ec-clip_00001_00051-neg | indoorcrowd | 5.0 | 51 | 10.2 | 222 | 0 | events | yes | occlusion_crowding |
+| held-out | IC-acs_ec-clip_00001_00082-neg | indoorcrowd | 5.0 | 82 | 16.4 | 2191 | 0 | events | yes | occlusion_crowding |
+| held-out | IC-acs_ec-clip_00026_00091-neg | indoorcrowd | 5.0 | 41 | 8.2 | 539 | 0 | events | yes | occlusion_crowding |
+| held-out | IC-ie_central-clip_00001_00061-neg | indoorcrowd | 5.0 | 61 | 12.2 | 356 | 0 | events | yes | clear |
+| held-out | IC-ie_central-clip_00001_00094-neg | indoorcrowd | 5.0 | 94 | 18.8 | 687 | 0 | events | yes | clear |
+| held-out | IC-ie_central-clip_00001_00381-neg | indoorcrowd | 5.0 | 381 | 76.2 | 2039 | 0 | events | yes | clear |
+| held-out | IC-r_central-clip_00001_00090-neg | indoorcrowd | 5.0 | 90 | 18.0 | 550 | 0 | events | yes | occlusion_crowding |
+| held-out | IC-r_central-clip_00001_00134-neg | indoorcrowd | 5.0 | 134 | 26.8 | 1147 | 0 | events | yes | occlusion_crowding |
+| held-out | IC-r_central-clip_00001_00156-neg | indoorcrowd | 5.0 | 156 | 31.2 | 872 | 0 | events | yes | occlusion_crowding |
 
 ## Known biases / limitations
 MOT17 is mostly outdoor street/mall footage with different camera heights than a corridor; indoor clips are from one or few locations and will not cover all lighting, clothing or crowd types. Results do not generalise beyond the conditions listed in the manifest.
