@@ -16,6 +16,9 @@ outputs/
 results/detections/
 results/tracks/
 
+# error-analysis renders are real frames (faces): never published, regenerate with `sightline errors`
+results/error_analysis/**/*.png
+
 # python
 __pycache__/
 *.pyc
