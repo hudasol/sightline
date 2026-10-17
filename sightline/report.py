@@ -124,6 +124,47 @@ def _runtime(rt: dict | None, label: str, path: str) -> list[str]:
                  s["frames_late"]]]) + [""]
 
 
+def _repeats(summ: dict | None, path: str) -> list[str]:
+    if not summ:
+        return []
+    rows = []
+    for name, g in summ.items():
+        for r in g["per_run"]:
+            rows.append([f"{name} run {r['run']}", r["frames_processed"], r["throughput_fps"], r["worst_clip_latency_ms_p95"],
+                         r["latency_ms_max"], r["frames_dropped"]])
+        t = g["throughput_fps"]
+        rows.append([f"{name} median (min-max)", "", f"{t['median']:.2f} ({t['min']:.2f}-{t['max']:.2f})", "", "", ""])
+    return [f"## Runtime: repeated offline runs on the held-out clips (`{path}`)", "",
+            "The first run is `results/runtime_report.json`, which `evaluate` read for its throughput check.", ""] +         _table(["Run", "Frames", "Throughput fps", "Worst clip p95 ms", "Max latency ms", "Dropped"], rows) + [""]
+
+
+# ACS-EC has two camera views; its corridor was drawn on clip_00001_00051's view and applied to the other
+# two recordings too (EVALUATION.md, erratum). A post-hoc sensitivity check, never a replacement result.
+OTHER_VIEW = ("IC-acs_ec-clip_00001_00082", "IC-acs_ec-clip_00026_00091")
+
+
+def _sensitivity(rd: Path, final: dict | None) -> list[str]:
+    pc = rd / "per_clip" / "bytetrack"
+    if not final or not pc.is_dir():
+        return []
+    scored = set(final["scope"]["events"])
+    rows = []
+    for label, keep in (("all event entries (the reported result)", lambda c: True),
+                        ("without the two ACS-EC lounge-view recordings and their -neg entries",
+                         lambda c: c.removesuffix("-neg") not in OTHER_VIEW)):
+        tp = fp = fn = n = 0
+        for f in sorted(pc.glob("*.json")):
+            d = json.loads(f.read_text())
+            if d["clip"] not in scored or not keep(d["clip"]):
+                continue
+            n += 1
+            tp, fp, fn = tp + len(d["event_pairs"]), fp + len(d["false_events"]), fn + len(d["missed_events"])
+        rows.append([label, n, tp, fp, fn, tp / (tp + fp) if tp + fp else None, tp / (tp + fn) if tp + fn else None])
+    return ["## Sensitivity: the ACS-EC camera-view erratum (post hoc, from `results/per_clip/bytetrack/`)", "",
+            "Not a replacement for the reported result: it shows how much the two recordings whose corridor was drawn "
+            "on another camera view move the event metrics.", ""] +         _table(["Event entries", "Entries", "TP", "FP", "FN", "Precision", "Recall"], rows) + [""]
+
+
 def _a4(a4: dict | None) -> list[str]:
     if not a4:
         return []
@@ -184,8 +225,9 @@ def build(results_dir: Path) -> str:
            "re-run the command. Interpretation is in `docs/EVALUATION.md`.", ""]
     out += _a4(_load(rd / "detector_selection" / "a4_choice.json"))
     if final:
-        out += _bar(final) + _detection(final) + _tracking(final) + _events(final)
+        out += _bar(final) + _detection(final) + _tracking(final) + _events(final) + _sensitivity(rd, final)
     out += _runtime(_load(rd / "runtime_report.json"), "held-out clips, offline, every frame processed", "results/runtime_report.json")
+    out += _repeats(_load(rd / "runtime" / "heldout_offline" / "summary.json"), "results/runtime/heldout_offline/summary.json")
     out += _runtime(_load(rd / "runtime" / "heldout_realtime.json"), "held-out clips paced in real time",
                     "results/runtime/heldout_realtime.json")
     out += _ablation(_load(rd / "ablation" / "ablation_heldout.json"))
