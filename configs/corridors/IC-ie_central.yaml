@@ -1,0 +1,8 @@
+# IndoorCrowd ie_central: a band across the middle of the entrance hall, between the front doors and the back door.
+# Image-space polygon, original pixels, fixed camera. Placed on 2026-10-17 from the first frame
+# and the ground-truth foot traces only (no detector/tracker output existed).
+# Every recording of this site has ground-truth foot points inside it.
+# Event labels are derived from this polygon, so it is hashed into the held-out lock.
+name: IC-ie_central
+frame_size: [1280, 720]
+polygon: [[600, 330], [700, 330], [720, 715], [600, 715]]

@@ -1,0 +1,9 @@
+# IndoorCrowd acs_ec: NEGATIVE corridor: the seating area right of the lower walkway.
+# Image-space polygon, original pixels, fixed camera. Placed on 2026-10-17 from the first frame
+# and the ground-truth foot traces only (no detector/tracker output existed).
+# No ground-truth foot point of any recording of this site lies inside it (checked before any
+# system output), so every recording with this corridor is a negative case (PLAN.md A6.7).
+# Event labels are derived from this polygon, so it is hashed into the held-out lock.
+name: IC-acs_ec-neg
+frame_size: [1280, 720]
+polygon: [[960, 440], [1240, 440], [1240, 560], [960, 560]]
