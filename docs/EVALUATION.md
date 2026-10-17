@@ -147,7 +147,13 @@ Each item addresses a named risk.
   fragmentation above.
 - **Stress suite** (risk: unknown behaviour under blur, compression, low light and shake). The frozen
   system was rerun on degraded held-out clips, with nothing retuned (`results/stress/`,
-  `docs/RESULTS.md`).
+  `docs/RESULTS.md`, `results/plots/stress_curves.png`).
+  - **Tracking degrades steadily.** IDF1 falls from 0.512 (clean) to 0.402 at blur sigma 6, 0.417 at
+    JPEG quality 5, 0.443 at brightness x0.15, and 0.302 at 20 px of shake. Shake hurts most, because it
+    moves every box between frames.
+  - **Event recall hardly moves** (0.75-0.81 at every level, against 0.787 clean). With 80 GT events,
+    one event is 1.25 points, so these differences are within a few events.
+  - **False CLEAR rises** from 8.8% to 13.5% at JPEG quality 5, and to 10-12% at the strongest shake.
   - **Known limit of the suite:** only the detector sees the degraded frames. The pipeline replay that
     computes tracking, events and health reads the clean frames (`sightline/stress.py` passes
     degraded detections to `evaluate_clip`, which reads the original source). So the stress rows show
