@@ -188,6 +188,19 @@ def cmd_decimate(a) -> int:
     return 0
 
 
+def cmd_select_detector(a) -> int:
+    from sightline.evaluation.run import load_eval_config, write_json
+    from sightline.selection import select_a4
+
+    out = select_a4(Path(a.results), Path(a.runtime_summary), load_eval_config(a.eval_config)["bar"]["min_fps"])
+    write_json(Path(a.out), out)
+    c = out["choice"]
+    _p(f"A4: {out['verdict']}; choice: " + (f"{c['detector']} k={c['k']} (in-scope F1 {c['in_scope_f1']}, "
+       f"median {c['throughput_fps_median']:.2f} fps, threshold {out['operating_threshold']})" if c else "none"))
+    _p(f"wrote {a.out}")
+    return 0 if c and out["verdict"] == "valid" else 1
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -688,6 +701,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--out-root", default="data/mot17_5fps")
     sp.add_argument("--cache", default="results/detections", help="detection caches to renumber, one folder per detector tag")
     sp.add_argument("--summary", help="write a JSON report here")
+
+    sp = add("select-detector", cmd_select_detector, "apply PLAN.md A4 to saved val results (detector and k)")
+    sp.add_argument("--results", default="results")
+    sp.add_argument("--runtime-summary", default="results/runtime/a4_selection/summary.json")
+    sp.add_argument("--eval-config", default="configs/eval.yaml")
+    sp.add_argument("--out", default="results/detector_selection/a4_choice.json")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
