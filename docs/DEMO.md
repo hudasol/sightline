@@ -50,9 +50,13 @@ difference.
 switch or duplicate track, each with the "why" written after looking at the frame.
 
 ## 6. One corridor event end to end (30 s)
-Pick a matched event in `results/per_clip/bytetrack/<clip>.json` (`event_pairs`). Show its
-`first_inside_frame` (GT) against the predicted `open_frame` (the latency in frames), its active
-frames and its close or UNRESOLVED state in the replay's `events.jsonl`.
+```bash
+python -m sightline timeline IC-acs_eg-clip_00001_00061             # lists the clip's events and latencies
+python -m sightline timeline IC-acs_eg-clip_00001_00061 --event <N>  # one event, approach to close or loss
+```
+The output shows when the track was first reported, the GT first-inside frame, the open frame and its
+latency in frames and seconds, the evidence while active, and how the event ended (closed, or UNRESOLVED
+when the track was lost). It is built from `results/per_clip/` and the saved tracks only.
 
 ## 7. Break the input (30 s)
 ```bash
