@@ -106,7 +106,7 @@ def plot_per_condition(final: dict, out_dir: Path) -> list[Path]:
 def plot_latency(final_per_clip: Path, out: Path) -> Path | None:
     lat = []
     for f in sorted(final_per_clip.glob("bytetrack/*.json")):
-        lat += json.loads(f.read_text()).get("event_latency_frames", [])
+        lat += json.loads(f.read_text()).get("event_latencies_frames", [])
     if not lat:
         return None
     fig, ax = _fig(6.4, 3.4)
@@ -199,7 +199,7 @@ def plot_reliability(report: dict, out: Path) -> Path | None:
                          fontsize=7, ha="center", color=INK)
         ax2.set_ylim(0, 1.05)
     rho = report.get("spearman_frame_confidence_vs_recall")
-    _style(ax2, "Frame recall by mean confidence" + (f" (Spearman {rho:.2f})" if rho is not None else ""),
+    _style(ax2, "Recall by frame confidence" + (f" (rho {rho:.2f})" if rho is not None else ""),
            "mean score of used detections (quintiles)", "mean frame recall")
     fig.tight_layout()
     fig.savefig(out, facecolor=SURFACE)
