@@ -231,6 +231,15 @@ def cmd_calibration(a) -> int:
     return 0
 
 
+def cmd_report(a) -> int:
+    from sightline.report import build
+
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(a.out).write_text(build(Path(a.results)), newline="\n")
+    _p(f"wrote {a.out} from the files under {a.results}")
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -753,6 +762,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--root", default=".")
     sp.add_argument("--cache", default="results/detections")
     sp.add_argument("--out", default="results/calibration/heldout.json")
+
+    sp = add("report", cmd_report, "markdown tables generated from saved results only (docs/RESULTS.md)")
+    sp.add_argument("--results", default="results")
+    sp.add_argument("--out", default="docs/RESULTS.md")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
