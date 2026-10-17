@@ -82,6 +82,9 @@ class HealthConfig:
     low_conf_mean: float = 0.35  # mean detection score over the window; FROZEN-ON-VAL
     fps_window: int = 30
     warmup_frames: int = 5  # frames excluded from the fps check while the model warms up
+    # the corridor status may rest on a detection no older than this (source time). Declared, not tuned.
+    # Sync mode at k <= 3 and >= 5 fps stays under it; a slow async worker or a stalled detector does not.
+    max_detection_age_s: float = 0.5
 
 
 @dataclass

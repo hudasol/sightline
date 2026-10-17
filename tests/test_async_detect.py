@@ -68,3 +68,22 @@ def test_cached_detections_ignore_async_and_stay_deterministic(clip, cfg, corrid
     cfg.pipeline.async_detection = True
     b = run_clip(clip.video, cfg, corridor, cached=cached)
     assert b.policy["async_detection"] is False and a.mot_rows == b.mot_rows
+
+
+def test_a_detector_slower_than_the_age_limit_turns_async_mode_degraded(clip, cfg, corridor, cached):
+    # the per-frame time stays a few ms in async mode, so only the detection-age check can see this
+    from sightline.types import CorridorStatus
+
+    det = SlowDetector(clip, cached, delay_s=0.8)
+    cfg.pipeline.detect_every, cfg.pipeline.async_detection = 1, True
+    cfg.health.max_detection_age_s = 0.5
+    run = run_clip(clip.video, cfg, corridor, detector=det, keep_results=True, realtime=True, max_frames=30)
+    stale = [r for r in run.results if any(x.startswith("stale_detections") for x in r.health.reasons)]
+    assert stale, "a 0.8 s detector must leave the corridor status resting on detections older than 0.5 s"
+    assert all(r.corridor != CorridorStatus.CLEAR for r in stale)
+
+
+def test_sync_mode_with_a_short_interval_never_reports_stale_detections(clip, cfg, corridor, cached):
+    cfg.pipeline.detect_every = 3  # at 15 fps the oldest detection is 2/15 s old
+    run = run_clip(clip.video, cfg, corridor, cached=cached, keep_results=True)
+    assert not any(x.startswith("stale_detections") for r in run.results for x in r.health.reasons)

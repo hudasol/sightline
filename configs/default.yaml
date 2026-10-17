@@ -45,6 +45,7 @@ health:
   low_conf_mean: 0.35       # FROZEN-ON-VAL
   fps_window: 30
   warmup_frames: 5
+  max_detection_age_s: 0.5 # declared, not tuned: the corridor status rests on a detection <= 0.5 s old
 
 pipeline:
   detect_every: 1           # detector on every k-th frame, tracker predicts between (PLAN.md A2)
