@@ -1,6 +1,6 @@
 {
  "split": "val",
- "note": "Tuning set. Every threshold is chosen here and only here. MOT17 base scenes 02, 04, 05, 11, 13 (FRCNN copy only). Own val clips must come from a different camera position AND recording session than any own test clip. Condition tags for MOT17 come from the official MOTChallenge sequence descriptions and are to be confirmed by looking at the frames.",
+ "note": "Tuning set. Every threshold is chosen here and only here. MOT17 base scenes 02, 04, 05, 11, 13 (FRCNN copy only). Own val clips must come from a different camera position AND recording session than any own test clip. Condition tags for MOT17 come from the official MOTChallenge sequence descriptions and are to be confirmed by looking at the frames. Entries ending in -5fps are frame-rate-matched copies of the same val scenes at about 5 fps (PLAN.md A6.3), added 2026-10-17.",
  "clips": [
   {
    "id": "MOT17-02-FRCNN",
@@ -8,7 +8,9 @@
    "scene": "MOT17-02",
    "camera": "mot17-02",
    "session": "mot17-02",
-   "conditions": ["occlusion_crowding"],
+   "conditions": [
+    "occlusion_crowding"
+   ],
    "conditions_source": "MOTChallenge: 'People walking around a large square.' static camera, 600 frames @ 30 fps, 1920x1080, density 31.0",
    "corridor": "configs/corridors/MOT17-02.yaml",
    "gt": "data/mot17/MOT17-02-FRCNN/gt/gt.txt",
@@ -21,7 +23,10 @@
    "scene": "MOT17-04",
    "camera": "mot17-04",
    "session": "mot17-04",
-   "conditions": ["occlusion_crowding", "low_light_compression"],
+   "conditions": [
+    "occlusion_crowding",
+    "low_light_compression"
+   ],
    "conditions_source": "MOTChallenge: 'Pedestrian street at night, elevated viewpoint', 1050 frames @ 30 fps, 1920x1080, density 45.3",
    "corridor": "configs/corridors/MOT17-04.yaml",
    "gt": "data/mot17/MOT17-04-FRCNN/gt/gt.txt",
@@ -34,13 +39,18 @@
    "scene": "MOT17-05",
    "camera": "mot17-05",
    "session": "mot17-05",
-   "conditions": ["camera_motion_blur"],
+   "conditions": [
+    "camera_motion_blur"
+   ],
    "conditions_source": "MOTChallenge: 'Street scene from a moving platform', 837 frames @ 14 fps, 640x480",
    "corridor": "configs/corridors/MOT17-05.yaml",
    "gt": "data/mot17/MOT17-05-FRCNN/gt/gt.txt",
    "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
    "negative": false,
-   "metrics": ["detection", "tracking"],
+   "metrics": [
+    "detection",
+    "tracking"
+   ],
    "metrics_note": "moving camera: the image-space corridor polygon does not stay on the floor, so corridor events and their rule-derived labels are not meaningful; scored on detection and tracking only"
   },
   {
@@ -49,13 +59,18 @@
    "scene": "MOT17-11",
    "camera": "mot17-11",
    "session": "mot17-11",
-   "conditions": ["camera_motion_blur"],
+   "conditions": [
+    "camera_motion_blur"
+   ],
    "conditions_source": "MOTChallenge: 'Forward moving camera in a busy shopping mall', 900 frames @ 30 fps, 1920x1080",
    "corridor": "configs/corridors/MOT17-11.yaml",
    "gt": "data/mot17/MOT17-11-FRCNN/gt/gt.txt",
    "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
    "negative": false,
-   "metrics": ["detection", "tracking"],
+   "metrics": [
+    "detection",
+    "tracking"
+   ],
    "metrics_note": "moving camera: the image-space corridor polygon does not stay on the floor, so corridor events and their rule-derived labels are not meaningful; scored on detection and tracking only"
   },
   {
@@ -64,14 +79,119 @@
    "scene": "MOT17-13",
    "camera": "mot17-13",
    "session": "mot17-13",
-   "conditions": ["camera_motion_blur", "occlusion_crowding"],
+   "conditions": [
+    "camera_motion_blur",
+    "occlusion_crowding"
+   ],
    "conditions_source": "MOTChallenge: 'Filmed from a bus on a busy intersection', 750 frames @ 25 fps, 1920x1080",
    "corridor": "configs/corridors/MOT17-13.yaml",
    "gt": "data/mot17/MOT17-13-FRCNN/gt/gt.txt",
    "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
    "negative": false,
-   "metrics": ["detection", "tracking"],
+   "metrics": [
+    "detection",
+    "tracking"
+   ],
    "metrics_note": "moving camera: the image-space corridor polygon does not stay on the floor, so corridor events and their rule-derived labels are not meaningful; scored on detection and tracking only"
+  },
+  {
+   "id": "MOT17-02-FRCNN-5fps",
+   "source": "data/mot17_5fps/MOT17-02-FRCNN-5fps",
+   "scene": "MOT17-02",
+   "camera": "mot17-02",
+   "session": "mot17-02",
+   "conditions": [
+    "occlusion_crowding"
+   ],
+   "conditions_source": "decimated copy of MOT17-02-FRCNN (every round(fps/5)-th frame, PLAN.md A6.3); MOTChallenge: 'People walking around a large square.' static camera, 600 frames @ 30 fps, 1920x1080, density 31.0",
+   "corridor": "configs/corridors/MOT17-02.yaml",
+   "gt": "data/mot17_5fps/MOT17-02-FRCNN-5fps/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false,
+   "metrics": [
+    "tracking",
+    "events"
+   ],
+   "metrics_note": "frame-rate-matched copy of a val scene: same scene, same split; detection is already scored on every original frame, so not again here (PLAN.md A6.3)"
+  },
+  {
+   "id": "MOT17-04-FRCNN-5fps",
+   "source": "data/mot17_5fps/MOT17-04-FRCNN-5fps",
+   "scene": "MOT17-04",
+   "camera": "mot17-04",
+   "session": "mot17-04",
+   "conditions": [
+    "occlusion_crowding",
+    "low_light_compression"
+   ],
+   "conditions_source": "decimated copy of MOT17-04-FRCNN (every round(fps/5)-th frame, PLAN.md A6.3); MOTChallenge: 'Pedestrian street at night, elevated viewpoint', 1050 frames @ 30 fps, 1920x1080, density 45.3",
+   "corridor": "configs/corridors/MOT17-04.yaml",
+   "gt": "data/mot17_5fps/MOT17-04-FRCNN-5fps/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false,
+   "metrics": [
+    "tracking",
+    "events"
+   ],
+   "metrics_note": "frame-rate-matched copy of a val scene: same scene, same split; detection is already scored on every original frame, so not again here (PLAN.md A6.3)"
+  },
+  {
+   "id": "MOT17-05-FRCNN-5fps",
+   "source": "data/mot17_5fps/MOT17-05-FRCNN-5fps",
+   "scene": "MOT17-05",
+   "camera": "mot17-05",
+   "session": "mot17-05",
+   "conditions": [
+    "camera_motion_blur"
+   ],
+   "conditions_source": "decimated copy of MOT17-05-FRCNN (every round(fps/5)-th frame, PLAN.md A6.3); MOTChallenge: 'Street scene from a moving platform', 837 frames @ 14 fps, 640x480",
+   "corridor": "configs/corridors/MOT17-05.yaml",
+   "gt": "data/mot17_5fps/MOT17-05-FRCNN-5fps/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false,
+   "metrics": [
+    "tracking"
+   ],
+   "metrics_note": "frame-rate-matched copy of a val scene: same scene, same split; detection is already scored on every original frame, so not again here (PLAN.md A6.3); moving camera, so no events either"
+  },
+  {
+   "id": "MOT17-11-FRCNN-5fps",
+   "source": "data/mot17_5fps/MOT17-11-FRCNN-5fps",
+   "scene": "MOT17-11",
+   "camera": "mot17-11",
+   "session": "mot17-11",
+   "conditions": [
+    "camera_motion_blur"
+   ],
+   "conditions_source": "decimated copy of MOT17-11-FRCNN (every round(fps/5)-th frame, PLAN.md A6.3); MOTChallenge: 'Forward moving camera in a busy shopping mall', 900 frames @ 30 fps, 1920x1080",
+   "corridor": "configs/corridors/MOT17-11.yaml",
+   "gt": "data/mot17_5fps/MOT17-11-FRCNN-5fps/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false,
+   "metrics": [
+    "tracking"
+   ],
+   "metrics_note": "frame-rate-matched copy of a val scene: same scene, same split; detection is already scored on every original frame, so not again here (PLAN.md A6.3); moving camera, so no events either"
+  },
+  {
+   "id": "MOT17-13-FRCNN-5fps",
+   "source": "data/mot17_5fps/MOT17-13-FRCNN-5fps",
+   "scene": "MOT17-13",
+   "camera": "mot17-13",
+   "session": "mot17-13",
+   "conditions": [
+    "camera_motion_blur",
+    "occlusion_crowding"
+   ],
+   "conditions_source": "decimated copy of MOT17-13-FRCNN (every round(fps/5)-th frame, PLAN.md A6.3); MOTChallenge: 'Filmed from a bus on a busy intersection', 750 frames @ 25 fps, 1920x1080",
+   "corridor": "configs/corridors/MOT17-13.yaml",
+   "gt": "data/mot17_5fps/MOT17-13-FRCNN-5fps/gt/gt.txt",
+   "license": "MOT17 (MOTChallenge) - see docs/DATA_CARD.md",
+   "negative": false,
+   "metrics": [
+    "tracking"
+   ],
+   "metrics_note": "frame-rate-matched copy of a val scene: same scene, same split; detection is already scored on every original frame, so not again here (PLAN.md A6.3); moving camera, so no events either"
   }
  ]
 }
