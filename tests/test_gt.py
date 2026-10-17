@@ -32,3 +32,14 @@ def test_mot_gt_scores_pedestrians_ignores_distractors_and_drops_non_people(tmp_
     gt, ignore = load_mot_gt(p)
     assert [tid for tid, _b in gt[1]] == [1]
     assert sorted(ignore[1]) == sorted([(0.0, 0.0, 10.0, 20.0), (50.0, 0.0, 60.0, 20.0), (90.0, 0.0, 100.0, 20.0)])
+
+
+def test_unknown_visibility_is_kept_and_judged_in_scope_by_height_alone(tmp_path):
+    p = tmp_path / "gt.txt"
+    # frame 1: tall person, visibility unknown (-1); short person, unknown; tall person, known 0.3
+    p.write_text("1,1,0,0,10,50,1,1,-1\n1,2,0,0,10,5,1,1,-1\n1,3,0,0,10,50,1,1,0.3\n")
+    gt, ignore = load_mot_gt(p)
+    assert [t for t, _b in gt[1]] == [1, 2, 3]  # unknown visibility is not dropped
+    gt_in, ignore_in = load_mot_gt(p, in_scope=InScope(0.10, 0.65, 100))
+    assert [t for t, _b in gt_in[1]] == [1]  # tall + unknown in scope; short and known-occluded ignored
+    assert len(ignore_in[1]) == 2

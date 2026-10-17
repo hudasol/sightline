@@ -11,12 +11,13 @@ COCO `bbox` (x, y, w, h in pixels) and `track_id`. Each recording becomes one cl
 
     <out>/<site>/<recording>/seqinfo.ini
     <out>/<site>/<recording>/img1/000001.jpg ...   (renumbered from 1, original order)
-    <out>/<site>/<recording>/gt/gt.txt             (frame,id,x,y,w,h,1,1,1.0)
+    <out>/<site>/<recording>/gt/gt.txt             (frame,id,x,y,w,h,1,1,-1)
     <out>/<site>/<recording>/source_frames.json    (new frame -> original file name)
 
-IndoorCrowd gives no visibility, so every box is written with visibility 1.0. Under the
-in-scope rule (PLAN.md A1) that keeps every tall-enough person, occluded or not: the
-stricter reading for the detector. The split is by SITE (one fixed camera each), never
+IndoorCrowd gives no visibility, so every box is written with visibility -1 (unknown,
+the MOT convention), never a made-up 1.0. The in-scope rule (PLAN.md A1) then judges
+these boxes by height alone: every tall-enough person counts, occluded or not, which is
+the stricter reading for the detector. The split is by SITE (one fixed camera each), never
 by frame or recording; the manifest's scene and camera fields carry the site.
 """
 
@@ -105,7 +106,7 @@ def import_site(parquet: Path, site: str, out_dir: Path) -> list[dict]:
             mapping[new] = row["file_name"]
             o = row["objects"]
             for (x, y, bw, bh), tid in zip(o["bbox"], o["track_id"]):
-                lines.append(f"{new},{int(tid)},{x:.2f},{y:.2f},{bw:.2f},{bh:.2f},1,1,1.0")
+                lines.append(f"{new},{int(tid)},{x:.2f},{y:.2f},{bw:.2f},{bh:.2f},1,1,-1")
                 ids.add(int(tid))
         (seq / "gt" / "gt.txt").write_text("\n".join(lines) + "\n", newline="\n")
         (seq / "seqinfo.ini").write_text(

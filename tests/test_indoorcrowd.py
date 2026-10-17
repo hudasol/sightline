@@ -45,6 +45,7 @@ def test_recordings_become_renumbered_mot_sequences_in_source_order(tmp_path):
     gt, ignore = load_mot_gt(seq / "gt" / "gt.txt")
     assert gt[1] == [(4, (0.0, 0.0, 10.0, 20.0)), (7, (30.0, 1.0, 35.0, 7.0))] and gt[2] == [(4, (1.0, 2.0, 11.0, 22.0))]
     assert not ignore
+    assert (seq / "gt" / "gt.txt").read_text().splitlines()[0].endswith(",1,1,-1")  # visibility unknown, not 1.0
     assert json.loads((seq / "source_frames.json").read_text())["1"].endswith("frame_00011.jpg")
     assert rep["parquet"]["acs_eg"]["sha256"] and rep["revision"] == "abc"
 
