@@ -442,16 +442,26 @@ def cmd_benchmark(a) -> int:
 
     try:
         cfg = _load_cfg(a)
-        corridor = load_corridor(a.corridor)
+        if a.manifest:  # each distinct source once, with its own corridor and fps
+            seen, jobs = set(), []
+            for c in load_manifest(a.manifest).clips:
+                if c.source not in seen:
+                    seen.add(c.source)
+                    jobs.append((str(Path(a.root) / c.source), load_corridor(Path(a.root) / c.corridor), c.fps))
+        elif a.sources and a.corridor:
+            corridor = load_corridor(a.corridor)
+            jobs = [(src, corridor, a.fps) for src in a.sources]
+        else:
+            raise ConfigError("benchmark needs sources and --corridor, or --manifest")
         detector = make_detector(cfg.detector)
-    except (ConfigError, DetectorUnavailable) as exc:
+    except (ConfigError, ManifestError, DetectorUnavailable) as exc:
         return _unavailable(None, str(exc))
     di = detector.info()
     _p(f"detector={di['detector']} backend={di.get('backend')} "
        f"threads={di.get('torch_threads', di.get('intra_op_threads'))} interop={di.get('torch_interop_threads', 'n/a')}")
     all_lat, summaries = None, []
-    for src in a.sources:
-        run = run_clip(src, cfg, corridor, detector=detector, fps_override=a.fps, realtime=a.realtime,
+    for src, corridor, fps in jobs:
+        run = run_clip(src, cfg, corridor, detector=detector, fps_override=fps, realtime=a.realtime,
                        max_frames=a.max_frames)
         summaries.append({"clip": run.clip, **run.runtime})
         rt = run.runtime
@@ -471,7 +481,7 @@ def cmd_benchmark(a) -> int:
               "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height],
               "detector_input_size": list(cfg.detector.input_size), "decode_thread": cfg.pipeline.decode_thread,
               "detect_every": cfg.pipeline.detect_every, "async_detection": cfg.pipeline.async_detection,
-              "max_frames_per_clip": a.max_frames, "code": code_version()}
+              "max_frames_per_clip": a.max_frames, "manifest": a.manifest, "code": code_version()}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, indent=1))
     _p(f"wrote {a.out}")
@@ -743,8 +753,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(config="results/frozen_config.yaml")
 
     sp = add("benchmark", cmd_benchmark, "runtime evidence on THIS machine (live detector)")
-    sp.add_argument("sources", nargs="+")
-    sp.add_argument("--corridor", required=True)
+    sp.add_argument("sources", nargs="*")
+    sp.add_argument("--corridor")
+    sp.add_argument("--manifest", help="time every distinct source of this manifest with its own corridor")
+    sp.add_argument("--root", default=".")
     sp.add_argument("--config", default="results/frozen_config.yaml")
     sp.add_argument("--out", default="results/runtime_report.json")
     sp.add_argument("--fps", type=float)
