@@ -29,7 +29,9 @@ bar:
   min_difficult_conditions: 3
   detection_precision: 0.80
   detection_recall: 0.80
-  detection_bar_dataset: own   # judged on held-out OWN corridor clips, in scope (A1); MOT17 is reported, not judged
+  # judged on held-out IndoorCrowd clips, in scope (A1, A6.1: IndoorCrowd replaces own clips for v1.0);
+  # MOT17 is reported, not judged
+  detection_bar_dataset: indoorcrowd
   idf1: 0.65
   event_precision: 0.85
   event_recall: 0.85

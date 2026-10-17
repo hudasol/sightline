@@ -42,7 +42,7 @@ def test_coverage_reports_what_events_rest_on(tmp_path):
     assert cov["event_difficult_conditions_present"] == []
 
 
-def test_detection_bar_is_judged_on_own_clips_in_scope(clip, cfg, cached):
+def test_detection_bar_is_judged_on_the_named_dataset_in_scope(clip, cfg, cached):
     from sightline.evaluation.run import bar_check
 
     eval_cfg = load_eval_config(ROOT / "configs" / "eval.yaml")
@@ -55,8 +55,8 @@ def test_detection_bar_is_judged_on_own_clips_in_scope(clip, cfg, cached):
     assert "ALL" in agg["detection_in_scope"] and "ALL" in agg["tracking_in_scope"]["bytetrack"]
     cov = {"meets_min_clips": True, "meets_three_difficult": True, "has_negative_set": True}
     bar = bar_check(agg, cov, eval_cfg)
-    # MOT17 is reported, never judged: with no own clips the detection checks cannot pass
-    assert bar["detection_judged_on"] == "own clips, in scope"
+    # MOT17 is reported, never judged: with no IndoorCrowd clips (A6) the detection checks cannot pass
+    assert bar["detection_judged_on"] == "indoorcrowd clips, in scope"
     assert bar["checks"]["detection_precision>=0.80"] is False and bar["checks"]["detection_recall>=0.80"] is False
 
 
