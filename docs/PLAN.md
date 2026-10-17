@@ -421,3 +421,80 @@ or own-clip data, because none exists.
 5. Section 3 names `tests/test_split.py`. The leakage tests are in
    `tests/test_manifest.py`.
 
+
+### A6 (2026-10-17): IndoorCrowd as the held-out evaluation set
+
+**What was known.** No own corridor clip has been recorded, and the deadline is
+2026-10-18. The IndoorCrowd `tracking` config was imported: 12 recordings from 4
+sites, 1,305 frames at 5 fps, one fixed 1280x720 camera per site
+(`results/ingest/indoorcrowd_import.json`). Its frames, ground-truth boxes and
+ground-truth foot traces were looked at to draw corridors and tag conditions. **No
+detector, tracker or event output on IndoorCrowd existed** when this was decided.
+Nothing is tuned, locked or frozen. The MOT17 val results are those in
+`docs/EVALUATION.md`.
+
+1. **Role.** IndoorCrowd is the primary labelled evaluation set. Its fixed indoor
+   cameras and corridor-distance people are the closest public match to the
+   deployment. The A1 detection bar is judged on held-out IndoorCrowd, in scope.
+   Own clips, once recorded, join in a later version with a fresh lock. They are
+   not part of v1.0.
+2. **Split by site, never by frame or recording. All four sites go to test.**
+   - The bar asks for at least 12 held-out clips, and MOT17 gives 2. Each site
+     moved to val would take its 3 recordings out of test, leaving 11 or fewer.
+   - The held-out set is then 14 clips from 6 scenes: MOT17-09, MOT17-10 and the
+     12 IndoorCrowd recordings.
+   - In the manifest, site = scene = camera, so `split-check` enforces the
+     site boundary.
+   - **Cost:** tuning sees no IndoorCrowd clip. The test therefore measures
+     transfer from MOT17 tuning to indoor 5 fps video. A failure there is
+     reported, not tuned away.
+3. **Frame-rate-matched val.** The test clips run at 5 fps and the val clips at
+   14-30 fps. So each val scene also enters val as a decimated copy at about
+   5 fps: every round(fps / 5)-th frame, with the ground truth renumbered.
+   - The copies are the same scenes in the same split, so no data crosses the
+     split.
+   - They count for tracking and events only. Detection is already scored on
+     every original val frame, and counting the copies too would score those
+     frames twice.
+   - Tuning pools the originals and the copies.
+4. **In scope on IndoorCrowd.** IndoorCrowd gives no visibility, so boxes carry
+   visibility -1 (unknown). In scope = height >= 10% of the frame (72 px), judged
+   by height alone. This is the stricter reading for the detector: an occluded
+   person still counts.
+5. **Ground-truth event labels in seconds.** `configs/eval.yaml` gives the label
+   rule as `min_s: 0.1` and `merge_gap_s: 0.1667`, converted per clip at its fps,
+   rounding half up. The rule now means the same time on every clip, as the
+   system's own settings already do (A3).
+   - **Unchanged labels:** every clip at 25 or 30 fps keeps its label-derived
+     event count (MOT17-02 11, 04 9, 09 14, 10 13, 11 40, 13 21).
+   - **One change, unused:** MOT17-05 (14 fps) goes from 53 to 64 derived
+     events. MOT17-05 is scored on detection and tracking only, so no metric
+     uses them.
+   - **At 5 fps** the rule is 1 frame inside and a 1-frame merge gap.
+6. **Corridors.** One per site (one fixed camera each): a band across the main
+   walkway, drawn from the first frame and the ground-truth foot traces before
+   any system output existed (`configs/corridors/IC-<site>.yaml`). Every
+   recording has ground-truth foot points inside its site's corridor.
+7. **Negative corridor set.** No recording is naturally negative, so a second,
+   negative corridor was placed at three sites:
+   - **Where:** visible floor next to a walkway (ACS-EC seating area, IE-Central
+     floor in front of the back wall, R-Central stairs). It was checked against
+     the ground truth before any system output: no ground-truth foot point lies
+     inside it in any recording of that site. ACS-EG has no such floor area (the
+     candidate was wall), so it has none.
+   - **How it is scored:** each recording with its site's negative corridor is a
+     negative clip entry. It counts for **events only**, so detection and
+     tracking are not counted twice. These entries are reported as negative
+     corridor configurations on the same footage and do not count towards the
+     12 clips.
+   - **Size:** 9 entries, 1,090 frames, about 3.6 minutes of negative footage.
+     Under 5 minutes, a single false event already exceeds the bar of 1 per
+     5 minutes. That is stated with the result, not hidden.
+8. **The detector and interval rule (A4) on MOT17 val.** A4 picks the detector and
+   k on own val clips, and none exist. It is applied unchanged otherwise on MOT17
+   val:
+   - **Accuracy:** in-scope F1 over all val frames, from
+     `results/detector_selection/`.
+   - **Speed:** median of 3 synchronous `benchmark` runs on the first 150 frames
+     of each val scene.
+   - **Fixed:** the candidates, the grid and the >= 10 fps bar do not change.
