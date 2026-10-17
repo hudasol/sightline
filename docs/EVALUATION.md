@@ -267,7 +267,7 @@ What this does and does not show:
 - **It removes blocking.** With the worker, no frame waits for the detector: no frame is dropped, and p95 latency falls from about 250-380 ms to 13-26 ms.
 - **It does not make the detector faster.** In async runs, 23.78 fps is the source rate of these clips (30, 30, 14, 30 and 25 fps), so every frame was processed in time. But 48-69% of the detector frames were skipped because the worker was still busy, so detections happen only as often as the detector can run. Between them the tracker predicts for longer than k frames.
 - **Its effect on accuracy is not measured.** When a result arrives depends on wall-clock timing, so cached-detection evaluation cannot reproduce async runs. Event recall and latency in async mode are untested.
-- **Health cannot see a slow detector in async mode.** The low-fps check (`sightline/health.py`) uses per-frame processing time, which is a few ms when the detector runs elsewhere, and nothing checks how old the last detection is. So with a very slow detector the corridor status could rest on old detections without turning DEGRADED. Until a detection-age check exists, async mode is not covered by the "never CLEAR when unsure" claim.
+- **Health could not see a slow detector in async mode (fixed 2026-10-17).** The low-fps check uses per-frame processing time, which is a few ms when the detector runs elsewhere. Health now also checks how old the detection behind the corridor status is (`health.max_detection_age_s`, 0.5 s), in both modes, and a test pins it with a 0.8 s detector in async mode. Async accuracy is still not measured.
 - **Synchronous real time does not keep up.** Even YOLOX-s at k = 3 dropped about half of all frames (415 of 750) in sync mode.
 - **Timing is noisy.** The control (same synchronous code) differs from "before" by up to 17% in throughput.
 
@@ -288,6 +288,19 @@ What this does and does not show:
 
 ## Error analysis
 `sightline errors` selects failures worst-first from saved results. The "why" column is written by a human after looking at the frames; it is not generated.
+
+- **Held-out failures** (frozen system): `results/error_analysis/heldout/INDEX.md`.
+  - 12 failures, two of each type, selected worst-first by the tool:
+    - false detections, missed people, ID switches;
+    - late crossings, false events, duplicate tracks.
+  - The "why" for each was written after looking at the frame and checking the saved boxes, tracks and
+    timelines. It was drafted by Claude for Huda to review.
+  - Three causes cover most of them:
+    1. MOT17 labels the off-frame part of people cut by the image edge (#1-#4).
+    2. Geometry-only association inside tight groups (#5, #6, #7, #11, #12).
+    3. Track fragmentation at 5 fps with k = 3 on people close to the camera (#9, #10).
+  - #8 is on the ACS-EC view the corridor was not drawn for (PLAN.md A7.1).
+- **False events on val** (M1): `results/error_analysis/val_false_events_yolox_s_640x640_k2/`.
 
 - **Unresolved events on val** (YOLOX-s @640, k = 2, untuned):
   `results/error_analysis/val_unresolved_yolox_s_640x640_k2/INDEX.md`.
