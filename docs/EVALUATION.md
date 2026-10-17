@@ -1,28 +1,168 @@
 # Evaluation
 
-**No held-out or own-clip result exists yet.** Held-out numbers will come only from `results/final_metrics.json`. The MOT17 **val** sections below cite their own files under `results/`. Every number must trace to a saved file; do not hand-type metrics.
+The held-out set was locked, the configuration was tuned on val only, and the held-out evaluation ran
+**once** on 2026-10-17 (`results/final_run_log.jsonl` has one line). This document interprets the
+results. The tables are in `docs/RESULTS.md`, which `python -m sightline report` generates from the
+files under `results/`. Every number here comes from one of those files, and each is named next to the
+claim. The MOT17 **val** sections further down predate the lock and are kept as history.
 
-## Protocol
-1. Build `configs/manifests/val.json` and `configs/manifests/test.json`; `sightline split-check` must pass.
-2. `sightline lock-manifest` on the test manifest.
-3. `sightline detect-eval` and `sightline tune` on val only, writing `results/frozen_config.yaml` (with provenance).
-4. `sightline evaluate` once on the locked held-out set. Re-runs require `--allow-rerun` and are logged in `final_run_log.jsonl`.
-5. `sightline benchmark` on the demo machine; `sightline stress` on the frozen config (no retuning); `sightline errors` and `plots`.
+## Verdict against the bar
+Source: `results/bar_check.json`, `results/final_metrics.json`.
 
-## Acceptance bar (from the brief)
-| Metric | Bar | Result |
+| Bar (brief) | Held-out result | Verdict |
 |---|---|---|
-| Detection precision / recall (IoU 0.5), own clips in scope (A1) | >= 0.80 / >= 0.80 | not run |
-| IDF1 | >= 0.65 and > baseline | not run |
-| Event precision / recall | >= 0.85 / >= 0.85 | not run |
-| False events per 5 min (negative footage) | <= 1 | not run |
-| Median event latency | <= 5 frames | not run |
-| Throughput | >= 10 fps | not run on the held-out set |
-| Held-out clips | >= 12 | 2 listed in `test.json` (MOT17-09, 10), 0 evaluated, not locked |
+| >= 12 held-out clips, >= 3 difficult conditions, a negative set | 14 clips (6 scenes); crowding, camera motion/blur, low light; 9 negative entries | **pass** |
+| Detection P and R >= 0.80 at the frozen threshold (IndoorCrowd, in scope, A1/A6) | P 0.830, R 0.807 | **pass**, narrowly |
+| IDF1 >= 0.65 | 0.512 (all boxes); 0.713 in scope | **fail** as the bar is defined |
+| Tracker measurably better than the baseline | IDF1 0.512 vs 0.435; ID switches 235 vs 422 | **pass** |
+| Event precision and recall >= 0.85 | P 0.840, R 0.787 (63 TP, 12 FP, 17 FN) | **fail** |
+| <= 1 false event per 5 min of negative footage | 0 false events in 218 s | **pass**, but on 3.6 min only |
+| Median event latency <= 5 frames | 0 frames (63 matched events) | **pass** |
+| Degraded/unavailable on invalid video, stalls, low quality or performance | tested; on the held-out clips health was DEGRADED on 31 MOT17-10 frames and OK elsewhere | **pass** (by tests) |
+| Throughput >= 10 fps at the declared resolution | recorded check: 3.14 fps (run 1, one 549 s stall); median of 3 offline runs 14.79 fps | recorded **fail**; see Runtime |
+| Reproducible from frozen config; tests pass | `results/frozen_config.yaml` with provenance; all tests pass locally and in CI | **pass** |
 
-## What exists today
-- **Tests on a synthetic clip:** unit and end-to-end tests cover geometry, config validation, tracker expiry and re-entry, the event state machine, health states, manifest locking and CLI failure paths. On that clip, `tests/test_e2e.py` checks that the ByteTrack-style tracker uses no more ids than the IoU baseline. `sightline demo` prints both id lists. This is a correctness check of the code, **not** a performance claim, and no file saves those counts.
-- **MOT17 val measurements:** see the sections below.
+**In short.** Detection meets the bar on the primary set. The tracker clearly beats its baseline, but
+IDF1 over all boxes does not reach 0.65. Events miss both 0.85 bars. Most event errors come from two
+sources, described below, and both are visible in the error analysis. Throughput meets 10 fps in the
+median of three runs, but the run the bar check used has a stall, and the check is left as recorded.
+
+## What was done, in order
+1. **Held-out set fixed** before any output existed on it: MOT17-09 and 10 (2026-10-12) and the 12
+   IndoorCrowd recordings, split by site (PLAN.md A6, 2026-10-17). Corridors and negative corridors
+   were drawn from frames and ground-truth foot traces only.
+2. **Detector and interval chosen on MOT17 val by A4:** YOLOX-s @640 with k = 3
+   (`results/detector_selection/a4_choice.json`). k = 3 is the smallest interval whose median of 3
+   synchronous offline runs reached 10 fps.
+3. **Locked (FINAL)** at fabd2d3 (`results/heldout_manifest.json`, hash `865a3313`).
+4. **Tuned on val only** at f07eb40: the 5 MOT17 val scenes plus their about-5 fps copies (A6.3) gave
+   `results/frozen_config.yaml`.
+5. **Runtime measured, then the single evaluation**, then analysis that changes nothing: ablation,
+   calibration, error analysis, stress.
+
+## Detection
+Sources: `docs/RESULTS.md` "Detection"; `results/final_metrics.json`.
+- **IndoorCrowd in scope (the judged set): P 0.830, R 0.807.** It passes, but only just: about 1 in 5
+  tall-enough people is missed. Because IndoorCrowd has no visibility field, "in scope" there includes
+  occluded people (A6.4). The crowded group (crowding, in scope) is the weakest: P 0.768, R 0.793.
+- **MOT17 in scope: P 0.827, R 0.957.** Reported, not judged (A1).
+- **All boxes: P 0.856, R 0.550.** Most misses are small or partly visible people, many of them MOT17
+  people cut off by the image edge. MOT17 labels the full body even off-frame, so a correct box on the
+  visible part scores IoU < 0.5. All four MOT17-09 detection failures in the error analysis are this
+  case (`results/error_analysis/heldout/INDEX.md` #1-#4).
+
+## Tracking
+Sources: `docs/RESULTS.md` "Tracking" and "Ablation"; `results/ablation/ablation_heldout.json`.
+- **ByteTrack-style: IDF1 0.512, 235 ID switches. IoU baseline: 0.435, 422** (all boxes, every frame).
+  In scope: 0.713 against 0.619, and 166 against 338 switches. The bar (0.65) is checked on all boxes,
+  so it fails. The in-scope value is reported, not substituted.
+- **Per condition:** crowding 0.569 (0.804 in scope), camera motion and night (MOT17-10) 0.374.
+- **What carries the gain: the motion model.**
+  - Without Kalman prediction, IDF1 falls to 0.438 with 423 switches, the baseline's level.
+  - Without the low-score second stage, it is 0.500 with 229 switches, and the event metrics do not
+    change.
+  - At k = 3 the tracker predicts two frames out of three, so a motion model matters more than any
+    other part.
+- **ID switches** in the error analysis happen inside tight groups standing shoulder to shoulder (#5,
+  #6). Geometry alone cannot tell overlapping neighbours apart.
+
+## Events
+Sources: `docs/RESULTS.md` "Events" and "Sensitivity"; `results/per_clip/bytetrack/*.json`.
+- **P 0.840, R 0.787: 63 true events, 12 false, 17 missed, 24 UNRESOLVED** over the 13 scored clips
+  and 9 negative entries. The IoU baseline: P 0.811, R 0.750.
+- **Where the 12 false events come from.**
+  - 10 are on ACS-EG, the ground-level corridor, and 9 of them on one clip (`clip_00011_00093`: 15
+    predicted events for 6 GT events).
+  - People there walk close to the camera. At 5 fps with the detector every 3rd frame (one detection
+    every 0.6 s), they move too far between detections for the predicted box to match the next one, so
+    tracks fragment. With `min_hits` 1, each new track counts at once, and a new event opens on almost
+    every detector frame (#9, #10).
+  - 18 of the 24 UNRESOLVED events are on ACS-EG for the same reason.
+- **Where the 17 misses come from.**
+  - 10 are on the two ACS-EC lounge-view recordings, whose corridor was drawn on another camera view
+    (PLAN.md A7.1).
+  - Without those two recordings, recall would be 0.891 and precision 0.826. That is a post-hoc
+    sensitivity check, not a result.
+- **Latency.** Median 0 frames over the 63 matches. MOT17-09 (30 fps): median 4, with 5 of 14 events
+  later than 5 frames, the worst 66 frames (2.2 s), inside a dense group (#7). IndoorCrowd (5 fps):
+  median 0, with 10 of 49 negative, because the system's foot point entered before the ground truth's.
+  The open debounce is one frame at 5 fps. Latency is the frame the event opened, not the backdated
+  first-inside frame.
+- **Negatives.** No false event in the 9 negative entries (218 s). That is under 5 minutes, so the bar
+  could only be met with zero; one false event would have failed it. The ACS-EC negative entries on
+  the lounge view lie mostly on a wall, so they test little (A7.1).
+- **Coverage for events.** The only difficult condition the event metrics rest on is crowding. Camera
+  motion and night come only from MOT17-10, which is scored on detection and tracking only.
+
+## Safety: false CLEAR
+Sources: `results/final_metrics.json` "safety"; `results/safety/false_clear_by_clip.json`.
+- **78 of 890 occupied frames (8.8%) were reported CLEAR** while a GT person's feet were inside. Health
+  was OK on all of them, so the system did not know it was wrong.
+- **56 of the 78 are on the two ACS-EC lounge-view recordings** (46 of 82 and 10 of 40). The other 22
+  are spread over 8 clips (at most 9 on one clip).
+- In the frozen system, CLEAR means "no track inside", not "nobody inside". A person the detector
+  misses, or whose track has not been confirmed, leaves the corridor CLEAR. This is the most important
+  limit of the advisory output, and the health checks do not cover it.
+
+## Degraded state
+- **Pinned by tests.** Invalid video, invalid config, corrupt frames, stalled streams, low fps, low
+  light and stale detections are pinned by tests (`tests/test_health.py`, `tests/test_async_detect.py`,
+  `tests/test_e2e.py`). A bad file or config ends UNAVAILABLE with exit code 2 (`docs/DEMO.md` step 7).
+- **On the held-out clips.** Health was DEGRADED on 31 frames of MOT17-10 (night) and OK elsewhere. The
+  `min_luminance` threshold tuned on val (101.1) did not trigger on IndoorCrowd.
+- **The low-confidence trigger is unsupported.** A frame's mean confidence does not predict its recall
+  on held-out data (Spearman -0.008; 0.261 on val; `results/calibration/heldout.json`).
+
+## Runtime (demo machine)
+Sources: `results/runtime_report.json`, `results/runtime/heldout_offline/`,
+`results/runtime/heldout_realtime.json`.
+- **Offline, every frame processed, 2,484 held-out frames.**
+  - Run 1 ran at 3.14 fps because one MOT17-09 frame took 549 s (PLAN.md A7.2). Runs 2 and 3 ran at
+    14.79 and 14.87 fps, so the median is 14.79 fps.
+  - Detector inference p50 is about 225 ms on the frames it runs on; with k = 3, the other two frames
+    cost a few ms.
+  - The worst-clip p95 frame latency is 235-457 ms across the runs: the detector frames miss a
+    100 ms budget, and throughput is an average.
+- **Paced in real time, synchronous.**
+  - On the 5 fps IndoorCrowd clips the pipeline kept up: 38 of 1,305 frames dropped.
+  - On the 25-30 fps MOT17 clips it did not: 888 of 1,179 frames dropped.
+  - Real-time 30 fps input needs the async worker (whose accuracy is not measured) or a faster machine.
+- **Run-to-run variation is large on this laptop.** The A4 runs on 17 Oct were about half as fast as
+  the 14 Oct runs of the same code.
+
+## Beyond the bar
+Each item addresses a named risk.
+- **Event-state redesign** (risk: a lost track silently closing an event). Events are candidate,
+  active, closing, CLOSED or UNRESOLVED, with entry and exit edges. 24 held-out events ended
+  UNRESOLVED instead of being reported as "left". How they are scored is described in "How UNRESOLVED
+  events are scored" below.
+- **Ablation** (risk: crediting the wrong component). The motion model carries the gain; the
+  low-score stage adds little (above).
+- **Confidence calibration** (risk: trusting scores that do not predict failure). ECE is 0.115 on
+  held-out. Precision is below the score at low scores and above it at high scores. Frame confidence
+  does not predict recall on held-out (`results/plots/reliability_heldout.png`).
+- **Edge optimisation** (risk: missing the 10 fps bar on a CPU). YOLOX through ONNX Runtime, plus a
+  measured detection interval, choose the speed and accuracy point: in-scope val F1 0.853 at k = 3 and
+  10.13 fps, against 3.98 fps at k = 1 (`docs/RESULTS.md`). The cost of k = 3 at 5 fps is the track
+  fragmentation above.
+- **Stress suite** (risk: unknown behaviour under blur, compression, low light and shake). The frozen
+  system was rerun on degraded held-out clips, with nothing retuned (`results/stress/`,
+  `docs/RESULTS.md`).
+
+## What these results do not show
+- **Not robot footage.** No own corridor footage at robot height was evaluated. IndoorCrowd is the
+  nearest public match; three of its four views look down from above.
+- **The negative set is short:** 3.6 minutes.
+- **Event labels are derived** from ground-truth boxes and the corridor polygon. Nobody labelled the
+  events by hand.
+- **One machine, one evaluation run.** Throughput varies by a factor of about 2 between sessions on
+  this laptop.
+
+---
+
+# Before the lock: protocol history and MOT17 val results
+
+Everything below was written before the held-out set was locked. It is kept as the record of how the protocol and the configuration were reached.
 
 ## Scope: moving cameras count for detection and tracking only
 The corridor is an image-space polygon, so it means nothing once the camera moves. MOT17-05, 10, 11 and 13 are filmed from a moving platform. Their manifest entries say `"metrics": ["detection", "tracking"]`, and every event number (precision, recall, latency, false events, false CLEAR) pools only clips scored on events. Decided 2026-10-12, before any event metric was computed.
