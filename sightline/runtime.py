@@ -13,6 +13,21 @@ from pathlib import Path
 import numpy as np
 
 
+def code_version(root: str | Path = ".") -> dict:
+    """The commit a measurement ran on, and whether code or configs had uncommitted edits at the time."""
+    import subprocess
+
+    def git(*args: str) -> str | None:
+        try:
+            return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, timeout=10).stdout.strip()
+        except Exception:
+            return None
+
+    commit = git("rev-parse", "HEAD") or None
+    status = git("status", "--porcelain", "--", "sightline", "configs")
+    return {"git_commit": commit, "uncommitted_code_or_config_changes": (bool(status) if status is not None else None)}
+
+
 def machine_info() -> dict:
     info: dict = {
         "platform": platform.platform(),

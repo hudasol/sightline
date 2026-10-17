@@ -438,7 +438,7 @@ def cmd_evaluate(a) -> int:
 
 
 def cmd_benchmark(a) -> int:
-    from sightline.runtime import machine_info
+    from sightline.runtime import code_version, machine_info
 
     try:
         cfg = _load_cfg(a)
@@ -471,7 +471,7 @@ def cmd_benchmark(a) -> int:
               "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height],
               "detector_input_size": list(cfg.detector.input_size), "decode_thread": cfg.pipeline.decode_thread,
               "detect_every": cfg.pipeline.detect_every, "async_detection": cfg.pipeline.async_detection,
-              "max_frames_per_clip": a.max_frames}
+              "max_frames_per_clip": a.max_frames, "code": code_version()}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, indent=1))
     _p(f"wrote {a.out}")
