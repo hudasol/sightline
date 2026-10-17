@@ -199,3 +199,12 @@ def test_n_open_controls_the_open_frame(n_open):
     eng = mk(n_open=n_open)
     feed(eng, [IN] * 10)
     assert eng.all_events()[0].open_frame == n_open
+
+
+def test_gt_event_rule_in_seconds_keeps_30fps_labels_and_scales_to_5fps():
+    from sightline.evaluation.run import gt_event_rule_frames, load_eval_config
+
+    rule = load_eval_config("configs/eval.yaml")["gt_events"]
+    assert gt_event_rule_frames(rule, 30.0) == (rule["min_frames"], rule["merge_gap"]) == (3, 5)
+    assert gt_event_rule_frames(rule, 5.0) == (1, 1)
+    assert gt_event_rule_frames({"min_frames": 3, "merge_gap": 5}, 5.0) == (3, 5)  # frames only: unchanged

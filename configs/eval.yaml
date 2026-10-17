@@ -14,7 +14,12 @@ in_scope:
   min_visibility: 0.65      # Caltech "Reasonable" precedent
 
 gt_events:
-  # rule used to derive event labels from ground-truth boxes (MOT17 clips)
+  # rule used to derive event labels from ground-truth boxes (MOT17 and IndoorCrowd clips).
+  # In seconds (PLAN.md A6, 2026-10-17), converted per clip at its own fps, rounding half up:
+  # 0.1 s and 0.1667 s are exactly the old 3 and 5 frames at 30 fps, so no 30 fps label changes;
+  # at 5 fps (IndoorCrowd) they are 1 and 1 frame. The frame values are kept as the fallback.
+  min_s: 0.1
+  merge_gap_s: 0.1667
   min_frames: 3
   merge_gap: 5
 
