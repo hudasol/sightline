@@ -1,0 +1,376 @@
+{
+ "rule": "False events: predicted events left unmatched by the event scorer (false_events in the per-clip details; status plays no part, as in matching). Worst first = longest open (close_frame - open_frame), ties broken by clip id then frame. Fixed before any strip was looked at.",
+ "run": "configs/manifests/val.json | detector yolox_s @[640, 640] | detect_every 2 | score threshold 0.5 | config configs/default.yaml (untuned)",
+ "requested": 10,
+ "selected": 6,
+ "items": [
+  {
+   "type": "false_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 163,
+   "event_id": 5,
+   "track_id": 16,
+   "status": "UNRESOLVED",
+   "close_reason": "track_lost",
+   "open_frame": 163,
+   "close_frame": 209,
+   "first_inside_frame": 159,
+   "last_inside_frame": 178,
+   "open_frames": 46,
+   "evidence": {
+    "inside_detected": 10,
+    "inside_predicted": 8,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "overlapping_gt_events": [
+    {
+     "gt_event": 1,
+     "gt_frames": [
+      1,
+      459
+     ],
+     "matched_to_event": 1
+    },
+    {
+     "gt_event": 2,
+     "gt_frames": [
+      76,
+      195
+     ],
+     "matched_to_event": 3
+    },
+    {
+     "gt_event": 3,
+     "gt_frames": [
+      41,
+      268
+     ],
+     "matched_to_event": 2
+    },
+    {
+     "gt_event": 4,
+     "gt_frames": [
+      109,
+      452
+     ],
+     "matched_to_event": 6
+    },
+    {
+     "gt_event": 10,
+     "gt_frames": [
+      114,
+      268
+     ],
+     "matched_to_event": 4
+    }
+   ],
+   "image": "01_false_event_MOT17-02-FRCNN_ev5_f163.png"
+  },
+  {
+   "type": "false_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 241,
+   "event_id": 7,
+   "track_id": 26,
+   "status": "UNRESOLVED",
+   "close_reason": "track_lost",
+   "open_frame": 241,
+   "close_frame": 279,
+   "first_inside_frame": 237,
+   "last_inside_frame": 248,
+   "open_frames": 38,
+   "evidence": {
+    "inside_detected": 6,
+    "inside_predicted": 4,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "overlapping_gt_events": [
+    {
+     "gt_event": 1,
+     "gt_frames": [
+      1,
+      459
+     ],
+     "matched_to_event": 1
+    },
+    {
+     "gt_event": 3,
+     "gt_frames": [
+      41,
+      268
+     ],
+     "matched_to_event": 2
+    },
+    {
+     "gt_event": 4,
+     "gt_frames": [
+      109,
+      452
+     ],
+     "matched_to_event": 6
+    },
+    {
+     "gt_event": 10,
+     "gt_frames": [
+      114,
+      268
+     ],
+     "matched_to_event": 4
+    }
+   ],
+   "image": "02_false_event_MOT17-02-FRCNN_ev7_f241.png"
+  },
+  {
+   "type": "false_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 437,
+   "event_id": 12,
+   "track_id": 2,
+   "status": "UNRESOLVED",
+   "close_reason": "track_lost",
+   "open_frame": 437,
+   "close_frame": 471,
+   "first_inside_frame": 435,
+   "last_inside_frame": 440,
+   "open_frames": 34,
+   "evidence": {
+    "inside_detected": 3,
+    "inside_predicted": 3,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "overlapping_gt_events": [
+    {
+     "gt_event": 1,
+     "gt_frames": [
+      1,
+      459
+     ],
+     "matched_to_event": 1
+    },
+    {
+     "gt_event": 4,
+     "gt_frames": [
+      109,
+      452
+     ],
+     "matched_to_event": 6
+    },
+    {
+     "gt_event": 5,
+     "gt_frames": [
+      378,
+      600
+     ],
+     "matched_to_event": 9
+    },
+    {
+     "gt_event": 6,
+     "gt_frames": [
+      413,
+      600
+     ],
+     "matched_to_event": 10
+    },
+    {
+     "gt_event": 7,
+     "gt_frames": [
+      429,
+      600
+     ],
+     "matched_to_event": 14
+    },
+    {
+     "gt_event": 9,
+     "gt_frames": [
+      352,
+      453
+     ],
+     "matched_to_event": 11
+    }
+   ],
+   "image": "03_false_event_MOT17-02-FRCNN_ev12_f437.png"
+  },
+  {
+   "type": "false_event",
+   "clip": "MOT17-04-FRCNN",
+   "frame": 275,
+   "event_id": 3,
+   "track_id": 39,
+   "status": "CLOSED",
+   "close_reason": "left_corridor",
+   "open_frame": 275,
+   "close_frame": 303,
+   "first_inside_frame": 271,
+   "last_inside_frame": 298,
+   "open_frames": 28,
+   "evidence": {
+    "inside_detected": 13,
+    "inside_predicted": 11,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "overlapping_gt_events": [
+    {
+     "gt_event": 4,
+     "gt_frames": [
+      193,
+      458
+     ],
+     "matched_to_event": 2
+    },
+    {
+     "gt_event": 5,
+     "gt_frames": [
+      193,
+      461
+     ],
+     "matched_to_event": 1
+    },
+    {
+     "gt_event": 6,
+     "gt_frames": [
+      256,
+      420
+     ],
+     "matched_to_event": 4
+    }
+   ],
+   "image": "04_false_event_MOT17-04-FRCNN_ev3_f275.png"
+  },
+  {
+   "type": "false_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 445,
+   "event_id": 13,
+   "track_id": 46,
+   "status": "CLOSED",
+   "close_reason": "left_corridor",
+   "open_frame": 445,
+   "close_frame": 457,
+   "first_inside_frame": 441,
+   "last_inside_frame": 452,
+   "open_frames": 12,
+   "evidence": {
+    "inside_detected": 6,
+    "inside_predicted": 4,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "overlapping_gt_events": [
+    {
+     "gt_event": 1,
+     "gt_frames": [
+      1,
+      459
+     ],
+     "matched_to_event": 1
+    },
+    {
+     "gt_event": 4,
+     "gt_frames": [
+      109,
+      452
+     ],
+     "matched_to_event": 6
+    },
+    {
+     "gt_event": 5,
+     "gt_frames": [
+      378,
+      600
+     ],
+     "matched_to_event": 9
+    },
+    {
+     "gt_event": 6,
+     "gt_frames": [
+      413,
+      600
+     ],
+     "matched_to_event": 10
+    },
+    {
+     "gt_event": 7,
+     "gt_frames": [
+      429,
+      600
+     ],
+     "matched_to_event": 14
+    },
+    {
+     "gt_event": 9,
+     "gt_frames": [
+      352,
+      453
+     ],
+     "matched_to_event": 11
+    }
+   ],
+   "image": "05_false_event_MOT17-02-FRCNN_ev13_f445.png"
+  },
+  {
+   "type": "false_event",
+   "clip": "MOT17-02-FRCNN",
+   "frame": 591,
+   "event_id": 16,
+   "track_id": 64,
+   "status": "UNRESOLVED",
+   "close_reason": "stream_end",
+   "open_frame": 591,
+   "close_frame": 600,
+   "first_inside_frame": 587,
+   "last_inside_frame": 600,
+   "open_frames": 9,
+   "evidence": {
+    "inside_detected": 7,
+    "inside_predicted": 5,
+    "opened_on_prediction": false,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   },
+   "overlapping_gt_events": [
+    {
+     "gt_event": 5,
+     "gt_frames": [
+      378,
+      600
+     ],
+     "matched_to_event": 9
+    },
+    {
+     "gt_event": 6,
+     "gt_frames": [
+      413,
+      600
+     ],
+     "matched_to_event": 10
+    },
+    {
+     "gt_event": 7,
+     "gt_frames": [
+      429,
+      600
+     ],
+     "matched_to_event": 14
+    },
+    {
+     "gt_event": 8,
+     "gt_frames": [
+      458,
+      600
+     ],
+     "matched_to_event": 15
+    }
+   ],
+   "image": "06_false_event_MOT17-02-FRCNN_ev16_f591.png"
+  }
+ ]
+}
