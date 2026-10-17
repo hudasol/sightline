@@ -216,6 +216,21 @@ def cmd_ablate(a) -> int:
     return 0
 
 
+def cmd_calibration(a) -> int:
+    from sightline.calibration import calibration_report
+    from sightline.evaluation.run import load_eval_config, write_json
+
+    try:
+        cfg = load_config(a.config)
+        out = calibration_report(Path(a.manifest), cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache))
+    except (ConfigError, ManifestError, RuntimeError, FileNotFoundError) as exc:
+        return _unavailable(None, f"calibration: {exc}")
+    out["config"] = a.config
+    write_json(Path(a.out), out)
+    _p(f"ECE {out['ece']}, Spearman(frame confidence, recall) {out['spearman_frame_confidence_vs_recall']}; wrote {a.out}")
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -730,6 +745,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--root", default=".")
     sp.add_argument("--cache", default="results/detections")
     sp.add_argument("--out", default="results/ablation/ablation_heldout.json")
+
+    sp = add("calibration", cmd_calibration, "does detector confidence predict correctness? (analysis only)")
+    sp.add_argument("--manifest", default="results/heldout_manifest.json")
+    sp.add_argument("--config", default="results/frozen_config.yaml")
+    sp.add_argument("--eval-config", default="configs/eval.yaml")
+    sp.add_argument("--root", default=".")
+    sp.add_argument("--cache", default="results/detections")
+    sp.add_argument("--out", default="results/calibration/heldout.json")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
