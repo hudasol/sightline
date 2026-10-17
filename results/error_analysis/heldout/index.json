@@ -1,0 +1,132 @@
+[
+ {
+  "type": "false_detection",
+  "clip": "MOT17-09-FRCNN",
+  "frame": 16,
+  "box": [
+   1.1,
+   243.41,
+   194.32,
+   919.57
+  ],
+  "score": 0.926,
+  "image": "01_false_detection_MOT17-09-FRCNN_f16.png"
+ },
+ {
+  "type": "false_detection",
+  "clip": "MOT17-09-FRCNN",
+  "frame": 196,
+  "box": [
+   1.26,
+   77.16,
+   372.82,
+   1073.74
+  ],
+  "score": 0.9213,
+  "image": "02_false_detection_MOT17-09-FRCNN_f196.png"
+ },
+ {
+  "type": "missed_person",
+  "clip": "MOT17-09-FRCNN",
+  "frame": 220,
+  "gt_id": 20,
+  "box": [
+   -426.0,
+   -220.0,
+   183.0,
+   1348.0
+  ],
+  "image": "03_missed_person_MOT17-09-FRCNN_f220.png"
+ },
+ {
+  "type": "missed_person",
+  "clip": "MOT17-09-FRCNN",
+  "frame": 217,
+  "gt_id": 20,
+  "box": [
+   -267.0,
+   -202.0,
+   335.0,
+   1339.0
+  ],
+  "image": "04_missed_person_MOT17-09-FRCNN_f217.png"
+ },
+ {
+  "type": "id_switch",
+  "clip": "IC-acs_ec-clip_00001_00082",
+  "frame": 19,
+  "gt_id": 13,
+  "track_id": 1,
+  "image": "05_id_switch_IC-acs_ec-clip_00001_00082_f19.png"
+ },
+ {
+  "type": "id_switch",
+  "clip": "IC-acs_ec-clip_00001_00082",
+  "frame": 37,
+  "gt_id": 35,
+  "track_id": 11,
+  "image": "06_id_switch_IC-acs_ec-clip_00001_00082_f37.png"
+ },
+ {
+  "type": "late_crossing",
+  "clip": "MOT17-09-FRCNN",
+  "frame": 322,
+  "latency_frames": 66,
+  "gt_first_inside": 256,
+  "image": "07_late_crossing_MOT17-09-FRCNN_f322.png"
+ },
+ {
+  "type": "late_crossing",
+  "clip": "IC-acs_ec-clip_00001_00082",
+  "frame": 25,
+  "latency_frames": 24,
+  "gt_first_inside": 1,
+  "image": "08_late_crossing_IC-acs_ec-clip_00001_00082_f25.png"
+ },
+ {
+  "type": "false_event",
+  "clip": "IC-acs_eg-clip_00011_00093",
+  "frame": 5,
+  "image": "09_false_event_IC-acs_eg-clip_00011_00093_f5.png"
+ },
+ {
+  "type": "false_event",
+  "clip": "IC-acs_eg-clip_00011_00093",
+  "frame": 10,
+  "image": "10_false_event_IC-acs_eg-clip_00011_00093_f10.png"
+ },
+ {
+  "type": "duplicate_track",
+  "clip": "MOT17-09-FRCNN",
+  "frame": 223,
+  "gt_id": 13,
+  "track_ids": [
+   18,
+   20
+  ],
+  "box": [
+   125.0,
+   313.0,
+   439.0,
+   953.0
+  ],
+  "image": "11_duplicate_track_MOT17-09-FRCNN_f223.png"
+ },
+ {
+  "type": "duplicate_track",
+  "clip": "MOT17-09-FRCNN",
+  "frame": 226,
+  "gt_id": 22,
+  "track_ids": [
+   13,
+   21
+  ],
+  "box": [
+   1489.0,
+   426.0,
+   1599.0,
+   696.0
+  ],
+  "image": "12_duplicate_track_MOT17-09-FRCNN_f226.png"
+ }
+]

@@ -1,15 +1,28 @@
 # Perception card (model card)
 
-**Status:** real detectors have been run on MOT17 **val** only (`docs/EVALUATION.md`, "Val results so far"). **No detector is selected yet.** The final detector and detection interval will be chosen on own val clips by the rule in PLAN.md amendment A4. `configs/default.yaml` still names MobileNetV3-Large-320 FPN as a placeholder. Nothing is tuned, locked or frozen.
+**Status (2026-10-17): frozen.** The shipped system is `results/frozen_config.yaml`: YOLOX-s @640x640 on ONNX Runtime, detector on every 3rd frame, ByteTrack-style tracker, all thresholds tuned on val only after the held-out manifest was locked. Its held-out numbers are in `docs/RESULTS.md` (generated) and interpreted in `docs/EVALUATION.md`.
+
+## How the shipped configuration was chosen
+1. **Detector and detection interval: PLAN.md A4, applied on MOT17 val (A6.8).** YOLOX-s @640 has the highest in-scope val F1 of the candidates (0.853). The smallest interval whose median of 3 synchronous offline runs reaches 10 fps is k = 3 (10.13 fps, range 9.29-11.15; k = 2: 7.30, k = 1: 3.98). Source: `results/detector_selection/a4_choice.json`.
+2. **Thresholds and timings: `sightline tune` on val only** (5 MOT17 val scenes plus their about-5 fps copies, A6.3), after the held-out lock. The frozen values and the grids they came from are in `results/frozen_config.yaml` (`provenance`) and `results/tuning/`.
+
+## Frozen operating point
+Read these from `results/frozen_config.yaml`; they are not repeated here so that they cannot drift:
+- `detector.score_threshold`: the operating threshold, also the tracker's high/low split.
+- `tracker.max_age_s`, `tracker.min_hits`, `tracker.match_iou`, and the same three for `baseline_tracker`
+  (the baseline is tuned on the same grid).
+- `events.open_s`, `events.close_s`, `events.cooldown_s`: converted to frames at each clip's fps.
+- `health.*`: the degraded-state thresholds. `max_detection_age_s` (0.5 s) is declared, not tuned.
 
 ## Components
 | Part | Choice | Why |
 |---|---|---|
-| Detector | Pretrained COCO detectors, person class only. Candidates are listed below. | Permissive licences only (BSD-3 / Apache-2.0 / MIT); avoids AGPL (Ultralytics). Chosen on own val clips by PLAN.md A4, never on test results. |
+| Detector | **YOLOX-s, 640x640, ONNX Runtime, COCO person class.** The other candidates are listed below. | Permissive licences only (BSD-3 / Apache-2.0 / MIT); avoids AGPL (Ultralytics). Chosen by PLAN.md A4 on val, never on test results. |
+| Detection interval | k = 3: the detector runs on every 3rd frame, the tracker predicts in between (PLAN.md A2) | The smallest k at >= 10 fps on this laptop. At a 5 fps source it means a detection every 0.6 s. |
 | Tracker | Own ByteTrack-style two-stage association: Kalman (cx, cy, aspect, h) + IoU + Hungarian, no appearance model | Geometry only; cheap; handles low-score recovery |
-| Baseline | Greedy IoU tracker | Required comparison; to be tuned on the same grid as the chosen tracker (no tuning has run yet) |
+| Baseline | Greedy IoU tracker | Required comparison, tuned on the same grid as the chosen tracker |
 | Events | Bottom-centre point vs corridor polygon, debounced open (n), hysteresis close (m), cooldown merge | Deterministic and explainable |
-| Health | OK / DEGRADED / UNAVAILABLE from frame validity, timestamps, fps, brightness, blur, detector confidence | Failure must be visible, never silent |
+| Health | OK / DEGRADED / UNAVAILABLE from frame validity, timestamps, fps, brightness, blur, detector confidence, and the age of the detection the status rests on | Failure must be visible, never silent |
 
 ## Detector candidates: sources, licences, files
 
@@ -41,7 +54,22 @@ Corridor status is `CLEAR` only when health is OK and no person is inside, a can
 - Heavy occlusion/crowds: ids switch and events may merge or split.
 - Extreme low light, blur, shake: expected to degrade; health should flag it. Camera shake moves the corridor relative to the image (no stabilisation).
 - Pose: only the bottom-centre of the box is used; a person leaning in without feet crossing counts as outside.
+- Detection interval k = 3 at a 5 fps source: a person can move far between detections, and the tracker
+  predicts across the gap. Events opened or closed on a predicted box are marked in each event's evidence.
+- IndoorCrowd is the only indoor footage, and it is not robot footage. Its cameras are fixed, and three of
+  the four look down from an elevated or overhead position; only ACS-EG is at ground level. No own
+  robot-height footage was evaluated.
 - Unvalidated beyond the clips in the manifest.
 
+## Hardware benchmark
+The runtime report on the demo machine (`results/runtime_report.json`, offline, every frame processed;
+`results/runtime/heldout_realtime.json`, paced in real time) gives throughput, p50 and p95 latency,
+inference time and dropped or skipped frames, with the machine and the commit. The tables are in
+`docs/RESULTS.md`. The machine is a Windows 11 laptop with an AMD Family 25 Model 80 CPU (16 logical
+cores), no GPU, Python 3.13, ONNX Runtime 1.31.0. Throughput on it varied between sessions: the same code
+path ran 13.08 fps on 2026-10-14 and 7.30 fps on 2026-10-17 at k = 2 (`results/runtime/a4_selection/README.md`).
+
 ## Evaluation
-See `EVALUATION.md`. It has MOT17 val results only, and no held-out result exists. The bars come from the brief and are checked mechanically by `bar_check`. Under PLAN.md amendment A1 the detection bar is judged on own clips, in scope.
+See `EVALUATION.md` (interpretation) and `RESULTS.md` (tables generated from `results/`). The bars come
+from the brief and are checked mechanically by `bar_check`. Under PLAN.md A1 and A6 the detection bar is
+judged on held-out IndoorCrowd clips, in scope.

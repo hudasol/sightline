@@ -4,40 +4,70 @@
  "leakage_problems": [],
  "val_clips_scored_on": {
   "detection": 5,
-  "tracking": 5,
-  "events": 2
+  "tracking": 10,
+  "events": 4
  },
  "val_event_clips": [
   "MOT17-02-FRCNN",
-  "MOT17-04-FRCNN"
+  "MOT17-04-FRCNN",
+  "MOT17-02-FRCNN-5fps",
+  "MOT17-04-FRCNN-5fps"
  ],
  "test_coverage": {
-  "n_clips": 2,
-  "meets_min_clips": false,
+  "n_clips": 14,
+  "n_entries": 23,
+  "meets_min_clips": true,
   "conditions_present": [
    "camera_motion_blur",
    "clear",
-   "low_light_compression"
+   "low_light_compression",
+   "occlusion_crowding"
   ],
   "difficult_conditions_present": [
+   "occlusion_crowding",
    "camera_motion_blur",
    "low_light_compression"
   ],
-  "meets_three_difficult": false,
-  "negative_clips": 0,
-  "has_negative_set": false,
+  "meets_three_difficult": true,
+  "negative_clips": 9,
+  "negative_frames_note": "negative entries may reuse footage of scored clips with a second corridor",
+  "has_negative_set": true,
   "clips_scored_on": {
-   "detection": 2,
-   "tracking": 2,
-   "events": 1
+   "detection": 14,
+   "tracking": 14,
+   "events": 22
   },
   "event_conditions_present": [
-   "clear"
+   "clear",
+   "occlusion_crowding"
   ],
-  "event_difficult_conditions_present": []
+  "event_difficult_conditions_present": [
+   "occlusion_crowding"
+  ]
  },
  "test_event_clips": [
-  "MOT17-09-FRCNN"
+  "MOT17-09-FRCNN",
+  "IC-acs_ec-clip_00001_00051",
+  "IC-acs_ec-clip_00001_00082",
+  "IC-acs_ec-clip_00026_00091",
+  "IC-acs_eg-clip_00001_00061",
+  "IC-acs_eg-clip_00011_00093",
+  "IC-acs_eg-clip_00056_00191",
+  "IC-ie_central-clip_00001_00061",
+  "IC-ie_central-clip_00001_00094",
+  "IC-ie_central-clip_00001_00381",
+  "IC-r_central-clip_00001_00090",
+  "IC-r_central-clip_00001_00134",
+  "IC-r_central-clip_00001_00156",
+  "IC-acs_ec-clip_00001_00051-neg",
+  "IC-acs_ec-clip_00001_00082-neg",
+  "IC-acs_ec-clip_00026_00091-neg",
+  "IC-ie_central-clip_00001_00061-neg",
+  "IC-ie_central-clip_00001_00094-neg",
+  "IC-ie_central-clip_00001_00381-neg",
+  "IC-r_central-clip_00001_00090-neg",
+  "IC-r_central-clip_00001_00134-neg",
+  "IC-r_central-clip_00001_00156-neg"
  ],
- "checked_at_utc": "2026-10-12T13:29:19Z"
+ "checked_at_utc": "2026-10-17T14:47:29Z"
 }

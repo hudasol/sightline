@@ -188,6 +188,75 @@ def cmd_decimate(a) -> int:
     return 0
 
 
+def cmd_select_detector(a) -> int:
+    from sightline.evaluation.run import load_eval_config, write_json
+    from sightline.selection import select_a4
+
+    out = select_a4(Path(a.results), Path(a.runtime_summary), load_eval_config(a.eval_config)["bar"]["min_fps"])
+    write_json(Path(a.out), out)
+    c = out["choice"]
+    _p(f"A4: {out['verdict']}; choice: " + (f"{c['detector']} k={c['k']} (in-scope F1 {c['in_scope_f1']}, "
+       f"median {c['throughput_fps_median']:.2f} fps, threshold {out['operating_threshold']})" if c else "none"))
+    _p(f"wrote {a.out}")
+    return 0 if c and out["verdict"] == "valid" else 1
+
+
+def cmd_ablate(a) -> int:
+    from sightline.ablation import run_ablation
+    from sightline.evaluation.run import load_eval_config, write_json
+
+    try:
+        cfg = load_config(a.config)
+        out = run_ablation(Path(a.manifest), cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache), _p)
+    except (ConfigError, ManifestError, RuntimeError, FileNotFoundError) as exc:
+        return _unavailable(None, f"ablate: {exc}")
+    out["config"] = a.config
+    write_json(Path(a.out), out)
+    _p(f"wrote {a.out}")
+    return 0
+
+
+def cmd_calibration(a) -> int:
+    from sightline.calibration import calibration_report
+    from sightline.evaluation.run import load_eval_config, write_json
+
+    try:
+        cfg = load_config(a.config)
+        out = calibration_report(Path(a.manifest), cfg, load_eval_config(a.eval_config), Path(a.root), Path(a.cache))
+    except (ConfigError, ManifestError, RuntimeError, FileNotFoundError) as exc:
+        return _unavailable(None, f"calibration: {exc}")
+    out["config"] = a.config
+    write_json(Path(a.out), out)
+    _p(f"ECE {out['ece']}, Spearman(frame confidence, recall) {out['spearman_frame_confidence_vs_recall']}; wrote {a.out}")
+    return 0
+
+
+def cmd_report(a) -> int:
+    from sightline.report import build
+
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(a.out).write_text(build(Path(a.results)), newline="\n")
+    _p(f"wrote {a.out} from the files under {a.results}")
+    return 0
+
+
+def cmd_timeline(a) -> int:
+    from sightline.timeline import list_events, timeline
+
+    try:
+        fps = next(c.fps or probe(Path(a.root) / c.source).fps for c in load_manifest(a.lock).clips if c.id == a.clip)
+        if a.event is None:
+            for e in list_events(Path(a.results), a.clip):
+                _p(f"event {e['event_id']} (track #{e['track_id']}, {e['status']}): matched GT event "
+                   f"{e['matched_gt_event']}, latency {e['latency_frames']} frames")
+            return 0
+        for line in timeline(Path(a.results), a.clip, a.event, fps):
+            _p(line)
+    except (StopIteration, KeyError, FileNotFoundError) as exc:
+        return _unavailable(None, f"timeline: {exc!r}")
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -372,6 +441,7 @@ def cmd_tune(a) -> int:
 def cmd_evaluate(a) -> int:
     from sightline.evaluation.run import (aggregate, bar_check, evaluate_clip, get_detections, load_eval_config,
                                           per_clip_details, prepare_clip, write_json)
+    from sightline.runtime import code_version
 
     root, results = Path(a.root), Path(a.results)
     final_path = results / "final_metrics.json"
@@ -402,9 +472,12 @@ def cmd_evaluate(a) -> int:
     eval_cfg = load_eval_config(a.eval_config)
     cds = [prepare_clip(c, root, eval_cfg) for c in man.clips]
     _p(f"evaluating {len(cds)} held-out clips with frozen config {hashlib.sha256(cfg_text.encode()).hexdigest()[:12]}")
-    all_results, dets_by_clip = [], {}
+    all_results, dets_by_clip, dets_by_source = [], {}, {}
     for cd in cds:
-        dets = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
+        # a negative corridor on footage already processed reuses its detections (same frames, same model)
+        if cd.clip.source not in dets_by_source:
+            dets_by_source[cd.clip.source] = get_detections(cd, cfg, root, Path(a.cache), _detector_factory(cfg))
+        dets = dets_by_source[cd.clip.source]
         dets_by_clip[cd.clip.id] = dets
         r = evaluate_clip(cd, cfg, dets, eval_cfg, root, out_root=results / "tracks")
         all_results.append(r)
@@ -424,6 +497,8 @@ def cmd_evaluate(a) -> int:
     agg["locked_manifest_sha256"] = lock["manifest_sha256"]
     agg["detector"] = {"name": cfg.detector.name, "score_threshold": cfg.detector.score_threshold}
     agg["detect_every"] = cfg.pipeline.detect_every
+    agg["code"] = code_version(root)
+    agg["runtime_report_used"] = str(rp) if runtime is not None else None
     agg["bar"] = bar_check(agg, cov, eval_cfg, runtime=runtime)
     write_json(final_path, agg)
     write_json(results / "bar_check.json", agg["bar"])
@@ -438,20 +513,30 @@ def cmd_evaluate(a) -> int:
 
 
 def cmd_benchmark(a) -> int:
-    from sightline.runtime import machine_info
+    from sightline.runtime import code_version, machine_info
 
     try:
         cfg = _load_cfg(a)
-        corridor = load_corridor(a.corridor)
+        if a.manifest:  # each distinct source once, with its own corridor and fps
+            seen, jobs = set(), []
+            for c in load_manifest(a.manifest).clips:
+                if c.source not in seen:
+                    seen.add(c.source)
+                    jobs.append((str(Path(a.root) / c.source), load_corridor(Path(a.root) / c.corridor), c.fps))
+        elif a.sources and a.corridor:
+            corridor = load_corridor(a.corridor)
+            jobs = [(src, corridor, a.fps) for src in a.sources]
+        else:
+            raise ConfigError("benchmark needs sources and --corridor, or --manifest")
         detector = make_detector(cfg.detector)
-    except (ConfigError, DetectorUnavailable) as exc:
+    except (ConfigError, ManifestError, DetectorUnavailable) as exc:
         return _unavailable(None, str(exc))
     di = detector.info()
     _p(f"detector={di['detector']} backend={di.get('backend')} "
        f"threads={di.get('torch_threads', di.get('intra_op_threads'))} interop={di.get('torch_interop_threads', 'n/a')}")
     all_lat, summaries = None, []
-    for src in a.sources:
-        run = run_clip(src, cfg, corridor, detector=detector, fps_override=a.fps, realtime=a.realtime,
+    for src, corridor, fps in jobs:
+        run = run_clip(src, cfg, corridor, detector=detector, fps_override=fps, realtime=a.realtime,
                        max_frames=a.max_frames)
         summaries.append({"clip": run.clip, **run.runtime})
         rt = run.runtime
@@ -471,7 +556,7 @@ def cmd_benchmark(a) -> int:
               "realtime_emulation": a.realtime, "declared_input": [cfg.pipeline.declared_width, cfg.pipeline.declared_height],
               "detector_input_size": list(cfg.detector.input_size), "decode_thread": cfg.pipeline.decode_thread,
               "detect_every": cfg.pipeline.detect_every, "async_detection": cfg.pipeline.async_detection,
-              "max_frames_per_clip": a.max_frames}
+              "max_frames_per_clip": a.max_frames, "manifest": a.manifest, "code": code_version()}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, indent=1))
     _p(f"wrote {a.out}")
@@ -682,6 +767,39 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--cache", default="results/detections", help="detection caches to renumber, one folder per detector tag")
     sp.add_argument("--summary", help="write a JSON report here")
 
+    sp = add("select-detector", cmd_select_detector, "apply PLAN.md A4 to saved val results (detector and k)")
+    sp.add_argument("--results", default="results")
+    sp.add_argument("--runtime-summary", default="results/runtime/a4_selection/summary.json")
+    sp.add_argument("--eval-config", default="configs/eval.yaml")
+    sp.add_argument("--out", default="results/detector_selection/a4_choice.json")
+
+    sp = add("ablate", cmd_ablate, "switch tracker parts off one at a time on cached detections (analysis only)")
+    sp.add_argument("--manifest", default="results/heldout_manifest.json")
+    sp.add_argument("--config", default="results/frozen_config.yaml")
+    sp.add_argument("--eval-config", default="configs/eval.yaml")
+    sp.add_argument("--root", default=".")
+    sp.add_argument("--cache", default="results/detections")
+    sp.add_argument("--out", default="results/ablation/ablation_heldout.json")
+
+    sp = add("calibration", cmd_calibration, "does detector confidence predict correctness? (analysis only)")
+    sp.add_argument("--manifest", default="results/heldout_manifest.json")
+    sp.add_argument("--config", default="results/frozen_config.yaml")
+    sp.add_argument("--eval-config", default="configs/eval.yaml")
+    sp.add_argument("--root", default=".")
+    sp.add_argument("--cache", default="results/detections")
+    sp.add_argument("--out", default="results/calibration/heldout.json")
+
+    sp = add("report", cmd_report, "markdown tables generated from saved results only (docs/RESULTS.md)")
+    sp.add_argument("--results", default="results")
+    sp.add_argument("--out", default="docs/RESULTS.md")
+
+    sp = add("timeline", cmd_timeline, "one corridor event from approach to close/lost, from saved results")
+    sp.add_argument("clip")
+    sp.add_argument("--event", type=int, help="omit to list the clip's events")
+    sp.add_argument("--lock", default="results/heldout_manifest.json")
+    sp.add_argument("--results", default="results")
+    sp.add_argument("--root", default=".")
+
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
     sp.add_argument("--config", default="configs/default.yaml")
@@ -746,8 +864,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(config="results/frozen_config.yaml")
 
     sp = add("benchmark", cmd_benchmark, "runtime evidence on THIS machine (live detector)")
-    sp.add_argument("sources", nargs="+")
-    sp.add_argument("--corridor", required=True)
+    sp.add_argument("sources", nargs="*")
+    sp.add_argument("--corridor")
+    sp.add_argument("--manifest", help="time every distinct source of this manifest with its own corridor")
+    sp.add_argument("--root", default=".")
     sp.add_argument("--config", default="results/frozen_config.yaml")
     sp.add_argument("--out", default="results/runtime_report.json")
     sp.add_argument("--fps", type=float)

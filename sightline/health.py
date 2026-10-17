@@ -75,6 +75,7 @@ class HealthMonitor:
         proc_time_s: float | None = None,
         det_scores: list[float] | None = None,
         wall: float | None = None,
+        detection_age_s: float | None = None,
     ) -> HealthReport:
         cfg = self.cfg
         if self._latched:
@@ -127,6 +128,11 @@ class HealthMonitor:
                 triggers.append((HealthState.DEGRADED, "low_light"))
             if quality.sharpness < cfg.min_sharpness:
                 triggers.append((HealthState.DEGRADED, "blurry_or_low_contrast"))
+
+        # detection age: what the corridor status rests on must be recent. In async mode the per-frame
+        # time above is a few ms whatever the detector does, so this is the check that sees a slow one.
+        if detection_age_s is not None and valid and detection_age_s > cfg.max_detection_age_s:
+            triggers.append((HealthState.DEGRADED, f"stale_detections_{detection_age_s:.2f}s"))
 
         # detector confidence
         if det_scores and valid:

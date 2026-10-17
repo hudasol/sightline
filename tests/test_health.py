@@ -163,3 +163,11 @@ def test_slow_processing_never_reports_clear(cfg, corridor):
         statuses.append((r.health.state, r.corridor))
     degraded = [s for s in statuses if s[0] != HealthState.OK]
     assert degraded and all(c != CorridorStatus.CLEAR for _s, c in degraded)
+
+
+def test_stale_detections_degrade_and_recent_ones_do_not():
+    m = mon(max_detection_age_s=0.5)
+    ok = m.observe(valid=True, ts=0.0, proc_time_s=0.01, detection_age_s=0.4)
+    assert ok.state == HealthState.OK
+    stale = m.observe(valid=True, ts=1 / FPS, proc_time_s=0.01, detection_age_s=0.8)
+    assert stale.state == HealthState.DEGRADED and stale.reasons == ["stale_detections_0.80s"]

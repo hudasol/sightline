@@ -1,0 +1,142 @@
+{
+ "what": "false CLEAR = the corridor status said CLEAR while a GT person's reference point was inside; per held-out events entry, frozen config, cached detections (same computation as final_metrics.json safety, split by clip)",
+ "commit": "898562cf3980ab8fe86af2a3e070213f328400c5",
+ "total": {
+  "occupied_frames": 890,
+  "false_clear_frames": 78
+ },
+ "clips": {
+  "MOT17-09-FRCNN": {
+   "occupied_frames": 383,
+   "false_clear_frames": 4,
+   "false_clear_rate": 0.010443864229765013,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_ec-clip_00001_00051": {
+   "occupied_frames": 18,
+   "false_clear_frames": 0,
+   "false_clear_rate": 0.0,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_ec-clip_00001_00082": {
+   "occupied_frames": 82,
+   "false_clear_frames": 46,
+   "false_clear_rate": 0.5609756097560976,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_ec-clip_00026_00091": {
+   "occupied_frames": 40,
+   "false_clear_frames": 10,
+   "false_clear_rate": 0.25,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_eg-clip_00001_00061": {
+   "occupied_frames": 46,
+   "false_clear_frames": 1,
+   "false_clear_rate": 0.021739130434782608,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_eg-clip_00011_00093": {
+   "occupied_frames": 46,
+   "false_clear_frames": 2,
+   "false_clear_rate": 0.043478260869565216,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_eg-clip_00056_00191": {
+   "occupied_frames": 81,
+   "false_clear_frames": 0,
+   "false_clear_rate": 0.0,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-ie_central-clip_00001_00061": {
+   "occupied_frames": 17,
+   "false_clear_frames": 0,
+   "false_clear_rate": 0.0,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-ie_central-clip_00001_00094": {
+   "occupied_frames": 9,
+   "false_clear_frames": 1,
+   "false_clear_rate": 0.1111111111111111,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-ie_central-clip_00001_00381": {
+   "occupied_frames": 83,
+   "false_clear_frames": 9,
+   "false_clear_rate": 0.10843373493975904,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-r_central-clip_00001_00090": {
+   "occupied_frames": 16,
+   "false_clear_frames": 2,
+   "false_clear_rate": 0.125,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-r_central-clip_00001_00134": {
+   "occupied_frames": 22,
+   "false_clear_frames": 1,
+   "false_clear_rate": 0.045454545454545456,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-r_central-clip_00001_00156": {
+   "occupied_frames": 47,
+   "false_clear_frames": 2,
+   "false_clear_rate": 0.0425531914893617,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_ec-clip_00001_00051-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_ec-clip_00001_00082-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-acs_ec-clip_00026_00091-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-ie_central-clip_00001_00061-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-ie_central-clip_00001_00094-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-ie_central-clip_00001_00381-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-r_central-clip_00001_00090-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-r_central-clip_00001_00134-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  },
+  "IC-r_central-clip_00001_00156-neg": {
+   "occupied_frames": 0,
+   "false_clear_frames": 0,
+   "false_clear_rate": null,
+   "non_ok_frame_fraction": 0.0
+  }
+ }
+}

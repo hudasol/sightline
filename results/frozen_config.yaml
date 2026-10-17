@@ -1,0 +1,117 @@
+detector:
+  name: yolox_s
+  score_threshold: 0.3
+  min_score: 0.1
+  input_size:
+  - 640
+  - 640
+  device: cpu
+  torch_threads: 8
+  weights_path: null
+tracker:
+  kind: bytetrack
+  new_track_score: 0.6
+  match_iou: 0.2
+  low_match_iou: 0.5
+  tentative_match_iou: 0.5
+  max_age: 30
+  min_hits: 1
+  trajectory_len: 30
+  max_age_s: 1.5
+  use_low_stage: true
+  use_motion: true
+baseline_tracker:
+  kind: iou
+  new_track_score: 0.6
+  match_iou: 0.2
+  low_match_iou: 0.5
+  tentative_match_iou: 0.5
+  max_age: 30
+  min_hits: 1
+  trajectory_len: 30
+  max_age_s: 1.0
+  use_low_stage: true
+  use_motion: true
+events:
+  n_open: 3
+  m_close: 5
+  cooldown: 15
+  edge_margin_frac: 0.05
+  open_s: 0.133
+  close_s: 0.1
+  cooldown_s: 1.0
+health:
+  min_fps: 10.0
+  gap_factor: 3.0
+  stall_seconds: 2.0
+  k_corrupt: 5
+  corrupt_window: 30
+  recover_frames: 15
+  min_luminance: 101.14
+  min_sharpness: 25.0
+  low_conf_window: 30
+  low_conf_mean: 0.35
+  fps_window: 30
+  warmup_frames: 5
+  max_detection_age_s: 0.5
+pipeline:
+  detect_every: 3
+  async_detection: false
+  declared_width: 640
+  declared_height: 360
+  decode_thread: true
+  decode_queue: 4
+provenance:
+  tuned_on_split: val
+  val_manifest: configs/manifests/val.json
+  val_clip_ids:
+  - MOT17-02-FRCNN
+  - MOT17-04-FRCNN
+  - MOT17-05-FRCNN
+  - MOT17-11-FRCNN
+  - MOT17-13-FRCNN
+  - MOT17-02-FRCNN-5fps
+  - MOT17-04-FRCNN-5fps
+  - MOT17-05-FRCNN-5fps
+  - MOT17-11-FRCNN-5fps
+  - MOT17-13-FRCNN-5fps
+  locked_test_manifest_sha256: 865a331313f463f2610dca28a29419f182e7da168a30892c92f3e7d38fcb4098
+  locked_test_manifest: results\heldout_manifest.json
+  git_commit: f07eb4081532ee9186c5ee9cbfa1347d84882881
+  tuned_at_utc: '2026-10-17T16:26:33Z'
+  detector_sweep_best:
+    tp: 31952
+    fp: 5977
+    fn: 5074
+    precision: 0.8424160932268185
+    recall: 0.8629611624264031
+    f1: 0.8525648722566874
+    threshold: 0.3
+  tracker_best:
+    bytetrack:
+      max_age_s: 1.5
+      min_hits: 1
+      match_iou: 0.2
+      idf1: 0.4405392632390618
+      id_switches: 1109
+    iou:
+      max_age_s: 1.0
+      min_hits: 1
+      match_iou: 0.2
+      idf1: 0.41681924284464916
+      id_switches: 1358
+  event_best:
+    open_s: 0.133
+    close_s: 0.1
+    cooldown_s: 1.0
+    event_f1: 0.7735849056603773
+    median_latency_frames: 2
+  notes:
+  - 'clips per stage: detection=5 tracking=10 events=4'
+  - detector threshold swept on in-scope boxes (PLAN.md amendment A1)
+  - 'min_luminance set from val: lowest luminance quintile has recall 0.33 vs overall
+    0.86'
+  - 'min_sharpness left at default: val shows no sharpness range where detection clearly
+    fails (unvalidated; the stress suite is the evidence for this threshold)'
+  - health.low_conf_mean left at default (unvalidated)
+  frozen: true

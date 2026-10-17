@@ -1,0 +1,435 @@
+{
+ "what": "PLAN.md A4 detector and detection-interval choice, applied on MOT17 val (A6.8); saved files only",
+ "rule": "highest in-scope F1 among pairs whose median of 3 sync offline runs is >= 10.0 fps; smallest k for that detector; F1 tie at 3 decimals -> faster median",
+ "in_scope_f1": {
+  "mbv3_320fpn_640x360": {
+   "f1": 0.607,
+   "threshold": 0.55,
+   "precision": 0.7445470622912164,
+   "recall": 0.5116674769081186,
+   "file": "results/detector_selection/detect_eval_val_mbv3_320fpn_640x360.json"
+  },
+  "mbv3_320fpn_960x540": {
+   "f1": 0.784,
+   "threshold": 0.65,
+   "precision": 0.8229736154028999,
+   "recall": 0.7480689245395128,
+   "file": "results/detector_selection/detect_eval_val_mbv3_320fpn_960x540.json"
+  },
+  "ssdlite320_320x320": {
+   "f1": 0.427,
+   "threshold": 0.2,
+   "precision": 0.6635774391630658,
+   "recall": 0.3152109328579917,
+   "file": "results/detector_selection/detect_eval_val_ssdlite320_320x320.json"
+  },
+  "yolox_nano_416x416": {
+   "f1": 0.725,
+   "threshold": 0.25,
+   "precision": 0.7910199910583126,
+   "recall": 0.6689893588289311,
+   "file": "results/detector_selection/detect_eval_val_yolox_nano_416x416.json"
+  },
+  "yolox_tiny_416x416": {
+   "f1": 0.778,
+   "threshold": 0.2,
+   "precision": 0.8045409959032946,
+   "recall": 0.7531734456868147,
+   "file": "results/detector_selection/detect_eval_val_yolox_tiny_416x416.json"
+  },
+  "yolox_s_640x640": {
+   "f1": 0.853,
+   "threshold": 0.3,
+   "precision": 0.8424160932268185,
+   "recall": 0.8629611624264031,
+   "file": "results/detector_selection/detect_eval_val_yolox_s_640x640.json"
+  }
+ },
+ "runtime_summary": "results/runtime/a4_selection/summary.json",
+ "pairs": [
+  {
+   "detector": "mbv3_320fpn_640x360",
+   "k": 1,
+   "in_scope_f1": 0.607,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_640x360",
+   "k": 2,
+   "in_scope_f1": 0.607,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_640x360",
+   "k": 3,
+   "in_scope_f1": 0.607,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_640x360",
+   "k": 4,
+   "in_scope_f1": 0.607,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_640x360",
+   "k": 6,
+   "in_scope_f1": 0.607,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_960x540",
+   "k": 1,
+   "in_scope_f1": 0.784,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_960x540",
+   "k": 2,
+   "in_scope_f1": 0.784,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_960x540",
+   "k": 3,
+   "in_scope_f1": 0.784,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_960x540",
+   "k": 4,
+   "in_scope_f1": 0.784,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "mbv3_320fpn_960x540",
+   "k": 6,
+   "in_scope_f1": 0.784,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "ssdlite320_320x320",
+   "k": 1,
+   "in_scope_f1": 0.427,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "ssdlite320_320x320",
+   "k": 2,
+   "in_scope_f1": 0.427,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "ssdlite320_320x320",
+   "k": 3,
+   "in_scope_f1": 0.427,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "ssdlite320_320x320",
+   "k": 4,
+   "in_scope_f1": 0.427,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "ssdlite320_320x320",
+   "k": 6,
+   "in_scope_f1": 0.427,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_nano_416x416",
+   "k": 1,
+   "in_scope_f1": 0.725,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_nano_416x416",
+   "k": 2,
+   "in_scope_f1": 0.725,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_nano_416x416",
+   "k": 3,
+   "in_scope_f1": 0.725,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_nano_416x416",
+   "k": 4,
+   "in_scope_f1": 0.725,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_nano_416x416",
+   "k": 6,
+   "in_scope_f1": 0.725,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_tiny_416x416",
+   "k": 1,
+   "in_scope_f1": 0.778,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_tiny_416x416",
+   "k": 2,
+   "in_scope_f1": 0.778,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_tiny_416x416",
+   "k": 3,
+   "in_scope_f1": 0.778,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_tiny_416x416",
+   "k": 4,
+   "in_scope_f1": 0.778,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_tiny_416x416",
+   "k": 6,
+   "in_scope_f1": 0.778,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_s_640x640",
+   "k": 1,
+   "in_scope_f1": 0.853,
+   "measured": true,
+   "runs": 3,
+   "throughput_fps_median": 3.983127840103484,
+   "throughput_fps_range": [
+    3.8347825516874012,
+    3.9850564993314888
+   ],
+   "worst_clip_latency_ms_p95_median": 453.15243999066286,
+   "latency_ms_max_median": 693.890199996531,
+   "qualifies": false
+  },
+  {
+   "detector": "yolox_s_640x640",
+   "k": 2,
+   "in_scope_f1": 0.853,
+   "measured": true,
+   "runs": 3,
+   "throughput_fps_median": 7.297924463567031,
+   "throughput_fps_range": [
+    7.151214474354365,
+    8.022217005880089
+   ],
+   "worst_clip_latency_ms_p95_median": 354.017199994996,
+   "latency_ms_max_median": 822.2851999889826,
+   "qualifies": false
+  },
+  {
+   "detector": "yolox_s_640x640",
+   "k": 3,
+   "in_scope_f1": 0.853,
+   "measured": true,
+   "runs": 3,
+   "throughput_fps_median": 10.130853234183265,
+   "throughput_fps_range": [
+    9.290988017747308,
+    11.149948827605787
+   ],
+   "worst_clip_latency_ms_p95_median": 412.3164399934459,
+   "latency_ms_max_median": 857.8661999927135,
+   "qualifies": true
+  },
+  {
+   "detector": "yolox_s_640x640",
+   "k": 4,
+   "in_scope_f1": 0.853,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  },
+  {
+   "detector": "yolox_s_640x640",
+   "k": 6,
+   "in_scope_f1": 0.853,
+   "measured": false,
+   "runs": null,
+   "throughput_fps_median": null,
+   "throughput_fps_range": null,
+   "worst_clip_latency_ms_p95_median": null,
+   "latency_ms_max_median": null,
+   "qualifies": null
+  }
+ ],
+ "choice": {
+  "detector": "yolox_s_640x640",
+  "k": 3,
+  "in_scope_f1": 0.853,
+  "throughput_fps_median": 10.130853234183265,
+  "throughput_fps_range": [
+   9.290988017747308,
+   11.149948827605787
+  ],
+  "worst_clip_latency_ms_p95_median": 412.3164399934459,
+  "latency_ms_max_median": 857.8661999927135
+ },
+ "operating_threshold": 0.3,
+ "unmeasured_pairs_that_could_change_the_choice": [],
+ "verdict": "valid"
+}

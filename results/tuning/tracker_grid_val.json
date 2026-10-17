@@ -1,0 +1,384 @@
+{
+ "bytetrack": [
+  {
+   "max_age_s": 0.5,
+   "min_hits": 1,
+   "match_iou": 0.2,
+   "idf1": 0.43229189452697764,
+   "id_switches": 1085
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 1,
+   "match_iou": 0.3,
+   "idf1": 0.42332081821263984,
+   "id_switches": 1263
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 1,
+   "match_iou": 0.4,
+   "idf1": 0.4059917355371901,
+   "id_switches": 1588
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 2,
+   "match_iou": 0.2,
+   "idf1": 0.4209209630901844,
+   "id_switches": 351
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 2,
+   "match_iou": 0.3,
+   "idf1": 0.4150630564766704,
+   "id_switches": 348
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 2,
+   "match_iou": 0.4,
+   "idf1": 0.4027693014404305,
+   "id_switches": 396
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 3,
+   "match_iou": 0.2,
+   "idf1": 0.41184414215605547,
+   "id_switches": 194
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 3,
+   "match_iou": 0.3,
+   "idf1": 0.4062645103944174,
+   "id_switches": 191
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 3,
+   "match_iou": 0.4,
+   "idf1": 0.3941969050160085,
+   "id_switches": 201
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 1,
+   "match_iou": 0.2,
+   "idf1": 0.43957084057212953,
+   "id_switches": 1100
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 1,
+   "match_iou": 0.3,
+   "idf1": 0.42976996957136954,
+   "id_switches": 1296
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 1,
+   "match_iou": 0.4,
+   "idf1": 0.41298543003084887,
+   "id_switches": 1624
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 2,
+   "match_iou": 0.2,
+   "idf1": 0.42803328388053924,
+   "id_switches": 362
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 2,
+   "match_iou": 0.3,
+   "idf1": 0.4214380002991228,
+   "id_switches": 370
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 2,
+   "match_iou": 0.4,
+   "idf1": 0.4101705337109889,
+   "id_switches": 402
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 3,
+   "match_iou": 0.2,
+   "idf1": 0.4202393278896942,
+   "id_switches": 192
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 3,
+   "match_iou": 0.3,
+   "idf1": 0.4120107026062828,
+   "id_switches": 203
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 3,
+   "match_iou": 0.4,
+   "idf1": 0.40602893463113665,
+   "id_switches": 201
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 1,
+   "match_iou": 0.2,
+   "idf1": 0.4405392632390618,
+   "id_switches": 1109
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 1,
+   "match_iou": 0.3,
+   "idf1": 0.430144094020567,
+   "id_switches": 1313
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 1,
+   "match_iou": 0.4,
+   "idf1": 0.4121579631268714,
+   "id_switches": 1647
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 2,
+   "match_iou": 0.2,
+   "idf1": 0.42877379143379607,
+   "id_switches": 376
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 2,
+   "match_iou": 0.3,
+   "idf1": 0.42060102550788603,
+   "id_switches": 376
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 2,
+   "match_iou": 0.4,
+   "idf1": 0.4079544117839265,
+   "id_switches": 418
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 3,
+   "match_iou": 0.2,
+   "idf1": 0.4211828949694553,
+   "id_switches": 190
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 3,
+   "match_iou": 0.3,
+   "idf1": 0.4116820858418342,
+   "id_switches": 207
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 3,
+   "match_iou": 0.4,
+   "idf1": 0.405390864225412,
+   "id_switches": 209
+  }
+ ],
+ "iou": [
+  {
+   "max_age_s": 0.5,
+   "min_hits": 1,
+   "match_iou": 0.2,
+   "idf1": 0.41215836203355555,
+   "id_switches": 1324
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 1,
+   "match_iou": 0.3,
+   "idf1": 0.4101813295812497,
+   "id_switches": 1498
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 1,
+   "match_iou": 0.4,
+   "idf1": 0.3925188490928278,
+   "id_switches": 1798
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 2,
+   "match_iou": 0.2,
+   "idf1": 0.40983447499660414,
+   "id_switches": 719
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 2,
+   "match_iou": 0.3,
+   "idf1": 0.40869712705164,
+   "id_switches": 663
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 2,
+   "match_iou": 0.4,
+   "idf1": 0.3924864911227378,
+   "id_switches": 614
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 3,
+   "match_iou": 0.2,
+   "idf1": 0.40525274046017373,
+   "id_switches": 453
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 3,
+   "match_iou": 0.3,
+   "idf1": 0.4038415589242573,
+   "id_switches": 384
+  },
+  {
+   "max_age_s": 0.5,
+   "min_hits": 3,
+   "match_iou": 0.4,
+   "idf1": 0.3866335303600215,
+   "id_switches": 328
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 1,
+   "match_iou": 0.2,
+   "idf1": 0.41681924284464916,
+   "id_switches": 1358
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 1,
+   "match_iou": 0.3,
+   "idf1": 0.41305720419244857,
+   "id_switches": 1527
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 1,
+   "match_iou": 0.4,
+   "idf1": 0.39623705299166956,
+   "id_switches": 1838
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 2,
+   "match_iou": 0.2,
+   "idf1": 0.4152926045016077,
+   "id_switches": 775
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 2,
+   "match_iou": 0.3,
+   "idf1": 0.4124384764229965,
+   "id_switches": 691
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 2,
+   "match_iou": 0.4,
+   "idf1": 0.3992669421107601,
+   "id_switches": 649
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 3,
+   "match_iou": 0.2,
+   "idf1": 0.41114021964237885,
+   "id_switches": 503
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 3,
+   "match_iou": 0.3,
+   "idf1": 0.40776083525395074,
+   "id_switches": 403
+  },
+  {
+   "max_age_s": 1.0,
+   "min_hits": 3,
+   "match_iou": 0.4,
+   "idf1": 0.3935973897461956,
+   "id_switches": 347
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 1,
+   "match_iou": 0.2,
+   "idf1": 0.41481174594804965,
+   "id_switches": 1392
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 1,
+   "match_iou": 0.3,
+   "idf1": 0.4125007883948281,
+   "id_switches": 1553
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 1,
+   "match_iou": 0.4,
+   "idf1": 0.39713889995636253,
+   "id_switches": 1861
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 2,
+   "match_iou": 0.2,
+   "idf1": 0.4138364215532325,
+   "id_switches": 823
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 2,
+   "match_iou": 0.3,
+   "idf1": 0.4115935643147343,
+   "id_switches": 743
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 2,
+   "match_iou": 0.4,
+   "idf1": 0.40029622444900287,
+   "id_switches": 674
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 3,
+   "match_iou": 0.2,
+   "idf1": 0.41061663455028385,
+   "id_switches": 536
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 3,
+   "match_iou": 0.3,
+   "idf1": 0.4071662954812013,
+   "id_switches": 441
+  },
+  {
+   "max_age_s": 1.5,
+   "min_hits": 3,
+   "match_iou": 0.4,
+   "idf1": 0.39477387470904834,
+   "id_switches": 366
+  }
+ ]
+}

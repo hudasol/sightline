@@ -24,7 +24,9 @@ def test_cli_replay_produces_events_and_files(clip, tmp_path):
     assert s["final_health"] == "OK"
 
 
-def test_bytetrack_beats_baseline_on_id_stability(clip, cfg, corridor, cached):
+def test_bytetrack_uses_no_more_ids_than_the_baseline(clip, cfg, corridor, cached):
+    """A correctness check on the synthetic clip, not evidence that ByteTrack is better: a tie passes.
+    Whether it beats the baseline is measured on held-out data (IDF1, ID switches) from saved results."""
     ids = {}
     for kind in ("iou", "bytetrack"):
         cfg.tracker.kind = kind

@@ -8,25 +8,28 @@ poor to trust. It never reports "clear" when it is not sure.
 > **Advisory only.** No robot connection, no motion control, no face or
 > biometric processing. Tracks are anonymous integers.
 
-**Status: under construction.** `docs/PLAN.md` was committed first and is the
-contract. Only MOT17 **val** measurements exist (`docs/EVALUATION.md`). No held-out
-or own-clip metric exists, and none is claimed until `results/` contains it. The status
-table at the bottom was last updated on 2026-10-14.
+`docs/PLAN.md` was committed first and is the contract; its dated amendments (A1-A6)
+record every later change with what was known when it was made. The held-out set (14
+clips: MOT17-09, MOT17-10 and 12 IndoorCrowd recordings) was locked before tuning, the
+configuration was tuned on val only, and the held-out evaluation ran once. Results:
+`docs/EVALUATION.md` (interpretation) and `docs/RESULTS.md` (tables generated from
+`results/`). Every number comes from a file under `results/`.
 
 ## What is in the box
 
 | Stage | Module | What it does |
 |---|---|---|
 | Ingest | `sightline/ingest.py` | One command records fps, frame count, per-frame timestamps and source metadata |
-| Detect | `sightline/detector.py` | Pretrained COCO person detectors (torchvision, or YOLOX on ONNX Runtime); the operating threshold is frozen on val, which has not happened yet |
+| Detect | `sightline/detector.py` | Pretrained COCO person detectors (torchvision, or YOLOX on ONNX Runtime). Shipped: YOLOX-s @640 on every 3rd frame, threshold frozen on val |
 | Track (baseline) | `sightline/tracking/iou_tracker.py` | Greedy IoU matching, no motion model |
 | Track (chosen) | `sightline/tracking/bytetrack.py` | ByteTrack-style two-stage association, Kalman + Hungarian, geometry only |
 | Track state | `sightline/tracking/state.py` | id, age, last seen, confidence, trajectory, explicit lost/expired policy |
 | Events | `sightline/events.py` | Debounced open / active / close, re-entry merge, `UNRESOLVED` on lost track |
-| Health | `sightline/health.py` | `OK / DEGRADED / UNAVAILABLE` from corrupt frames, stalls, low fps, low quality |
+| Health | `sightline/health.py` | `OK / DEGRADED / UNAVAILABLE` from corrupt frames, stalls, low fps, low quality, stale detections |
 | Evaluation | `sightline/evaluation/` | Detection P/R/F1, IDF1 and ID switches, event P/R, latency, per-condition tables |
 | Split safety | `sightline/manifest.py` | Clip manifests with hashes and a leakage check |
 | Runtime | `sightline/runtime.py` | fps, p50/p95 latency, inference time, dropped/skipped frames |
+| Analysis | `sightline/{ablation,calibration,errors,timeline,report}.py` | Tracker ablation, confidence calibration, worst-first failures, one event end to end, generated result tables |
 
 ## Setup
 
@@ -100,6 +103,8 @@ Put them under `data/` and describe them in a manifest. See
 ```text
 data/
   mot17/MOT17-02-FRCNN/{img1,gt/gt.txt,seqinfo.ini}   # one detector copy per scene only
+  mot17_5fps/MOT17-02-FRCNN-5fps/...                  # made by `decimate` (val only)
+  indoorcrowd/<site>/<recording>/...                  # made by `import-indoorcrowd`
   own/<clip_id>.mp4
 annotations/
   <clip_id>/gt.txt          # MOTChallenge format: frame,id,x,y,w,h,conf,class,vis
@@ -107,6 +112,26 @@ annotations/
 configs/
   corridors/<camera_id>.yaml
   manifests/{val.json,test.json}
+```
+
+**MOT17.** Download `https://motchallenge.net/data/MOT17.zip` and extract only
+`train/MOT17-{02,04,05,09,10,11,13}-FRCNN/{img1,gt,seqinfo.ini}` into `data/mot17/` (DATA_CARD).
+
+**IndoorCrowd** is gated. Accept its terms on Hugging Face under your own account and read
+`docs/licences/INDOORCROWD_LICENSE.txt` first. Download the `tracking` config only:
+
+```bash
+pip install -e ".[indoorcrowd]"
+hf auth login
+hf download sebnae/IndoorCrowd --repo-type dataset --revision 87049647f27c4419dcba051474dcfc0fcecad8e0 --include "tracking/*" --local-dir data/indoorcrowd/raw
+python -m sightline import-indoorcrowd --revision 87049647f27c4419dcba051474dcfc0fcecad8e0
+```
+
+**Frame-rate-matched val copies** (PLAN.md A6.3) run at about 5 fps, like the IndoorCrowd clips.
+Make them after the val detection caches exist, so the caches are renumbered rather than recomputed:
+
+```bash
+python -m sightline decimate data/mot17/MOT17-02-FRCNN data/mot17/MOT17-04-FRCNN data/mot17/MOT17-05-FRCNN data/mot17/MOT17-11-FRCNN data/mot17/MOT17-13-FRCNN --summary results/ingest/val_5fps_decimation.json
 ```
 
 Check the split is leakage-safe and lock the held-out manifest **before** the
@@ -180,18 +205,29 @@ The demo is synthetic. It checks the code, not real-world performance.
 
 ## Splits, tuning, evaluation (order matters)
 
+This is the exact sequence that produced `results/`. Each step reads only what the steps before it wrote.
+
 ```bash
 python -m sightline split-check --val configs/manifests/val.json --test configs/manifests/test.json --out results/split/split_check.json
-python -m sightline detect-eval --manifest configs/manifests/val.json --out <file>   # val only: P/R/F1 vs threshold
-python -m sightline interval-eval --every 1 2 3 --out <file>      # val only: event recall/latency vs detection interval
-python -m sightline lock-manifest configs/manifests/test.json      # BEFORE tuning; "draft" until coverage is met
-python -m sightline tune                                           # val only -> results/frozen_config.yaml
-python -m sightline evaluate                                       # locked held-out set, once
-python -m sightline benchmark <clips> --corridor <corridor.yaml>   # fps / latency on THIS machine
-python -m sightline stress                                         # blur/compression/low light/shake, no retuning
-python -m sightline errors                                         # picks failures worst-first; you write the "why"
-python -m sightline plots                                          # all plots from saved results
+python -m sightline detect-eval --manifest configs/manifests/val.json --detector yolox_s --input-size 640 640 --out results/detector_selection/detect_eval_val_yolox_s_640x640.json   # val only, one file per candidate
+python -m sightline runtime-summary results/runtime/a4_selection        # median of 3 benchmark runs per (detector, k)
+python -m sightline select-detector                                     # PLAN.md A4 -> results/detector_selection/a4_choice.json
+python -m sightline lock-manifest configs/manifests/test.json           # BEFORE tuning; "draft" until coverage is met
+python -m sightline tune --config configs/default.yaml                  # val only -> results/frozen_config.yaml
+python -m sightline benchmark --manifest results/heldout_manifest.json  # fps / latency on THIS machine -> results/runtime_report.json
+python -m sightline benchmark --manifest results/heldout_manifest.json --realtime --out results/runtime/heldout_realtime.json
+python -m sightline evaluate                                            # locked held-out set, once
+python -m sightline ablate                                              # tracker parts on/off, cached detections, analysis only
+python -m sightline calibration                                         # does confidence predict correctness? analysis only
+python -m sightline errors                                              # failures worst-first; a human writes the "why"
+python -m sightline stress                                              # blur/compression/low light/shake, frozen, no retuning
+python -m sightline plots                                               # all plots from saved results
+python -m sightline report                                              # docs/RESULTS.md, tables from saved results only
 ```
+
+The A4 throughput measurement was three synchronous offline runs per k. One of them looks like this:
+`python -m sightline benchmark data/mot17/MOT17-02-FRCNN --corridor configs/corridors/MOT17-02.yaml --config configs/default.yaml --detector yolox_s --input-size 640 640 --detect-every 3 --max-frames 150 --out results/runtime/a4_selection/yolox_s_640x640_k3_run1/MOT17-02.json`.
+It ran for each val scene, k = 1, 2 and 3, and runs 1-3 (`results/runtime/a4_selection/README.md`).
 
 Every frame is processed. `pipeline.detect_every: k` runs the detector on every k-th
 frame, and the tracker predicts in between. Events record how much of their evidence
@@ -210,19 +246,20 @@ Detectors (`--detector`):
 in the report. `threads <clip>` times the detector at several torch thread counts.
 
 `benchmark --async-detection` runs the detector on a worker thread, so other frames
-never wait for it (`pipeline.async_detection`). It is off by default. Its effect on
-accuracy is not yet measured, and health does not yet check how old the last detection
-is, so the "never CLEAR when unsure" guarantee covers only the default synchronous mode
-(`docs/EVALUATION.md`). `runtime-summary <folder>` gives
+never wait for it (`pipeline.async_detection`). It is off by default and its effect on
+accuracy is not measured. In both modes health checks how old the detection behind the
+corridor status is (`health.max_detection_age_s`, 0.5 s). A detector that falls behind turns
+the system DEGRADED instead of leaving it CLEAR on stale detections. `runtime-summary <folder>` gives
 the median and range over repeated benchmark runs (PLAN.md A4).
 
 `tune` refuses to run unless the held-out lock is **final** (coverage met) and
 unchanged, and writes `results/frozen_config.yaml` with provenance. `evaluate` refuses if the lock or
-config provenance does not match, and a second run needs `--allow-rerun` (logged).
-None of this has run yet. Once it has, `evaluate` writes under `results/`: detection
-metrics, IDF1 / ID switches for the baseline and the chosen tracker, event precision,
-recall and latency, false events per 5 minutes of negative footage, per-condition
-tables and the runtime report.
+config provenance does not match. A second run needs `--allow-rerun` and is logged in
+`results/final_run_log.jsonl`. `evaluate` writes:
+- `results/final_metrics.json`: detection, IDF1 and ID switches for the baseline and the chosen
+  tracker, event precision, recall and latency, false events per 5 minutes of negative footage,
+  per-condition tables and the bar check;
+- `results/per_clip/`.
 
 ## Replay one clip
 
@@ -255,8 +292,6 @@ end-to-end tests.
 python -m sightline stress --lock results/heldout_manifest.json --config results/frozen_config.yaml
 ```
 
-This needs the locked held-out manifest and the frozen config, so it cannot run yet.
-
 Degrades held-out clips (blur, compression, low light, shake) at several
 levels using the **frozen** config and plots the degradation curve. It does not
 retune anything.
@@ -264,35 +299,45 @@ retune anything.
 ## Tests
 
 ```bash
-pytest -q
+python -m pytest -q
 ```
 
-Covers event state, geometry, tracker expiry and re-entry, invalid
-configuration, degraded states, split leakage, and an end-to-end replay on a
-generated synthetic clip (no downloads needed).
+The tests cover:
+- event state, geometry, and tracker expiry and re-entry;
+- invalid configuration;
+- degraded states: corrupt frames, stalls, low fps and stale detections;
+- split leakage, one key at a time, and the lock and `evaluate` refusals;
+- the importers;
+- end-to-end replays on a generated synthetic clip (no downloads needed).
+
+CI runs the same suite on Python 3.12 and 3.13 for every push (`.github/workflows/tests.yml`).
 
 ## Repository layout
 
 ```text
-docs/        PLAN, DATA_CARD, MODEL_CARD, EVALUATION, RECORDING_GUIDE, PROCESS_LOG, RETROSPECTIVE
+docs/        PLAN, DATA_CARD, MODEL_CARD, EVALUATION, RESULTS (generated), DEMO, RECORDING_GUIDE,
+             SOLO_RECORDING_GUIDE, PROCESS_LOG, RETROSPECTIVE, licences/
 sightline/   package
 configs/     corridors, manifests (+ own-clip template), default parameters
 results/     saved measurements (see results/README.md); later the frozen config and locked held-out manifest
 tests/
 ```
 
-## Status
+## Status (2026-10-17)
 
 | Item | State |
 |---|---|
-| `docs/PLAN.md` and amendments A1-A4 | done |
-| Pipeline code and tests (synthetic + unit) | done, passing |
-| Real detectors on MOT17 **val** (7 configurations) | done, val only: `results/detector_selection/`, `results/interval/`, `results/runtime/` |
-| MOT17 downloaded, ingested and split | done (`docs/DATA_CARD.md`) |
-| Own corridor clips | not recorded yet (`docs/RECORDING_GUIDE.md`) |
-| Detector and detection interval selected | no: chosen on own val clips by PLAN.md A4 |
-| Held-out manifest locked, tuning, held-out evaluation | not done |
-| Demo video, retrospective, `v1.0.0` | not started |
+| `docs/PLAN.md`, amendments A1-A7 | done; A7 records two errata found after the evaluation |
+| Data: MOT17 (7 scenes) and IndoorCrowd (12 recordings, 4 sites) | done (`docs/DATA_CARD.md`); own robot-height footage not recorded |
+| Detector and interval (A4 on MOT17 val) | YOLOX-s @640, k = 3 (`results/detector_selection/a4_choice.json`) |
+| Held-out manifest | locked FINAL before tuning (`results/heldout_manifest.json`) |
+| Tuning (val only) | done (`results/frozen_config.yaml`) |
+| Held-out evaluation | run once (`results/final_metrics.json`; tables in `docs/RESULTS.md`) |
+| Bar | detection, clip count, conditions, negatives, latency and "beats the baseline" pass; IDF1 and event precision/recall fail; throughput recorded as fail on a stalled run, median of 3 runs 14.79 fps (`docs/EVALUATION.md`) |
+| Ablation, calibration, error analysis, stress | done (`results/`) |
+| Tests | all pass locally and in CI (`.github/workflows/tests.yml`) |
+| Demo video | script in `docs/DEMO.md`; recording is Huda's |
+| Retrospective | drafted from the record; Huda to finish |
 
 ## Licences
 
@@ -302,5 +347,8 @@ This code is MIT. Third-party parts:
 - ONNX Runtime (MIT)
 - detector weights trained on COCO (annotations CC BY 4.0, images under the Flickr terms). Files and hashes are in `docs/MODEL_CARD.md`.
 - MOT17 (commonly cited as CC BY-NC-SA 3.0, not re-verified; see `docs/DATA_CARD.md`)
+- IndoorCrowd (`fair-noncommercial-research-license`): non-commercial computer vision research only,
+  no surveillance, no re-identification (`docs/licences/INDOORCROWD_LICENSE.txt`). It is not
+  redistributed: no frame or label of it is in this repository.
 
 Do not commit clips or weights.

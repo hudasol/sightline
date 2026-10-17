@@ -48,14 +48,14 @@ def test_cli_detector_overrides_are_applied_and_validated():
 def test_time_based_settings_reproduce_the_frame_defaults_at_30fps(cfg):
     from sightline.config import resolve_timing, timing_summary
 
-    r = timing_summary(resolve_timing(cfg, 30.0))
+    r = timing_summary(resolve_timing(cfg, 30.0, detect_every=1))  # the old frame defaults assumed k = 1
     assert (r["n_open"], r["m_close"], r["cooldown"], r["max_age_detector_frames"]) == (3, 5, 15, 30)
 
 
 def test_time_based_settings_follow_fps_and_detection_interval(cfg):
     from sightline.config import resolve_timing
 
-    at14 = resolve_timing(cfg, 14.0)  # MOT17-05 runs at 14 fps
+    at14 = resolve_timing(cfg, 14.0, detect_every=1)  # MOT17-05 runs at 14 fps
     assert (at14.events.n_open, at14.events.m_close, at14.events.cooldown, at14.tracker.max_age) == (1, 2, 7, 14)
     k3 = resolve_timing(cfg, 30.0, detect_every=3)
     assert k3.tracker.max_age == 10  # 1.0 s of patience = 10 DETECTOR frames when the detector runs at 10 Hz
