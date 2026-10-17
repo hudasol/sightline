@@ -1,0 +1,131 @@
+{
+ "what": "tracker ablation on cached detections with the frozen config; analysis only, nothing chosen from it",
+ "manifest": "results/heldout_manifest.json",
+ "clips": [
+  "MOT17-09-FRCNN",
+  "MOT17-10-FRCNN",
+  "IC-acs_ec-clip_00001_00051",
+  "IC-acs_ec-clip_00001_00082",
+  "IC-acs_ec-clip_00026_00091",
+  "IC-acs_eg-clip_00001_00061",
+  "IC-acs_eg-clip_00011_00093",
+  "IC-acs_eg-clip_00056_00191",
+  "IC-ie_central-clip_00001_00061",
+  "IC-ie_central-clip_00001_00094",
+  "IC-ie_central-clip_00001_00381",
+  "IC-r_central-clip_00001_00090",
+  "IC-r_central-clip_00001_00134",
+  "IC-r_central-clip_00001_00156",
+  "IC-acs_ec-clip_00001_00051-neg",
+  "IC-acs_ec-clip_00001_00082-neg",
+  "IC-acs_ec-clip_00026_00091-neg",
+  "IC-ie_central-clip_00001_00061-neg",
+  "IC-ie_central-clip_00001_00094-neg",
+  "IC-ie_central-clip_00001_00381-neg",
+  "IC-r_central-clip_00001_00090-neg",
+  "IC-r_central-clip_00001_00134-neg",
+  "IC-r_central-clip_00001_00156-neg"
+ ],
+ "variants": {
+  "bytetrack (shipped)": {
+   "switches": {},
+   "idf1": 0.5115382871650723,
+   "id_switches": 235,
+   "mota": 0.42134209492518127,
+   "idf1_in_scope": 0.7129639629909638,
+   "id_switches_in_scope": 166,
+   "event_precision": 0.84,
+   "event_recall": 0.7875,
+   "events_tp": 63,
+   "events_fp": 12,
+   "events_fn": 17,
+   "latency_frames_median": 0,
+   "events_unresolved": 24,
+   "negative_clip_false_events": 0,
+   "n_clips_tracking": 14,
+   "n_clips_events": 22
+  },
+  "no low-score stage": {
+   "switches": {
+    "use_low_stage": false
+   },
+   "idf1": 0.4996678958338105,
+   "id_switches": 229,
+   "mota": 0.4187350451769579,
+   "idf1_in_scope": 0.7043322749005438,
+   "id_switches_in_scope": 165,
+   "event_precision": 0.84,
+   "event_recall": 0.7875,
+   "events_tp": 63,
+   "events_fp": 12,
+   "events_fn": 17,
+   "latency_frames_median": 0,
+   "events_unresolved": 25,
+   "negative_clip_false_events": 0,
+   "n_clips_tracking": 14,
+   "n_clips_events": 22
+  },
+  "no motion model": {
+   "switches": {
+    "use_motion": false
+   },
+   "idf1": 0.4381877169498832,
+   "id_switches": 423,
+   "mota": 0.4050212492410985,
+   "idf1_in_scope": 0.6130888169723121,
+   "id_switches_in_scope": 331,
+   "event_precision": 0.8194444444444444,
+   "event_recall": 0.7375,
+   "events_tp": 59,
+   "events_fp": 13,
+   "events_fn": 21,
+   "latency_frames_median": 1,
+   "events_unresolved": 34,
+   "negative_clip_false_events": 0,
+   "n_clips_tracking": 14,
+   "n_clips_events": 22
+  },
+  "neither (no motion, no low-score stage)": {
+   "switches": {
+    "use_low_stage": false,
+    "use_motion": false
+   },
+   "idf1": 0.44118791930941315,
+   "id_switches": 422,
+   "mota": 0.4047712581693511,
+   "idf1_in_scope": 0.621608827063836,
+   "id_switches_in_scope": 329,
+   "event_precision": 0.8194444444444444,
+   "event_recall": 0.7375,
+   "events_tp": 59,
+   "events_fp": 13,
+   "events_fn": 21,
+   "latency_frames_median": 1,
+   "events_unresolved": 34,
+   "negative_clip_false_events": 0,
+   "n_clips_tracking": 14,
+   "n_clips_events": 22
+  },
+  "IoU baseline": {
+   "switches": {
+    "baseline": true
+   },
+   "idf1": 0.4351836978222457,
+   "id_switches": 422,
+   "mota": 0.40355701582086356,
+   "idf1_in_scope": 0.6186078767748293,
+   "id_switches_in_scope": 338,
+   "event_precision": 0.8108108108108109,
+   "event_recall": 0.75,
+   "events_tp": 60,
+   "events_fp": 14,
+   "events_fn": 20,
+   "latency_frames_median": 1.0,
+   "events_unresolved": 35,
+   "negative_clip_false_events": 0,
+   "n_clips_tracking": 14,
+   "n_clips_events": 22
+  }
+ },
+ "config": "results/frozen_config.yaml"
+}

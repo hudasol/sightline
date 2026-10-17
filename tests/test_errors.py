@@ -79,3 +79,17 @@ def test_unresolved_strips_on_val_style_run(clip, cached, tmp_path):
     fe = json.loads((analyze_false_events(res, Path("."), man, cache, detector_tag(cfg), 0.5, 10, "test run")
                      / "index.json").read_text())
     assert fe["rule"].startswith("False events") and fe["selected"] == len(fe["items"])
+
+
+def test_failures_come_only_from_clips_scored_on_their_family(tmp_path):
+    from sightline.errors import select_failures
+
+    (tmp_path / "bytetrack").mkdir()
+    detail = {"false_positives": [{"frame": 3, "score": 0.9, "box": [0, 0, 1, 1]}],
+              "misses": [{"frame": 4, "box": [0, 0, 5, 5]}], "id_switches": [{"frame": 6}],
+              "events_predicted": [], "events_gt": [], "event_pairs": [], "false_events": []}
+    for cid in ("a", "a-neg"):  # the same footage twice: a clip and a negative-corridor entry
+        (tmp_path / "bytetrack" / f"{cid}.json").write_text(json.dumps({"clip": cid, **detail}))
+    got = select_failures(tmp_path, tmp_path, per_type=5,
+                          scored={"a": ("detection", "tracking", "events"), "a-neg": ("events",)})
+    assert [(x["type"], x["clip"]) for x in got] == [("false_detection", "a"), ("missed_person", "a"), ("id_switch", "a")]

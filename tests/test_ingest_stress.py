@@ -36,3 +36,31 @@ def test_clean_level_is_identity():
 
 def test_shake_is_deterministic():
     assert shake_offsets(5, 6, 1) == shake_offsets(5, 6, 1)
+
+
+def test_stress_runs_the_detector_only_where_the_pipeline_would_and_once_per_source(clip, cfg, cached):
+    from pathlib import Path
+
+    from sightline.evaluation.run import load_eval_config, prepare_clip
+    from sightline.manifest import Clip
+    from sightline.stress import run_stress
+
+    root = Path(__file__).resolve().parent.parent
+    eval_cfg = load_eval_config(root / "configs" / "eval.yaml")
+    corridor = str(root / "configs" / "corridors" / "synthetic.yaml")
+    base = dict(source=str(clip.video), scene="s", camera="c", session="x", conditions=["clear"],
+                corridor=corridor, gt=str(clip.gt), license="t")
+    cds = [prepare_clip(Clip(id="a", **base), Path("."), eval_cfg),
+           prepare_clip(Clip(id="a-neg", negative=True, metrics=("events",), **base), Path("."), eval_cfg)]
+
+    class Counting:
+        name, calls = "count", 0
+
+        def detect(self, image):
+            Counting.calls += 1
+            return []
+
+    cfg.pipeline.detect_every = 3
+    rows = run_stress(cds, cfg, eval_cfg, Path("."), Counting(), kinds=("blur",), progress=lambda m: None)
+    per_level = len(range(1, cds[0].n_frames + 1, 3))
+    assert Counting.calls == per_level * len(rows)  # every k-th frame, and the -neg entry reuses the source

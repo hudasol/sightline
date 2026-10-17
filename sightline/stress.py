@@ -80,9 +80,16 @@ def _shift_gt(cd: ClipData, offsets: dict) -> ClipData:
 
 def stressed_detections(cd: ClipData, cfg: Config, root: Path, detector: Detector, kind: str, level: float,
                         offsets: dict, seed: int) -> dict[int, list[Detection]]:
+    """Detections on the degraded frames the frozen pipeline would run the detector on (every k-th
+    frame, PLAN.md A2). Frames in between are predicted by the tracker and never read detections."""
+    from sightline.pipeline import is_detector_frame
+
+    k = cfg.pipeline.detect_every
     out: dict[int, list[Detection]] = {}
     src = iter_frames(root / cd.clip.source, cd.clip.fps, stride=1, info=cd.info)
     for fr in degraded_frames(src, kind, level, offsets, seed):
+        if not is_detector_frame(fr.index, k):
+            continue
         out[fr.index] = detector.detect(fr.image) if fr.valid and fr.image is not None else []
     return out
 
@@ -96,22 +103,28 @@ def run_stress(cds: list[ClipData], cfg: Config, eval_cfg: dict, root: Path, det
         for level in LEVELS[kind]:
             pooled = {"tp": 0, "fp": 0, "fn": 0}
             results = []
+            by_source: dict[str, dict] = {}  # entries that share footage (negative corridors) share detections
             for cd in cds:
                 offsets = shake_offsets(cd.n_frames, level, seed) if kind == "shake" else {}
                 cd_eval = _shift_gt(cd, offsets) if kind == "shake" and level else cd
-                dets = stressed_detections(cd, cfg, root, detector, kind, level, offsets, seed)
+                if cd.clip.source not in by_source:
+                    by_source[cd.clip.source] = stressed_detections(cd, cfg, root, detector, kind, level, offsets, seed)
+                dets = by_source[cd.clip.source]
                 r = evaluate_clip(cd_eval, cfg, dets, eval_cfg, root, trackers=("bytetrack",))
                 results.append(r)
-                for k in pooled:
-                    pooled[k] += r.det_counts[k]
+                if cd.clip.scored_on("detection"):  # each family pools only the clips it is scored on
+                    for k in pooled:
+                        pooled[k] += r.det_counts[k]
             from sightline.evaluation import tracking as trk_eval
             from sightline.evaluation.events import event_metrics
             from sightline.evaluation.run import safety_metrics
 
-            trk = trk_eval.summarize({r.cd.clip.id: r.accs["bytetrack"] for r in results}).get("OVERALL", {})
-            ev = event_metrics([r.matches["bytetrack"] for r in results], [r.cd.clip.negative for r in results],
-                               [r.cd.info.frame_count_reported / r.cd.info.fps for r in results])
-            safety = safety_metrics(results, "bytetrack")
+            rs_trk = [r for r in results if r.cd.clip.scored_on("tracking")]
+            rs_ev = [r for r in results if r.cd.clip.scored_on("events")]
+            trk = trk_eval.summarize({r.cd.clip.id: r.accs["bytetrack"] for r in rs_trk}).get("OVERALL", {}) if rs_trk else {}
+            ev = event_metrics([r.matches["bytetrack"] for r in rs_ev], [r.cd.clip.negative for r in rs_ev],
+                               [r.cd.info.frame_count_reported / r.cd.info.fps for r in rs_ev])
+            safety = safety_metrics(rs_ev, "bytetrack")
             p = pooled["tp"] / (pooled["tp"] + pooled["fp"]) if pooled["tp"] + pooled["fp"] else 0.0
             rc = pooled["tp"] / (pooled["tp"] + pooled["fn"]) if pooled["tp"] + pooled["fn"] else 0.0
             row = {"degradation": kind, "level": level, "detection_precision": p, "detection_recall": rc,

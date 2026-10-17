@@ -106,7 +106,7 @@ def plot_per_condition(final: dict, out_dir: Path) -> list[Path]:
 def plot_latency(final_per_clip: Path, out: Path) -> Path | None:
     lat = []
     for f in sorted(final_per_clip.glob("bytetrack/*.json")):
-        lat += json.loads(f.read_text()).get("event_latency_frames", [])
+        lat += json.loads(f.read_text()).get("event_latencies_frames", [])
     if not lat:
         return None
     fig, ax = _fig(6.4, 3.4)
@@ -169,6 +169,44 @@ def plot_runtime(runtime: dict, out: Path, budget_ms: float = 100.0) -> Path | N
     return out
 
 
+def plot_reliability(report: dict, out: Path) -> Path | None:
+    bins = [b for b in report.get("reliability_bins", []) if b["detections"]]
+    if not bins:
+        return None
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(9.0, 3.6), dpi=150)
+    fig.patch.set_facecolor(SURFACE)
+    ax.plot([0, 1], [0, 1], color=MUTED, linestyle=(0, (4, 3)), linewidth=1)
+    ax.annotate("calibrated", (0.62, 0.66), color=MUTED, fontsize=8, rotation=33)
+    x = [b["mean_score"] for b in bins]
+    y = [b["precision"] for b in bins]
+    ax.plot(x, y, color=BLUE, linewidth=2, marker="o", markersize=5, markeredgecolor=SURFACE, markeredgewidth=1.2)
+    for b in bins:
+        ax.annotate(str(b["detections"]), (b["mean_score"], b["precision"]), xytext=(0, 6), textcoords="offset points",
+                    fontsize=6, color=MUTED, ha="center")
+    ax.axvline(report["operating_threshold"], color=ORANGE, linewidth=1)
+    ax.annotate("frozen threshold", (report["operating_threshold"], 0.04), xytext=(4, 0), textcoords="offset points",
+                fontsize=7, color=ORANGE)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1.05)
+    _style(ax, f"Detection reliability (ECE {report['ece']:.3f})", "mean detection score in bin", "precision in bin")
+    q = report.get("recall_by_frame_confidence_quintile") or []
+    if q:
+        ax2.bar(range(len(q)), [r["mean_recall"] or 0 for r in q], color=BLUE, width=0.6)
+        ax2.set_xticks(range(len(q)))
+        ax2.set_xticklabels([f"{r['mean_confidence_from']:.2f}-{r['mean_confidence_to']:.2f}" for r in q], fontsize=7)
+        for i, r in enumerate(q):
+            ax2.annotate(f"{r['mean_recall']:.2f}", (i, r["mean_recall"] or 0), xytext=(0, 3), textcoords="offset points",
+                         fontsize=7, ha="center", color=INK)
+        ax2.set_ylim(0, 1.05)
+    rho = report.get("spearman_frame_confidence_vs_recall")
+    _style(ax2, "Recall by frame confidence" + (f" (rho {rho:.2f})" if rho is not None else ""),
+           "mean score of used detections (quintiles)", "mean frame recall")
+    fig.tight_layout()
+    fig.savefig(out, facecolor=SURFACE)
+    plt.close(fig)
+    return out
+
+
 def make_all(results_dir: str | Path = "results") -> list[Path]:
     rd = Path(results_dir)
     out = rd / "plots"
@@ -181,6 +219,8 @@ def make_all(results_dir: str | Path = "results") -> list[Path]:
     stress = _load(rd / "stress" / "stress_results.json")
     if stress:
         made.append(plot_stress(stress, out / "stress_curves.png"))
+    for f in sorted((rd / "calibration").glob("*.json")) if (rd / "calibration").is_dir() else []:
+        made.append(plot_reliability(_load(f), out / f"reliability_{f.stem}.png"))
     runtime = _load(rd / "runtime_report.json")
     if runtime:
         made.append(plot_runtime(runtime.get("summary", runtime), out / "runtime_latency.png"))

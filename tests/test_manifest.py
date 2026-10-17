@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 
@@ -134,3 +135,40 @@ def test_a_second_corridor_on_the_same_footage_is_an_entry_not_a_clip(tmp_path):
     cov = coverage_check(load_manifest(p), min_clips=3)
     assert (cov["n_clips"], cov["n_entries"], cov["negative_clips"]) == (2, 3, 1)
     assert cov["meets_min_clips"] is False
+
+
+@pytest.mark.parametrize("shared, label", [
+    ({"camera": "cam-X"}, "camera"),
+    ({"session": "sess-X"}, "recording session"),
+    ({"source": "same.mp4"}, "source path"),
+])
+def test_split_check_catches_each_key_on_its_own(tmp_path, shared, label):
+    """Scenes differ; exactly one other key is shared. Each must be caught by itself."""
+    v = _write(tmp_path / "v.json", [_clip("a", "site-1", "a.mp4", **shared)])
+    t = _write(tmp_path / "t.json", [_clip("b", "site-2", "b.mp4", **shared)])
+    problems = split_check(load_manifest(v), load_manifest(t))
+    assert len(problems) == 1 and problems[0].startswith(f"val and test share {label}")
+
+
+def test_split_check_catches_two_detector_copies_of_one_mot_scene(tmp_path):
+    # MOT17-02-DPM and MOT17-02-FRCNN are the same video under different names
+    v = _write(tmp_path / "v.json", [_clip("MOT17-02-DPM", "MOT17-02-DPM", "a", camera="c1", session="s1")])
+    t = _write(tmp_path / "t.json", [_clip("MOT17-02-FRCNN", "MOT17-02-FRCNN", "b", camera="c2", session="s2")])
+    assert split_check(load_manifest(v), load_manifest(t)) == ["val and test share base scene: 'MOT-02'"]
+
+
+def test_evaluate_refuses_without_a_final_lock(tmp_path):
+    from sightline.cli import main
+
+    (tmp_path / "a.txt").write_text("x")
+    (tmp_path / "a.gt").write_text("y")
+    (tmp_path / "c.yaml").write_text("polygon: []")
+    cfg = tmp_path / "frozen.yaml"  # a loadable config, so the refusal can only come from the lock
+    root = Path(__file__).resolve().parent.parent
+    cfg.write_text((root / "configs" / "default.yaml").read_text() + "\nprovenance: {frozen: true}\n")
+    assert main(["evaluate", "--lock", str(tmp_path / "missing.json"), "--config", str(cfg), "--root", str(tmp_path),
+                 "--results", str(tmp_path / "r")]) == 2
+    lock_manifest(_write(tmp_path / "m.json", [_clip("a", "s", "a.txt", gt="a.gt")]), tmp_path / "lock.json", tmp_path)
+    assert main(["evaluate", "--lock", str(tmp_path / "lock.json"), "--config", str(cfg), "--root", str(tmp_path),
+                 "--results", str(tmp_path / "r")]) == 2  # a draft lock is refused
+    assert not (tmp_path / "r" / "final_metrics.json").exists()

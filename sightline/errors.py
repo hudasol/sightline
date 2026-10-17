@@ -44,15 +44,22 @@ def _duplicate_frames(gt, tracks_txt: Path, iou_thr: float = 0.5) -> list[dict]:
     return out
 
 
-def select_failures(per_clip_dir: Path, results_dir: Path, per_type: int = 2) -> list[dict]:
+def select_failures(per_clip_dir: Path, results_dir: Path, per_type: int = 2, scored: dict | None = None) -> list[dict]:
+    """scored: clip id -> the metric families it counts for. A failure is only taken from a clip scored on
+    its family, so a second corridor on the same footage (a negative entry) adds no repeated detections."""
     items: list[dict] = []
     fps, misses, switches, late, false_ev = [], [], [], [], []
     for f in sorted((per_clip_dir / "bytetrack").glob("*.json")):
         d = json.loads(f.read_text())
         clip = d["clip"]
-        fps += [{"type": "false_detection", "clip": clip, **x} for x in d["false_positives"]]
-        misses += [{"type": "missed_person", "clip": clip, **x} for x in d["misses"]]
-        switches += [{"type": "id_switch", "clip": clip, **x} for x in d["id_switches"]]
+        fams = scored.get(clip, ()) if scored is not None else ("detection", "tracking", "events")
+        if "detection" in fams:
+            fps += [{"type": "false_detection", "clip": clip, **x} for x in d["false_positives"]]
+            misses += [{"type": "missed_person", "clip": clip, **x} for x in d["misses"]]
+        if "tracking" in fams:
+            switches += [{"type": "id_switch", "clip": clip, **x} for x in d["id_switches"]]
+        if "events" not in fams:
+            continue
         by_p = {e["event_id"]: e for e in d["events_predicted"]}
         gt_by = {g["id"]: g for g in d["events_gt"]}
         for gid, pid in d["event_pairs"]:
@@ -106,12 +113,15 @@ def render_failure(item: dict, root: Path, lock_path: Path, cache_dir: Path, det
 
 def analyze(results_dir: Path, root: Path, lock_path: Path, cache_dir: Path, detector_tag: str, threshold: float,
             per_type: int = 2) -> Path:
-    out_dir = results_dir / "error_analysis"
-    items = select_failures(results_dir / "per_clip", results_dir, per_type)
-    # duplicate-track candidates need GT and the saved tracks
+    out_dir = results_dir / "error_analysis" / "heldout"
+    out_dir.mkdir(parents=True, exist_ok=True)
     man = load_manifest(lock_path)
+    items = select_failures(results_dir / "per_clip", results_dir, per_type, {c.id: c.metrics for c in man.clips})
+    # duplicate-track candidates need GT and the saved tracks
     dups = []
     for c in man.clips:
+        if not c.scored_on("tracking"):
+            continue
         gt, _ig = load_mot_gt(root / c.gt)
         for d in _duplicate_frames(gt, results_dir / "tracks" / "bytetrack" / c.id / "tracks.txt")[:per_type]:
             dups.append({"type": "duplicate_track", "clip": c.id, **d})

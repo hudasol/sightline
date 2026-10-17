@@ -12,7 +12,7 @@ Filming only yourself? See the short [SOLO_RECORDING_GUIDE.md](SOLO_RECORDING_GU
 | >= 10 held-out (test) clips | the bar is 12 held-out clips, and MOT17 supplies 2 | `test.json` |
 | Hard conditions **for events** in test: occlusion/crowding, low light, blur | MOT17-10 is moving-camera, so it counts for detection and tracking only | `test.json` |
 | At least one negative test clip | false events per 5 min is measured on negatives only | `test.json` |
-| Own **val** clips, from other sessions | amendment A4 picks the detector and interval on own val clips | `val.json` |
+| Own **val** clips, from other sessions | amendment A4 picks the detector and interval on own val clips (for v1.0, with no own clips, it was applied on MOT17 val: A6.8) | `val.json` |
 
 A reasonable minimum is 2 locations x 2 sessions each:
 - give one session per location to val (about 4-6 clips)

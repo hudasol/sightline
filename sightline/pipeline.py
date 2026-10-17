@@ -98,6 +98,9 @@ class Pipeline:
         # async detection (live detector only): worker + tracker snapshots taken just before each submitted frame
         self.worker = DetectionWorker(detector, clock) if (cfg.pipeline.async_detection and detector is not None) else None
         self._snapshots: dict[int, object] = {}
+        self._submitted_ts: dict[int, float] = {}
+        self._last_det_ts: float | None = None  # timestamp of the frame the latest applied detection was run on
+        self._first_ts: float | None = None
 
     def close(self) -> None:
         if self.worker is not None:
@@ -138,11 +141,13 @@ class Pipeline:
                 f_det, detections, infer_s = done_det
                 replay_expired = self._apply_late(f_det, detections, frame.index)
                 applied_from, delay = f_det, frame.index - f_det
+                self._last_det_ts = self._submitted_ts.pop(f_det, frame.timestamp)
             else:
                 detections = []
             if detector_ran:
                 if self.worker.idle:
                     self._snapshots[frame.index] = copy.deepcopy(self.tracker)
+                    self._submitted_ts[frame.index] = frame.timestamp
                     self.worker.submit(frame.index, frame.image)
                 else:
                     skipped_busy = True
@@ -160,12 +165,17 @@ class Pipeline:
                 infer_s = self.clock() - t_inf
             out = self.tracker.update(detections, frame.index, frame.timestamp)
             applied_from, delay = frame.index, 0
+            self._last_det_ts = frame.timestamp
         records = self.engine.update(frame.index, frame.timestamp, out.tracks, replay_expired + out.expired)
 
         done = self.clock()
+        if self._first_ts is None:
+            self._first_ts = frame.timestamp
+        # source time since the image behind the tracker's latest detection (or since the stream began)
+        age = frame.timestamp - (self._last_det_ts if self._last_det_ts is not None else self._first_ts)
         health = self.monitor.observe(
             valid=True, ts=frame.timestamp, quality=quality, proc_time_s=done - t0,
-            det_scores=[d.score for d in detections] if detector_ran else None, wall=t0,
+            det_scores=[d.score for d in detections] if detector_ran else None, wall=t0, detection_age_s=age,
         )
 
         tentative_inside = any(

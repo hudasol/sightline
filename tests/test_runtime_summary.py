@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 
@@ -26,3 +27,12 @@ def test_median_and_range_over_runs(tmp_path):
     assert g["worst_clip_latency_ms_p95"] == {"median": 150, "min": 120, "max": 180}  # worst clip, not pooled
     assert g["latency_ms_max"]["max"] == 400 and g["frames_dropped"]["median"] == 4  # 2 clips x 2 dropped
     assert s["other"]["runs"] == 1
+
+
+def test_code_version_names_the_commit_and_dirty_state(tmp_path):
+    from sightline.runtime import code_version
+
+    here = code_version(Path(__file__).resolve().parent.parent)
+    assert set(here) == {"git_commit", "uncommitted_code_or_config_changes"}
+    outside = code_version(tmp_path)  # not a repository: nothing is claimed
+    assert outside["git_commit"] is None

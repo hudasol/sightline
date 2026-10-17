@@ -1,0 +1,4 @@
+# Deliberately invalid, for the "break it on purpose" demo: "scor_threshold" is a typo.
+# Unknown keys are rejected, so the system reports UNAVAILABLE instead of running with a default.
+detector:
+  scor_threshold: 0.4

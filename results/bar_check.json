@@ -1,0 +1,20 @@
+{
+ "checks": {
+  "heldout_clips>=12": true,
+  "three_difficult_conditions": true,
+  "negative_corridor_set": true,
+  "detection_precision>=0.80": true,
+  "detection_recall>=0.80": true,
+  "idf1>=0.65": false,
+  "tracker_beats_baseline": true,
+  "event_precision>=0.85": false,
+  "event_recall>=0.85": false,
+  "false_events_per_5min_negative<=1": true,
+  "median_event_latency<=5_frames": true,
+  "throughput>=10fps": false
+ },
+ "all_pass": false,
+ "detection_judged_on": "indoorcrowd clips, in scope",
+ "not_yet_measured": [],
+ "note": "Mechanical check of the numeric bar only. Degraded-state behaviour, tests, reproducibility and visual error analysis are reviewed separately."
+}

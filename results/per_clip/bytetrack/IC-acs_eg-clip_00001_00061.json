@@ -1,0 +1,359 @@
+{
+ "clip": "IC-acs_eg-clip_00001_00061",
+ "tags": [
+  "clear"
+ ],
+ "negative": false,
+ "tracker": "bytetrack",
+ "detection": {
+  "tp": 82,
+  "fp": 5,
+  "fn": 14,
+  "precision": 0.9425287356321839,
+  "recall": 0.8541666666666666,
+  "f1": 0.8961748633879782,
+  "threshold": 0.3
+ },
+ "detection_in_scope": {
+  "tp": 82,
+  "fp": 5,
+  "fn": 10,
+  "precision": 0.9425287356321839,
+  "recall": 0.8913043478260869,
+  "f1": 0.9162011173184358,
+  "threshold": 0.3
+ },
+ "dataset": "indoorcrowd",
+ "id_switches": [
+  {
+   "frame": 40,
+   "gt_id": 5,
+   "track_id": 7
+  },
+  {
+   "frame": 45,
+   "gt_id": 7,
+   "track_id": 5
+  },
+  {
+   "frame": 49,
+   "gt_id": 6,
+   "track_id": 6
+  }
+ ],
+ "events_predicted": [
+  {
+   "event_id": 1,
+   "track_id": 1,
+   "status": "CLOSED",
+   "type": "crossing",
+   "first_inside_frame": 1,
+   "open_frame": 1,
+   "open_ts": 0.0,
+   "last_inside_frame": 25,
+   "close_frame": 26,
+   "close_reason": "left_corridor",
+   "entry_edge": 2,
+   "exit_edge": 0,
+   "reopen_count": 1,
+   "evidence": {
+    "inside_detected": 9,
+    "inside_predicted": 15,
+    "opened_on_prediction": false,
+    "closed_on_prediction": true,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 2,
+   "track_id": 2,
+   "status": "CLOSED",
+   "type": "crossing",
+   "first_inside_frame": 1,
+   "open_frame": 1,
+   "open_ts": 0.0,
+   "last_inside_frame": 25,
+   "close_frame": 26,
+   "close_reason": "left_corridor",
+   "entry_edge": 2,
+   "exit_edge": 0,
+   "reopen_count": 0,
+   "evidence": {
+    "inside_detected": 9,
+    "inside_predicted": 16,
+    "opened_on_prediction": false,
+    "closed_on_prediction": true,
+    "rests_on_prediction": false
+   }
+  },
+  {
+   "event_id": 3,
+   "track_id": 5,
+   "status": "UNRESOLVED",
+   "type": null,
+   "first_inside_frame": 39,
+   "open_frame": 39,
+   "open_ts": 7.6,
+   "last_inside_frame": 61,
+   "close_frame": 61,
+   "close_reason": "stream_end",
+   "entry_edge": 1,
+   "exit_edge": null,
+   "reopen_count": 1,
+   "evidence": {
+    "inside_detected": 7,
+    "inside_predicted": 15,
+    "opened_on_prediction": true,
+    "closed_on_prediction": false,
+    "rests_on_prediction": false
+   }
+  }
+ ],
+ "events_gt": [
+  {
+   "id": 1,
+   "first_inside_frame": 1,
+   "last_inside_frame": 24
+  },
+  {
+   "id": 2,
+   "first_inside_frame": 1,
+   "last_inside_frame": 24
+  },
+  {
+   "id": 3,
+   "first_inside_frame": 39,
+   "last_inside_frame": 44
+  },
+  {
+   "id": 4,
+   "first_inside_frame": 45,
+   "last_inside_frame": 61
+  }
+ ],
+ "event_pairs": [
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   2
+  ],
+  [
+   4,
+   3
+  ]
+ ],
+ "false_events": [],
+ "missed_events": [
+  3
+ ],
+ "event_latencies_frames": [
+  0,
+  0,
+  -6
+ ],
+ "false_positives": [
+  {
+   "frame": 1,
+   "box": [
+    833.94,
+    331.45,
+    870.47,
+    433.72
+   ],
+   "score": 0.5605
+  },
+  {
+   "frame": 10,
+   "box": [
+    783.36,
+    283.1,
+    830.25,
+    438.12
+   ],
+   "score": 0.6662
+  },
+  {
+   "frame": 22,
+   "box": [
+    1218.91,
+    258.45,
+    1279.39,
+    545.87
+   ],
+   "score": 0.8189
+  },
+  {
+   "frame": 43,
+   "box": [
+    1146.87,
+    187.03,
+    1272.23,
+    558.61
+   ],
+   "score": 0.8772
+  },
+  {
+   "frame": 46,
+   "box": [
+    1112.91,
+    193.84,
+    1250.16,
+    555.33
+   ],
+   "score": 0.8844
+  }
+ ],
+ "misses": [
+  {
+   "frame": 7,
+   "gt_id": 3,
+   "box": [
+    771.03,
+    351.18,
+    808.8399999999999,
+    433.77
+   ]
+  },
+  {
+   "frame": 10,
+   "gt_id": 3,
+   "box": [
+    782.11,
+    342.57,
+    822.08,
+    436.99
+   ]
+  },
+  {
+   "frame": 16,
+   "gt_id": 3,
+   "box": [
+    797.8,
+    353.28,
+    821.65,
+    439.14
+   ]
+  },
+  {
+   "frame": 19,
+   "gt_id": 3,
+   "box": [
+    800.45,
+    360.16,
+    839.5,
+    440.12
+   ]
+  },
+  {
+   "frame": 25,
+   "gt_id": 5,
+   "box": [
+    843.3,
+    317.67,
+    871.9,
+    446.20000000000005
+   ]
+  },
+  {
+   "frame": 37,
+   "gt_id": 5,
+   "box": [
+    875.68,
+    309.63,
+    920.0999999999999,
+    446.71000000000004
+   ]
+  },
+  {
+   "frame": 43,
+   "gt_id": 6,
+   "box": [
+    1132.75,
+    249.89,
+    1216.26,
+    537.04
+   ]
+  },
+  {
+   "frame": 46,
+   "gt_id": 6,
+   "box": [
+    1159.59,
+    289.34,
+    1244.8799999999999,
+    540.6899999999999
+   ]
+  },
+  {
+   "frame": 46,
+   "gt_id": 8,
+   "box": [
+    832.76,
+    343.01,
+    850.77,
+    407.0
+   ]
+  },
+  {
+   "frame": 49,
+   "gt_id": 8,
+   "box": [
+    835.98,
+    343.37,
+    850.4300000000001,
+    406.88
+   ]
+  },
+  {
+   "frame": 52,
+   "gt_id": 8,
+   "box": [
+    834.94,
+    345.32,
+    850.3900000000001,
+    406.99
+   ]
+  },
+  {
+   "frame": 55,
+   "gt_id": 6,
+   "box": [
+    1205.27,
+    274.23,
+    1257.95,
+    539.36
+   ]
+  },
+  {
+   "frame": 55,
+   "gt_id": 8,
+   "box": [
+    837.2,
+    350.9,
+    848.51,
+    407.90999999999997
+   ]
+  },
+  {
+   "frame": 58,
+   "gt_id": 6,
+   "box": [
+    1177.19,
+    319.48,
+    1256.25,
+    530.46
+   ]
+  }
+ ],
+ "final_health": "OK",
+ "health_frame_counts": {
+  "OK": 61
+ },
+ "corridor_frame_counts": {
+  "OCCUPIED": 47,
+  "CLEAR": 14
+ }
+}

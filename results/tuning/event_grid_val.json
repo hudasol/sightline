@@ -1,0 +1,191 @@
+[
+ {
+  "open_s": 0.067,
+  "close_s": 0.1,
+  "cooldown_s": 0.333,
+  "event_f1": 0.7522935779816513,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.067,
+  "close_s": 0.1,
+  "cooldown_s": 0.5,
+  "event_f1": 0.7522935779816513,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.067,
+  "close_s": 0.1,
+  "cooldown_s": 1.0,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.067,
+  "close_s": 0.167,
+  "cooldown_s": 0.333,
+  "event_f1": 0.7522935779816513,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.067,
+  "close_s": 0.167,
+  "cooldown_s": 0.5,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.067,
+  "close_s": 0.167,
+  "cooldown_s": 1.0,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.067,
+  "close_s": 0.267,
+  "cooldown_s": 0.333,
+  "event_f1": 0.7522935779816513,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.067,
+  "close_s": 0.267,
+  "cooldown_s": 0.5,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.067,
+  "close_s": 0.267,
+  "cooldown_s": 1.0,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 1
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.1,
+  "cooldown_s": 0.333,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.1,
+  "cooldown_s": 0.5,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.1,
+  "cooldown_s": 1.0,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.167,
+  "cooldown_s": 0.333,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.167,
+  "cooldown_s": 0.5,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.167,
+  "cooldown_s": 1.0,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.267,
+  "cooldown_s": 0.333,
+  "event_f1": 0.7592592592592593,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.267,
+  "cooldown_s": 0.5,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.1,
+  "close_s": 0.267,
+  "cooldown_s": 1.0,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.1,
+  "cooldown_s": 0.333,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.1,
+  "cooldown_s": 0.5,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.1,
+  "cooldown_s": 1.0,
+  "event_f1": 0.7735849056603773,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.167,
+  "cooldown_s": 0.333,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.167,
+  "cooldown_s": 0.5,
+  "event_f1": 0.7735849056603773,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.167,
+  "cooldown_s": 1.0,
+  "event_f1": 0.7735849056603773,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.267,
+  "cooldown_s": 0.333,
+  "event_f1": 0.766355140186916,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.267,
+  "cooldown_s": 0.5,
+  "event_f1": 0.7735849056603773,
+  "median_latency_frames": 2
+ },
+ {
+  "open_s": 0.133,
+  "close_s": 0.267,
+  "cooldown_s": 1.0,
+  "event_f1": 0.7735849056603773,
+  "median_latency_frames": 2
+ }
+]

@@ -498,3 +498,31 @@ Nothing is tuned, locked or frozen. The MOT17 val results are those in
    - **Speed:** median of 3 synchronous `benchmark` runs on the first 150 frames
      of each val scene.
    - **Fixed:** the candidates, the grid and the >= 10 fps bar do not change.
+
+### A7 (2026-10-17): errata found after the held-out evaluation
+
+**What was known.** The single held-out evaluation had run (`results/final_metrics.json`,
+`results/final_run_log.jsonl`). These two problems were found afterwards, during the error analysis
+and the runtime write-up. **Nothing below changed a setting, a corridor, a label or the evaluation**,
+which was not rerun. They are recorded so that the results can be read correctly.
+
+1. **ACS-EC has two camera views, not one.**
+   - A6.6 assumed one fixed camera per IndoorCrowd site. ACS-EC's `clip_00001_00051` is an elevated
+     view of the atrium. Its `clip_00001_00082` and `clip_00026_00091` are a ground-level view of the
+     lounge. The import check had shown the difference (frames with the same number differed by 62 grey
+     levels against about 19 between the other two), but it was read only as "not the same video".
+   - The ACS-EC corridor was drawn on `clip_00001_00051`'s view. On the other two recordings it lies
+     over the busy counter area, and the negative corridor lies mostly on a wall.
+   - The labels use the same polygon, so the event metrics stay internally consistent. But those two
+     clips test "entered this image region", not the walkway the corridor was drawn for.
+   - The other three sites have one view each (checked on the first frame of all 12 recordings).
+   - Redrawing the corridor now would be changing the test after seeing it, so it is not done. A
+     post-hoc sensitivity table in `docs/RESULTS.md` shows the event metrics with and without these two
+     recordings. The reported result is the full set.
+2. **The runtime report `evaluate` read contains a 549 s stall.**
+   - `results/runtime_report.json` (offline run 1) has one MOT17-09 frame that took 548.9 s. Its overall
+     throughput is therefore 3.14 fps, and the mechanical bar check records the throughput as FAIL.
+   - Two more runs at the same code, on the same clips, gave 14.79 and 14.87 fps with no such frame
+     (`results/runtime/heldout_offline/`). The median of the three is 14.79 fps.
+   - The cause of the stall was not identified. The bar check is left as recorded. The repeated runs are
+     reported next to it, as A4 does for the detector choice.
