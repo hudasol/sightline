@@ -147,6 +147,21 @@ def cmd_import_cvat(a) -> int:
     return 0
 
 
+def cmd_import_indoorcrowd(a) -> int:
+    from sightline.evaluation.run import write_json
+    from sightline.indoorcrowd import IndoorCrowdError, import_tracking
+
+    try:
+        rep = import_tracking(Path(a.raw), Path(a.out), tuple(a.sites), a.revision)
+    except IndoorCrowdError as exc:
+        return _unavailable(None, f"import-indoorcrowd: {exc}")
+    write_json(Path(a.summary), rep)
+    for c in rep["clips"]:
+        _p(f"{c['id']}: {c['frames']} frames, {c['boxes']} boxes, {c['track_ids']} ids -> {c['path']}")
+    _p(f"{len(rep['clips'])} clips written; summary in {a.summary}. Split by site: every clip of a site goes to one split.")
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -622,6 +637,14 @@ def build_parser() -> argparse.ArgumentParser:
                     help="which frames were annotated: 1-600, 1-600:10, comma-separated parts, or a file of frame numbers")
     sp.add_argument("--person-labels", nargs="+", default=["person", "pedestrian"])
     sp.add_argument("--ignore-labels", nargs="*", default=[], help="labels to keep as ignore regions (never scored)")
+
+    sp = add("import-indoorcrowd", cmd_import_indoorcrowd,
+             "convert the downloaded IndoorCrowd `tracking` parquet files into MOT sequences")
+    sp.add_argument("--raw", default="data/indoorcrowd/raw", help="folder holding tracking/<site>-*.parquet")
+    sp.add_argument("--out", default="data/indoorcrowd")
+    sp.add_argument("--sites", nargs="+", default=["acs_ec", "acs_eg", "ie_central", "r_central"])
+    sp.add_argument("--revision", help="the dataset commit the files came from, recorded in the summary")
+    sp.add_argument("--summary", default="results/ingest/indoorcrowd_import.json")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
