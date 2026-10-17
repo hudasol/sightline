@@ -1,0 +1,117 @@
+{
+ "what": "detector confidence calibration on in-scope GT; analysis only, nothing chosen from it",
+ "manifest": "configs/manifests/val.json",
+ "clips": [
+  "MOT17-02-FRCNN",
+  "MOT17-04-FRCNN",
+  "MOT17-05-FRCNN",
+  "MOT17-11-FRCNN",
+  "MOT17-13-FRCNN"
+ ],
+ "detector": "yolox_s",
+ "operating_threshold": 0.3,
+ "detection_floor": 0.1,
+ "iou": 0.5,
+ "detections_counted": 52439,
+ "reliability_bins": [
+  {
+   "score_from": 0.1,
+   "score_to": 0.2,
+   "detections": 9407,
+   "precision": 0.1410651642393962,
+   "mean_score": 0.14219868183267778
+  },
+  {
+   "score_from": 0.2,
+   "score_to": 0.3,
+   "detections": 5103,
+   "precision": 0.3644914756025867,
+   "mean_score": 0.2468811483441113
+  },
+  {
+   "score_from": 0.3,
+   "score_to": 0.4,
+   "detections": 4144,
+   "precision": 0.5933880308880309,
+   "mean_score": 0.3496867036679537
+  },
+  {
+   "score_from": 0.4,
+   "score_to": 0.5,
+   "detections": 3851,
+   "precision": 0.7011165930927032,
+   "mean_score": 0.44872757725266166
+  },
+  {
+   "score_from": 0.5,
+   "score_to": 0.6,
+   "detections": 3792,
+   "precision": 0.742879746835443,
+   "mean_score": 0.5497972837552744
+  },
+  {
+   "score_from": 0.6,
+   "score_to": 0.7,
+   "detections": 4114,
+   "precision": 0.8403014098201264,
+   "mean_score": 0.65246475449684
+  },
+  {
+   "score_from": 0.7,
+   "score_to": 0.8,
+   "detections": 6527,
+   "precision": 0.9128236555844952,
+   "mean_score": 0.7557211276237169
+  },
+  {
+   "score_from": 0.8,
+   "score_to": 0.9,
+   "detections": 12272,
+   "precision": 0.9383963494132985,
+   "mean_score": 0.8540278927640157
+  },
+  {
+   "score_from": 0.9,
+   "score_to": 1.0,
+   "detections": 3229,
+   "precision": 0.9430164137503871,
+   "mean_score": 0.9179017652524001
+  }
+ ],
+ "ece": 0.11898546310951769,
+ "frames_with_people_and_detections": 4127,
+ "recall_by_frame_confidence_quintile": [
+  {
+   "mean_confidence_from": 0.3761,
+   "mean_confidence_to": 0.6257730769230769,
+   "frames": 826,
+   "mean_recall": 0.8631039966481935
+  },
+  {
+   "mean_confidence_from": 0.6257730769230769,
+   "mean_confidence_to": 0.6635517894736842,
+   "frames": 825,
+   "mean_recall": 0.861011421716228
+  },
+  {
+   "mean_confidence_from": 0.6635517894736842,
+   "mean_confidence_to": 0.7196443636363636,
+   "frames": 825,
+   "mean_recall": 0.8871424334781486
+  },
+  {
+   "mean_confidence_from": 0.7196443636363636,
+   "mean_confidence_to": 0.7949720000000001,
+   "frames": 825,
+   "mean_recall": 0.9700889002065473
+  },
+  {
+   "mean_confidence_from": 0.7949720000000001,
+   "mean_confidence_to": 0.9460999999999999,
+   "frames": 826,
+   "mean_recall": 0.9756399169837426
+  }
+ ],
+ "spearman_frame_confidence_vs_recall": 0.2609123098706663,
+ "config": "results/frozen_config.yaml"
+}
