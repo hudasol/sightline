@@ -44,7 +44,11 @@ def run_ablation(manifest_path: Path, cfg: Config, eval_cfg: dict, root: Path, c
                  progress=print) -> dict:
     man = load_manifest(manifest_path)
     cds = [prepare_clip(c, root, eval_cfg) for c in man.clips]
-    dets = {cd.clip.id: get_detections(cd, cfg, root, cache_dir, None) for cd in cds}  # cached only, never a model
+    by_source: dict[str, dict] = {}  # cached only, never a model; entries sharing footage share detections
+    for cd in cds:
+        if cd.clip.source not in by_source:
+            by_source[cd.clip.source] = get_detections(cd, cfg, root, cache_dir, None)
+    dets = {cd.clip.id: by_source[cd.clip.source] for cd in cds}
     rows = {}
     for name, sw in VARIANTS.items():
         c = copy.deepcopy(cfg)

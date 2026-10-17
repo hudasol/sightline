@@ -37,3 +37,18 @@ def test_switching_off_the_low_score_stage_and_motion_changes_the_tracker(clip, 
     t.update([Detection((4, 0, 14, 20), 0.9)], 2, 0.1)  # moving right
     out = t.predict(3, 0.2)
     assert out.tracks[0].box == (4, 0, 14, 20)  # no motion model: the box is held, not extrapolated
+
+
+def test_ablation_reuses_detections_for_a_second_corridor_on_the_same_footage(clip, cached, tmp_path):
+    cfg = load_config(ROOT / "configs" / "default.yaml")
+    cache = tmp_path / "cache"
+    write_detection_cache(cache / detector_tag(cfg) / "syn.jsonl",
+                          {"detector": cfg.detector.name, "min_score": cfg.detector.min_score,
+                           "input_size": list(cfg.detector.input_size)}, cached)
+    base = {"source": str(clip.video), "scene": "s", "camera": "c", "session": "x", "conditions": ["clear"],
+            "corridor": str(ROOT / "configs" / "corridors" / "synthetic.yaml"), "gt": str(clip.gt), "license": "t"}
+    man = tmp_path / "m.json"
+    man.write_text(json.dumps({"split": "test", "clips": [{"id": "syn", **base},
+                                                          {"id": "syn-neg", "negative": True, "metrics": ["events"], **base}]}))
+    out = run_ablation(man, cfg, load_eval_config(ROOT / "configs" / "eval.yaml"), Path("."), cache, progress=lambda m: None)
+    assert out["clips"] == ["syn", "syn-neg"]  # no cache exists for syn-neg, and none is needed
