@@ -310,7 +310,13 @@ The tests cover:
 - the importers;
 - end-to-end replays on a generated synthetic clip (no downloads needed).
 
-CI runs the same suite on Python 3.12 and 3.13 for every push (`.github/workflows/tests.yml`).
+CI runs the same suite on Python 3.12 and 3.13 for every push (`.github/workflows/tests.yml`; runs at
+https://github.com/hudasol/sightline/actions/workflows/tests.yml).
+
+Last local run (2026-10-17, the demo laptop, Python 3.13): `python -m pytest -q` -> **188 passed** in 58 s.
+`tests/test_async_detect.py::test_other_frames_do_not_wait_for_a_slow_detector` checks wall-clock latency and
+can fail when the machine is busy (it failed once in three tries while the stress suite ran); it passes on an
+idle machine and in CI.
 
 ## Repository layout
 
