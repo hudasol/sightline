@@ -3,12 +3,13 @@
 # Never edit frozen_config.yaml by hand after the held-out manifest is locked.
 
 detector:
-  name: fasterrcnn_mobilenet_v3_large_320_fpn
-  score_threshold: 0.5      # FROZEN-ON-VAL
+  # chosen by PLAN.md A4 on MOT17 val (A6.8): results/detector_selection/a4_choice.json
+  name: yolox_s             # YOLOX-s, ONNX Runtime; weights/yolox/yolox_s.onnx (git-ignored)
+  score_threshold: 0.5      # FROZEN-ON-VAL (tune sets it from the in-scope val sweep)
   min_score: 0.1
-  input_size: null          # [w, h] frames are resized to fit inside; null = pipeline declared size
+  input_size: [640, 640]    # YOLOX-s's fixed square input, letterboxed
   device: cpu
-  torch_threads: 8          # fastest for this detector at 640x360: results/runtime/torch_threads_mbv3_320fpn_640x360.json
+  torch_threads: 8          # intra-op threads; the A4 runs used 8
 
 tracker:
   kind: bytetrack
@@ -48,7 +49,7 @@ health:
   max_detection_age_s: 0.5 # declared, not tuned: the corridor status rests on a detection <= 0.5 s old
 
 pipeline:
-  detect_every: 1           # detector on every k-th frame, tracker predicts between (PLAN.md A2)
+  detect_every: 3           # A4 choice: smallest k at >= 10 fps (median of 3); tracker predicts between (A2)
   declared_width: 640
   declared_height: 360
   decode_thread: true       # decode ahead in a background thread; order kept, nothing dropped
