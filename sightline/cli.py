@@ -270,6 +270,24 @@ def cmd_report_html(a) -> int:
     return 0
 
 
+def cmd_compare_trackers(a) -> int:
+    """Baseline against chosen tracker on one held out clip, from saved results only."""
+    rd = Path(a.results)
+    try:
+        per = {k: json.loads((rd / "per_clip" / k / f"{a.clip}.json").read_text()) for k in ("iou", "bytetrack")}
+        final = json.loads((rd / "final_metrics.json").read_text())
+    except FileNotFoundError as exc:
+        return _unavailable(None, f"compare-trackers: {exc}")
+    _p(f"{a.clip}: ID switches, IoU baseline {len(per['iou']['id_switches'])}, "
+       f"ByteTrack-style {len(per['bytetrack']['id_switches'])} (results/per_clip/{{iou,bytetrack}}/{a.clip}.json)")
+    _p("Per clip IDF1 is not saved. Pooled IDF1 (results/final_metrics.json, all boxes):")
+    for group in ["ALL"] + list(per["bytetrack"].get("tags", [])):
+        i, b = final["tracking"]["iou"].get(group), final["tracking"]["bytetrack"].get(group)
+        if i and b:
+            _p(f"  {group}: IoU baseline {i['idf1']:.3f}, ByteTrack-style {b['idf1']:.3f}")
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -818,6 +836,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--out", default="results/report/index.html")
     sp.add_argument("--clip", default="IC-ie_central-clip_00001_00061", help="the event walkthrough's clip")
     sp.add_argument("--event", type=int, default=3, help="the event walkthrough's event id")
+
+    sp = add("compare-trackers", cmd_compare_trackers, "baseline against chosen tracker on one held out clip, from saved results")
+    sp.add_argument("clip")
+    sp.add_argument("--results", default="results")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
