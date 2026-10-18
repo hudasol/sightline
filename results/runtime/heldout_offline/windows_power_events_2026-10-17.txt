@@ -1,0 +1,20 @@
+﻿Windows System event log, provider Microsoft-Windows-Kernel-Power, 2026-10-17 20:20-20:45 local time.
+Exported read-only on 2026-10-18 with Get-WinEvent to explain the 549 s frame in offline runtime run 1 (PLAN.md A7.2).
+
+2026-10-17 20:27:39  id=566  The system session has transitioned from 11 to 12.
+2026-10-17 20:27:39  id=506  The system is entering Modern Standby 
+2026-10-17 20:27:39  id=105  Power source change.
+2026-10-17 20:27:39  id=507  The system is exiting Modern Standby 
+2026-10-17 20:27:39  id=566  The system session has transitioned from 12 to 14.
+2026-10-17 20:27:39  id=506  The system is entering Modern Standby 
+2026-10-17 20:27:41  id=566  The system session has transitioned from 14 to 15.
+2026-10-17 20:27:47  id=172  Connectivity state in standby: Disconnected, Reason: Adaptive Connected Standby
+2026-10-17 20:27:50  id=172  Connectivity state in standby: Connected, Reason: None
+2026-10-17 20:27:50  id=507  The system is exiting Modern Standby 
+2026-10-17 20:27:50  id=566  The system session has transitioned from 15 to 16.
+2026-10-17 20:27:50  id=506  The system is entering Modern Standby 
+2026-10-17 20:27:55  id=566  The system session has transitioned from 16 to 17.
+2026-10-17 20:28:02  id=172  Connectivity state in standby: Disconnected, Reason: Policy Setting
+2026-10-17 20:37:02  id=172  Connectivity state in standby: Connected, Reason: None
+2026-10-17 20:37:02  id=507  The system is exiting Modern Standby 
+2026-10-17 20:37:02  id=566  The system session has transitioned from 17 to 18.
