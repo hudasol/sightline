@@ -1,6 +1,6 @@
 # Data card
 
-**Status (2026-10-17):** MOT17 (val and part of held-out) and IndoorCrowd (held-out, PLAN.md A6) are split and the held-out manifest is locked (`results/heldout_manifest.json`). Own corridor clips are not recorded; a later version adds them with a fresh lock. `configs/manifests/*.json` is the source of truth.
+**Status (2026-10-17):** MOT17 (val and part of held-out) and IndoorCrowd (held-out, PLAN.md A6) are split and the held-out manifest is locked (`results/heldout_manifest.json`). Own corridor clips are not recorded; a later version adds them with a fresh lock. **The evaluation uses sourced data only (MOT17 and IndoorCrowd); no own footage was recorded or required (PLAN.md A8).** Own clips are optional. `configs/manifests/*.json` is the source of truth.
 
 ## MOT17 acquisition (2026-10-12)
 - Downloaded `https://motchallenge.net/data/MOT17.zip`, 5,860,214,001 bytes (matches the server's Content-Length; server Last-Modified 18 Dec 2020). Every extracted member passed the zip CRC check.
@@ -25,7 +25,7 @@
 |---|---|---|---|
 | MOT17 train scenes (02, 04, 05, 09, 10, 11, 13) | public labelled pedestrian video; tuning and some held-out | CC BY-NC-SA 3.0 (commonly cited; no licence text found in the archive or on the archived site, 2026-10-12) | One detector copy per scene only. DPM/FRCNN/SDP copies are the same video and count as ONE scene. Non-commercial: do not redistribute inside a commercial product. |
 | IndoorCrowd `tracking` config (sites ACS-EC, ACS-EG, IE-Central, R-Central) | indoor, fixed-camera labelled tracking video: the primary held-out evaluation set (PLAN.md A6) | fair-noncommercial-research-license (`docs/licences/INDOORCROWD_LICENSE.txt`); non-commercial research only, no surveillance, no re-identification | Gated. Split by site, never by frame or recording. Faces blurred by the authors; no frame published. |
-| Self-recorded indoor corridor clips | the real target domain | own footage | Consent of anyone identifiable required; no faces published. |
+| Self-recorded indoor corridor clips | the real target domain. **Optional; not recorded and not used in the evaluation (PLAN.md A8)** | own footage | Consent of anyone identifiable required; no faces published. |
 
 ## Split rule
 Split by whole **scene / camera / recording session**, never by frame or by clip within a session. `sightline split-check` fails on any shared id, path, scene, base scene, camera or session. The held-out manifest is hashed (`lock-manifest`) **before** any tuning; `tune` refuses to run without the lock and `evaluate` refuses if hashes changed.
@@ -48,10 +48,10 @@ The thresholds live in `configs/eval.yaml` under `in_scope`; that file is hashed
 
 - **Ignore, not penalise.** For in-scope scoring, an out-of-scope person becomes an **ignore region**. A detection on them is neither a hit nor a false positive, and missing them is not a miss.
 - **Two reports.** Detection and tracking are reported **in scope** and on **all boxes**.
-- **The bar.** The detection bar is judged on held-out own clips, in scope. MOT17 is reported, not judged.
+- **The bar.** The detection bar is judged on held-out own clips, in scope. MOT17 is reported, not judged. (Superseded: with no own clips it is judged on held-out IndoorCrowd, in scope; PLAN.md A6.1, A8.)
 - **Events** use every scored person, whatever their scope. A person inside the corridor counts even if small or occluded.
 
-## Own-clip annotation rules (PLAN.md amendment A1)
+## Own-clip annotation rules (PLAN.md amendment A1; optional, A8)
 - **Every person box records visibility** (0-1, the visible fraction of the person) in column 9. The in-scope test (height >= 10% of the frame and visibility >= 0.65) needs it. A box with no real visibility estimate must not be exported as 1.0.
 - Label every person in view, in scope or not. Out-of-scope people become ignore regions, so a detection on them is never counted as a false positive.
 - Record which frames were annotated. Unannotated frames are not scored, and empty annotated frames are real negatives.

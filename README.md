@@ -8,12 +8,14 @@ poor to trust. It never reports "clear" when it is not sure.
 > **Advisory only.** No robot connection, no motion control, no face or
 > biometric processing. Tracks are anonymous integers.
 
-`docs/PLAN.md` was committed first and is the contract; its dated amendments (A1-A6)
+`docs/PLAN.md` was committed first and is the contract; its dated amendments (A1-A8)
 record every later change with what was known when it was made. The held-out set (14
 clips: MOT17-09, MOT17-10 and 12 IndoorCrowd recordings) was locked before tuning, the
 configuration was tuned on val only, and the held-out evaluation ran once. Results:
 `docs/EVALUATION.md` (interpretation) and `docs/RESULTS.md` (tables generated from
 `results/`). Every number comes from a file under `results/`.
+
+**Data: sourced only (PLAN.md A8).** The evaluation uses public sourced data only, MOT17 and IndoorCrowd. No own footage was recorded, and none was required. The own-footage tools below are optional.
 
 ## What is in the box
 
@@ -155,7 +157,9 @@ python -m sightline ingest data/own/ --out results/ingest      # a folder
 Writes `<clip>.ingest.json` with fps, frame count, resolution, codec, and a
 timestamp per frame. Corrupt or non-monotonic frames are recorded, not hidden.
 
-## Own footage: from phone to labelled clip
+## Own footage: from phone to labelled clip (optional)
+
+Optional (PLAN.md A8): the reported evaluation uses sourced data only and no own footage was recorded. This section is for anyone who later wants to evaluate on their own corridor.
 
 Phones record variable frame rate (VFR), often HEVC, sometimes with rotation
 metadata, and `check-clip` flags all three. Convert every recording once with
@@ -334,7 +338,7 @@ tests/
 | Item | State |
 |---|---|
 | `docs/PLAN.md`, amendments A1-A7 | done; A7 records two errata found after the evaluation |
-| Data: MOT17 (7 scenes) and IndoorCrowd (12 recordings, 4 sites) | done (`docs/DATA_CARD.md`); own robot-height footage not recorded |
+| Data: MOT17 (7 scenes) and IndoorCrowd (12 recordings, 4 sites) | done (`docs/DATA_CARD.md`); own robot-height footage not recorded (sourced data only, none required: PLAN.md A8) |
 | Detector and interval (A4 on MOT17 val) | YOLOX-s @640, k = 3 (`results/detector_selection/a4_choice.json`) |
 | Held-out manifest | locked FINAL before tuning (`results/heldout_manifest.json`) |
 | Tuning (val only) | done (`results/frozen_config.yaml`) |
