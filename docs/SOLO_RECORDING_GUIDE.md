@@ -1,4 +1,6 @@
-# Solo recording guide
+# Solo recording guide (optional)
+
+> **Optional (PLAN.md A8).** The reported evaluation uses sourced data only (MOT17 and IndoorCrowd). No own footage was recorded, and none was required. Use this guide only if you want to evaluate on your own corridor later; it needs a fresh lock.
 
 For filming **only yourself**, with nobody else in frame. This is a short
 version of [RECORDING_GUIDE.md](RECORDING_GUIDE.md); its setup, privacy and

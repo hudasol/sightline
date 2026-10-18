@@ -1,4 +1,6 @@
-# Recording guide: own corridor footage
+# Recording guide: own corridor footage (optional)
+
+> **Optional (PLAN.md A8).** The reported evaluation uses sourced data only (MOT17 and IndoorCrowd). No own footage was recorded, and none was required. Use this guide only if you want to evaluate on your own corridor later; it needs a fresh lock.
 
 What to film so the own clips can carry the protocol: the held-out bar (PLAN.md
 section 3, amendment A1) and the detector choice (amendment A4). Read this

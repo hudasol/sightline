@@ -12,6 +12,8 @@ clip is in which split. Paths are relative to the repo root.
 
 `split-check` on these two files passes but reports the held-out coverage gaps.
 
+> **Superseded for v1.0 (PLAN.md A6, A8).** The held-out set was completed with IndoorCrowd, and the evaluation uses sourced data only; no own clip was recorded or required. The list below describes what own clips would have had to add, and still applies if own clips are added later with a fresh lock.
+
 Before a **final** lock, your own corridor clips must add:
 - at least **10 more test clips** (the bar is 12, and MOT17 gives 2)
 - at least one test clip tagged **`occlusion_crowding`** (09 and 10 already give
