@@ -550,3 +550,10 @@ mentor confirmed that the task required sourcing data and never required filming
    this evaluation.
 4. **Nothing in the evaluation changes.** No held-out number, setting, polygon or threshold changes
    with this amendment.
+
+### A9 (2026-10-18): the cause of the A7.2 stall
+
+The Windows system log shows the laptop in Modern Standby from 20:27:50 to 20:37:02 on 2026-10-17, which is 552 s.
+That began 26 s after offline runtime run 1 started on MOT17-09, right after a power-source change, and covers its
+549 s frame. Details and the exported log are in `results/runtime/heldout_offline/STALL.md`. Nothing changes: the
+evaluation was not rerun, the recorded bar check stays as it is, and runs 2 and 3 remain separate timing checks.
