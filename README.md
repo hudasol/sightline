@@ -1,5 +1,11 @@
 # Sightline
 
+> **Start here.** Results table: [docs/RESULTS.md](docs/RESULTS.md), interpreted in [docs/EVALUATION.md](docs/EVALUATION.md).  
+> Report page: [results/report/index.html](results/report/index.html) (download it and double-click; no server needed).  
+> Run the tests: `python -m pytest -q`  
+> Regenerate the report page: `python -m sightline report-html`  
+> Limitations: [Known limitations](#known-limitations), including the bars that were missed.
+
 Advisory video perception for an indoor inspection robot. It detects people,
 tracks them with anonymous ids through motion and short occlusion, turns tracks into
 **one event per corridor entry/crossing**, and reports DEGRADED or UNAVAILABLE when the
