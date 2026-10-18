@@ -1,4 +1,4 @@
-# Demo script (4-6 minutes)
+# Demo script (4 to 6 minutes)
 
 Each step answers one item of the brief's acceptance demo. Every number shown comes from a file under
 `results/`. Nothing changes between steps: no threshold, label or clip. Run from the repo root with the venv active.
@@ -13,6 +13,36 @@ Each step answers one item of the brief's acceptance demo. Every number shown co
   - **Pending: no clip is approved yet.** Until one is, skip step 3b.
   - The clip has no ground truth, so it shows the system working, never an accuracy number.
   - Credit its creator in the video description.
+
+## Shot list (about 5 min 30 s)
+
+Only four things go on screen:
+- the report page (`results/report/index.html`);
+- the plots (`results/plots/`);
+- the terminal;
+- the approved Pexels clip, once Huda approves one.
+
+Read every number off the screen; none is typed here. Rows marked **MISSED BAR** show a bar the system did not
+meet: say so plainly and do not move on quickly.
+
+| # | Time | Open or run | Say | Length |
+|---|---|---|---|---|
+| 1 | 0:00 | `README.md`, the "Start here" block | What Sightline is: advisory corridor perception, no robot control, anonymous ids. It was evaluated once, on sourced data (MOT17, IndoorCrowd). | 20 s |
+| 2 | 0:20 | Terminal: `python -m sightline split-check --val configs/manifests/val.json --test configs/manifests/test.json`, then the `git log` line in step 1 below | The held out clips were locked before any tuning, and tuning used val only. | 30 s |
+| 3 | 0:50 | Report page: the bar table | Go down the rows. Read each PASS. | 25 s |
+| 4 | 1:15 | Report page: the same table, the FAIL rows. **MISSED BAR** | IDF1 fails the 0.65 bar, event precision and recall fail 0.85, and the recorded throughput check fails. Read the measured values off the page. Say that the throughput run had a stall while the laptop was in standby, and that the later timing checks are separate, not a replacement. | 35 s |
+| 5 | 1:50 | Report page: the ablation table | The tracker beats its baseline, and the motion model is what carries that gain. That is still short of the IDF1 bar. | 25 s |
+| 6 | 2:15 | Terminal: `python -m sightline timeline IC-ie_central-clip_00001_00061 --event 3` | One event from approach to close: when the track appears, when the feet are first inside, when the event opens and its latency, and how it closes. | 30 s |
+| 7 | 2:45 | Approved clip: the step 3b replay with `--overlay`. Until a clip is approved, run step 3a instead (text only) | Boxes, anonymous ids, the corridor, an event and the health state. This clip has no ground truth, so no accuracy number. | 30 s |
+| 8 | 3:15 | `results/error_analysis/heldout/INDEX.md` (text only, no images) | Three failures and why: a person cut off by the image edge, an ID switch in a tight group, and false events from tracks breaking up at 5 fps with the detector on every third frame. **MISSED BAR** context: the clip behind the false events holds most of the false events in the whole set. | 40 s |
+| 9 | 3:55 | `README.md`, "Known limitations": the ACS-EC item | The ACS-EC corridor was drawn on one camera view and lands on the cafe counter on two recordings. It was not redrawn after the evaluation. **MISSED BAR** context: those recordings hold most of the missed events. | 20 s |
+| 10 | 4:15 | Terminal: the two commands in step 8 below | Bad input ends UNAVAILABLE with exit code 2, never CLEAR. | 30 s |
+| 11 | 4:45 | `results/plots/stress_curves.png`, then `results/plots/reliability_heldout.png` | Tracking gets worse under blur, compression, low light and shake. Confidence did not predict recall on held out data. | 25 s |
+| 12 | 5:10 | Terminal: `python -m pytest -q` | The tests that pin events, geometry, expiry and failure behaviour. | 20 s |
+
+Without an approved clip, row 7 shows text only and the timing stays the same.
+
+The steps below give the full commands for each row.
 
 ## 0. Setup (before recording)
 ```bash
