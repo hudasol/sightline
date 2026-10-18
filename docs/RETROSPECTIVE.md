@@ -9,6 +9,9 @@
   clips. By the deadline no own clip existed, so the held-out set had to come from a public indoor
   dataset (IndoorCrowd, A6) that was found and imported on the last day. The system was never evaluated
   on robot-height footage of a real corridor.
+  *Later note (2026-10-18, PLAN.md A8):* the mentor confirmed that the task only required sourcing data,
+  never filming it. So own footage was never a requirement. What remains true is the planning lesson:
+  the plan assumed filming, and the sourced held-out set was found late.
 - **The bar is missed on three numbers.**
   - IDF1 is 0.512 over all boxes; the bar is 0.65.
   - Event precision is 0.840 and recall 0.787; the bar is 0.85 for both.
@@ -78,8 +81,8 @@
   and run-to-run variation on this laptop is about a factor of 2.
 
 ## What I would do next
-1. Record the own corridor clips (`docs/SOLO_RECORDING_GUIDE.md`), add them with a fresh lock, and
-   evaluate once more.
+1. Optional (A8): record own corridor clips (`docs/SOLO_RECORDING_GUIDE.md`), add them with a fresh lock,
+   and evaluate once more. The task did not require it.
 2. Make the detection interval time-based, and choose it on the frame-rate-matched val copies. At 5 fps,
    k = 1 does not fit on this laptop: YOLOX-s at k = 1 ran at 3.98 fps on val, below the source rate.
    The options are a smaller or faster detector at k = 1, or k = 2 with re-measured event results.

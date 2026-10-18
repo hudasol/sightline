@@ -17,7 +17,8 @@ Honest running record. Add entries as work happens; do not reconstruct afterward
 | 2026-10-17 | A4 applied on MOT17 val: 3 sync offline runs per k for YOLOX-s @640 gave medians 3.98 / 7.30 / 10.13 fps at k = 1 / 2 / 3, so k = 3 (`results/detector_selection/a4_choice.json`) | The runs were slower than the 14 Oct single runs (13.08 fps at k = 2); used as measured, not rerun in search of a faster result |
 | 2026-10-17 | Held-out manifest locked (FINAL, 23 entries, 14 clips) at fabd2d3, then tuned on val only in a worktree pinned at f07eb40 (99 min) | `results/heldout_manifest.json`, `results/frozen_config.yaml`, `results/tuning/` |
 | 2026-10-17 | Held-out runtime report, then the single held-out evaluation, then ablation, calibration, error analysis and stress on the frozen system | `results/`; nothing was retuned after the evaluation |
-| | Own corridor clips: recording and annotation | not recorded; a later version adds them with a fresh lock (A6.1) |
+| 2026-10-18 | The mentor confirmed the task required sourcing data, not filming it. PLAN amendment A8: the evaluation uses sourced data only (MOT17, IndoorCrowd); own footage optional | Docs only; no held-out number or setting changed |
+| | Own corridor clips: recording and annotation | not recorded; a later version adds them with a fresh lock (A6.1) | Optional (A8) |
 
 The rows dated 2026-10-12 and 2026-10-14 were added on 2026-10-14 from the git history and commit messages, not written as the work happened. That work was done with Claude Code (Opus 5.5).
 
