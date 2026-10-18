@@ -5,35 +5,35 @@ tracks them with anonymous ids through motion and short occlusion, turns tracks 
 **one event per corridor entry/crossing**, and reports DEGRADED or UNAVAILABLE when the
 input is invalid, stalled or of poor quality. It reports CLEAR only when health is OK and
 no track is inside the corridor. That is not a guarantee that nobody is inside: on the
-held-out set, 78 of 890 occupied frames were reported CLEAR (see Known limitations).
+held out set, 78 of 890 occupied frames were reported CLEAR (see Known limitations).
 
 > **Advisory only.** No robot connection, no motion control, no face or
 > biometric processing. Tracks are anonymous integers.
 
 `docs/PLAN.md` was committed first and is the contract; its dated amendments (A1-A8)
-record every later change with what was known when it was made. The held-out set (14
+record every later change with what was known when it was made. The held out set (14
 clips: MOT17-09, MOT17-10 and 12 IndoorCrowd recordings) was locked before tuning, the
-configuration was tuned on val only, and the held-out evaluation ran once. Results:
+configuration was tuned on val only, and the held out evaluation ran once. Results:
 `docs/EVALUATION.md` (interpretation) and `docs/RESULTS.md` (tables generated from
 `results/`). Every number comes from a file under `results/`.
 
-**Data: sourced only (PLAN.md A8).** The evaluation uses public sourced data only, MOT17 and IndoorCrowd. No own footage was recorded, and none was required. The own-footage tools below are optional.
+**Data: sourced only (PLAN.md A8).** The evaluation uses public sourced data only, MOT17 and IndoorCrowd. No own footage was recorded, and none was required. The own footage tools below are optional.
 
 ## What is in the box
 
 | Stage | Module | What it does |
 |---|---|---|
-| Ingest | `sightline/ingest.py` | One command records fps, frame count, per-frame timestamps and source metadata |
+| Ingest | `sightline/ingest.py` | One command records fps, frame count, per frame timestamps and source metadata |
 | Detect | `sightline/detector.py` | Pretrained COCO person detectors (torchvision, or YOLOX on ONNX Runtime). Shipped: YOLOX-s @640 on every 3rd frame, threshold frozen on val |
 | Track (baseline) | `sightline/tracking/iou_tracker.py` | Greedy IoU matching, no motion model |
-| Track (chosen) | `sightline/tracking/bytetrack.py` | ByteTrack-style two-stage association, Kalman + Hungarian, geometry only |
+| Track (chosen) | `sightline/tracking/bytetrack.py` | ByteTrack-style two stage association, Kalman + Hungarian, geometry only |
 | Track state | `sightline/tracking/state.py` | id, age, last seen, confidence, trajectory, explicit lost/expired policy |
 | Events | `sightline/events.py` | Debounced open / active / close, re-entry merge, `UNRESOLVED` on lost track |
 | Health | `sightline/health.py` | `OK / DEGRADED / UNAVAILABLE` from corrupt frames, stalls, low fps, low quality, stale detections |
-| Evaluation | `sightline/evaluation/` | Detection P/R/F1, IDF1 and ID switches, event P/R, latency, per-condition tables |
+| Evaluation | `sightline/evaluation/` | Detection P/R/F1, IDF1 and ID switches, event P/R, latency, per condition tables |
 | Split safety | `sightline/manifest.py` | Clip manifests with hashes and a leakage check |
 | Runtime | `sightline/runtime.py` | fps, p50/p95 latency, inference time, dropped/skipped frames |
-| Analysis | `sightline/{ablation,calibration,errors,timeline,report}.py` | Tracker ablation, confidence calibration, worst-first failures, one event end to end, generated result tables |
+| Analysis | `sightline/{ablation,calibration,errors,timeline,report}.py` | Tracker ablation, confidence calibration, worst first failures, one event end to end, generated result tables |
 
 ## Setup
 
@@ -55,7 +55,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Model weights download on first use (torchvision, COCO). They are git-ignored.
+Model weights download on first use (torchvision, COCO). They are git ignored.
 
 ### OpenCV with a GUI (for `draw-corridor` and `label-events`)
 
@@ -138,7 +138,7 @@ Make them after the val detection caches exist, so the caches are renumbered rat
 python -m sightline decimate data/mot17/MOT17-02-FRCNN data/mot17/MOT17-04-FRCNN data/mot17/MOT17-05-FRCNN data/mot17/MOT17-11-FRCNN data/mot17/MOT17-13-FRCNN --summary results/ingest/val_5fps_decimation.json
 ```
 
-Check the split is leakage-safe and lock the held-out manifest **before** the
+Check the split is leakage safe and lock the held out manifest **before** the
 final tuning pass:
 
 ```bash
@@ -169,7 +169,7 @@ ffmpeg, which is free (ffmpeg.org; on Windows `winget install Gyan.FFmpeg`). Thi
 gives a constant 30 fps, 1920x1080, H.264 file and **keeps the original
 untouched**.
 
-Keep originals in `data/own/originals/` (git-ignored). `-n` refuses to overwrite
+Keep originals in `data/own/originals/` (git ignored). `-n` refuses to overwrite
 an existing file.
 
 ```bash
@@ -207,7 +207,7 @@ python -m sightline demo          # generated clip, both trackers, writes output
 python -m pytest                  # unit + end-to-end tests
 ```
 
-The demo is synthetic. It checks the code, not real-world performance.
+The demo is synthetic. It checks the code, not real world performance.
 
 ## Splits, tuning, evaluation (order matters)
 
@@ -260,13 +260,13 @@ corridor status is (`health.max_detection_age_s`, 0.5 s). A detector that falls 
 the system DEGRADED instead of leaving it CLEAR on stale detections. `runtime-summary <folder>` gives
 the median and range over repeated benchmark runs (PLAN.md A4).
 
-`tune` refuses to run unless the held-out lock is **final** (coverage met) and
+`tune` refuses to run unless the held out lock is **final** (coverage met) and
 unchanged, and writes `results/frozen_config.yaml` with provenance. `evaluate` refuses if the lock or
 config provenance does not match. A second run needs `--allow-rerun` and is logged in
 `results/final_run_log.jsonl`. `evaluate` writes:
 - `results/final_metrics.json`: detection, IDF1 and ID switches for the baseline and the chosen
   tracker, event precision, recall and latency, false events per 5 minutes of negative footage,
-  per-condition tables and the bar check;
+  per condition tables and the bar check;
 - `results/per_clip/`.
 
 ## Replay one clip
@@ -292,7 +292,7 @@ This ends in `UNAVAILABLE` (exit 2), never `clear`. An invalid config does the
 same. For example, write `detector: {scor_threshold: 0.4}` (a typo in a key) to
 `bad.yaml` and pass `--config bad.yaml`: unknown keys are rejected, not ignored.
 A stalled stream and a corrupt file are covered by `tests/test_health.py` and the
-end-to-end tests.
+end to end tests.
 
 ## Stress suite
 
@@ -300,7 +300,7 @@ end-to-end tests.
 python -m sightline stress --lock results/heldout_manifest.json --config results/frozen_config.yaml
 ```
 
-Degrades held-out clips (blur, compression, low light, shake) at several
+Degrades held out clips (blur, compression, low light, shake) at several
 levels using the **frozen** config and plots the degradation curve. It does not
 retune anything.
 
@@ -316,13 +316,13 @@ The tests cover:
 - degraded states: corrupt frames, stalls, low fps and stale detections;
 - split leakage, one key at a time, and the lock and `evaluate` refusals;
 - the importers;
-- end-to-end replays on a generated synthetic clip (no downloads needed).
+- end to end replays on a generated synthetic clip (no downloads needed).
 
 CI runs the same suite on Python 3.12 and 3.13 for every push (`.github/workflows/tests.yml`; runs at
 https://github.com/hudasol/sightline/actions/workflows/tests.yml).
 
 Last local run (2026-10-17, the demo laptop, Python 3.13): `python -m pytest -q` -> **188 passed** in 58 s.
-`tests/test_async_detect.py::test_other_frames_do_not_wait_for_a_slow_detector` checks wall-clock latency and
+`tests/test_async_detect.py::test_other_frames_do_not_wait_for_a_slow_detector` checks wall clock latency and
 can fail when the machine is busy (it failed once in three tries while the stress suite ran); it passes on an
 idle machine and in CI.
 
@@ -341,11 +341,11 @@ tests/
 
 Each item is measured or recorded in the named file; `docs/EVALUATION.md` has the detail.
 
-- **ACS-EC corridor drawn on one camera view (found after the evaluation, PLAN.md A7.1).** IndoorCrowd's ACS-EC site has two camera views. The ACS-EC corridor was drawn on one view (`clip_00001_00051`). On the other two recordings (`clip_00001_00082`, `clip_00026_00091`) it lands on the cafe counter. These two recordings account for **10 of the 17 missed events** (`results/per_clip/bytetrack/`) and **56 of the 78 false-CLEAR frames** (`results/safety/false_clear_by_clip.json`). The corridor was **not** redrawn for the reported result, and the held-out evaluation was not rerun. A post-hoc sensitivity table without these two recordings is in `docs/RESULTS.md`; it is not a held-out result.
+- **ACS-EC corridor drawn on one camera view (found after the evaluation, PLAN.md A7.1).** IndoorCrowd's ACS-EC site has two camera views. The ACS-EC corridor was drawn on one view (`clip_00001_00051`). On the other two recordings (`clip_00001_00082`, `clip_00026_00091`) it lands on the cafe counter. These two recordings account for **10 of the 17 missed events** (`results/per_clip/bytetrack/`) and **56 of the 78 false CLEAR frames** (`results/safety/false_clear_by_clip.json`). The corridor was **not** redrawn for the reported result, and the held out evaluation was not rerun. A post hoc sensitivity table without these two recordings is in `docs/RESULTS.md`; it is not a held out result.
 - **Bars missed.** IDF1 0.512 (bar 0.65) and event precision 0.840 and recall 0.787 (bar 0.85)
   (`results/bar_check.json`). The recorded throughput check failed on a run with a 549 s stall, during which the laptop was in Modern Standby
   (PLAN.md A7.2, A9; `results/runtime/heldout_offline/STALL.md`).
-- **Track fragmentation at 5 fps with k = 3.** On IndoorCrowd's ground-level ACS-EG view, people close to the camera
+- **Track fragmentation at 5 fps with k = 3.** On IndoorCrowd's ground level ACS-EG view, people close to the camera
   fragment into several tracks; ACS-EG has 10 of the 12 false events (`results/per_clip/bytetrack/`).
 - **CLEAR means "no track inside", not "nobody inside".** 78 of 890 occupied frames were reported CLEAR with health OK
   (`results/final_metrics.json`, `safety`).
@@ -358,11 +358,11 @@ Each item is measured or recorded in the named file; `docs/EVALUATION.md` has th
 | Item | State |
 |---|---|
 | `docs/PLAN.md`, amendments A1-A7 | done; A7 records two errata found after the evaluation |
-| Data: MOT17 (7 scenes) and IndoorCrowd (12 recordings, 4 sites) | done (`docs/DATA_CARD.md`); own robot-height footage not recorded (sourced data only, none required: PLAN.md A8) |
+| Data: MOT17 (7 scenes) and IndoorCrowd (12 recordings, 4 sites) | done (`docs/DATA_CARD.md`); own robot height footage not recorded (sourced data only, none required: PLAN.md A8) |
 | Detector and interval (A4 on MOT17 val) | YOLOX-s @640, k = 3 (`results/detector_selection/a4_choice.json`) |
-| Held-out manifest | locked FINAL before tuning (`results/heldout_manifest.json`) |
+| Held out manifest | locked FINAL before tuning (`results/heldout_manifest.json`) |
 | Tuning (val only) | done (`results/frozen_config.yaml`) |
-| Held-out evaluation | run once (`results/final_metrics.json`; tables in `docs/RESULTS.md`) |
+| Held out evaluation | run once (`results/final_metrics.json`; tables in `docs/RESULTS.md`) |
 | Bar | detection, clip count, conditions, negatives, latency and "beats the baseline" pass; IDF1 and event precision/recall fail; throughput recorded as fail on a stalled run, median of 3 runs 14.79 fps (`docs/EVALUATION.md`) |
 | Ablation, calibration, error analysis, stress | done (`results/`) |
 | Tests | all pass locally and in CI (`.github/workflows/tests.yml`) |
@@ -371,7 +371,7 @@ Each item is measured or recorded in the named file; `docs/EVALUATION.md` has th
 
 ## Licences
 
-This code is MIT. Third-party parts:
+This code is MIT. Third party parts:
 - torchvision (BSD-3-Clause)
 - YOLOX ONNX exports (Apache-2.0)
 - ONNX Runtime (MIT)
