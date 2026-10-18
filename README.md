@@ -1,9 +1,11 @@
 # Sightline
 
 Advisory video perception for an indoor inspection robot. It detects people,
-keeps anonymous track ids through motion and short occlusion, turns tracks into
-**one event per corridor entry/crossing**, and says so when the video is too
-poor to trust. It never reports "clear" when it is not sure.
+tracks them with anonymous ids through motion and short occlusion, turns tracks into
+**one event per corridor entry/crossing**, and reports DEGRADED or UNAVAILABLE when the
+input is invalid, stalled or of poor quality. It reports CLEAR only when health is OK and
+no track is inside the corridor. That is not a guarantee that nobody is inside: on the
+held-out set, 78 of 890 occupied frames were reported CLEAR (see Known limitations).
 
 > **Advisory only.** No robot connection, no motion control, no face or
 > biometric processing. Tracks are anonymous integers.
