@@ -11,7 +11,7 @@ Every number in the docs comes from a file here. Each file's provenance (command
 | `tuning/` | The val grids `tune` searched: detector threshold, both trackers, events, image quality |
 | `final_metrics.json`, `bar_check.json`, `final_run_log.jsonl` | The single held-out evaluation, its mechanical bar check, and the run log (one line = one run) |
 | `per_clip/{bytetrack,iou}/` | Per held-out entry: detections, ID switches, predicted and GT events, matches, health |
-| `runtime_report.json` | Offline runtime on the held-out clips that `evaluate` read (run 1, with a 549 s stall, PLAN A7.2) |
+| `runtime_report.json` | Offline runtime on the held-out clips that `evaluate` read (run 1, with a 549 s stall while the laptop was in Modern Standby, PLAN A7.2, A9; `runtime/heldout_offline/STALL.md`) |
 | `runtime/heldout_offline/` | Runs 1-3 of the same measurement and their median |
 | `runtime/heldout_realtime.json` | The same clips paced in real time (synchronous) |
 | `runtime/a4_selection/` | The A4 throughput runs on val (3 per k) and their summary |

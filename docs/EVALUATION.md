@@ -117,7 +117,8 @@ Sources: `results/final_metrics.json` "safety"; `results/safety/false_clear_by_c
 Sources: `results/runtime_report.json`, `results/runtime/heldout_offline/`,
 `results/runtime/heldout_realtime.json`.
 - **Offline, every frame processed, 2,484 held-out frames.**
-  - Run 1 ran at 3.14 fps because one MOT17-09 frame took 549 s (PLAN.md A7.2). Runs 2 and 3 ran at
+  - Run 1 ran at 3.14 fps because one MOT17-09 frame took 549 s (PLAN.md A7.2). The Windows log shows the
+    laptop in Modern Standby for 552 s at that time (A9, `results/runtime/heldout_offline/STALL.md`). Runs 2 and 3 ran at
     14.79 and 14.87 fps, so the median is 14.79 fps.
   - Detector inference p50 is about 225 ms on the frames it runs on; with k = 3, the other two frames
     cost a few ms.

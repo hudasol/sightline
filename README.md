@@ -339,7 +339,8 @@ Each item is measured or recorded in the named file; `docs/EVALUATION.md` has th
 
 - **ACS-EC corridor drawn on one camera view (found after the evaluation, PLAN.md A7.1).** IndoorCrowd's ACS-EC site has two camera views. The ACS-EC corridor was drawn on one view (`clip_00001_00051`). On the other two recordings (`clip_00001_00082`, `clip_00026_00091`) it lands on the cafe counter. These two recordings account for **10 of the 17 missed events** (`results/per_clip/bytetrack/`) and **56 of the 78 false-CLEAR frames** (`results/safety/false_clear_by_clip.json`). The corridor was **not** redrawn for the reported result, and the held-out evaluation was not rerun. A post-hoc sensitivity table without these two recordings is in `docs/RESULTS.md`; it is not a held-out result.
 - **Bars missed.** IDF1 0.512 (bar 0.65) and event precision 0.840 and recall 0.787 (bar 0.85)
-  (`results/bar_check.json`). The recorded throughput check failed on a run with a 549 s stall (PLAN.md A7.2).
+  (`results/bar_check.json`). The recorded throughput check failed on a run with a 549 s stall, during which the laptop was in Modern Standby
+  (PLAN.md A7.2, A9; `results/runtime/heldout_offline/STALL.md`).
 - **Track fragmentation at 5 fps with k = 3.** On IndoorCrowd's ground-level ACS-EG view, people close to the camera
   fragment into several tracks; ACS-EG has 10 of the 12 false events (`results/per_clip/bytetrack/`).
 - **CLEAR means "no track inside", not "nobody inside".** 78 of 890 occupied frames were reported CLEAR with health OK
