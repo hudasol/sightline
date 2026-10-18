@@ -3,8 +3,11 @@
 The held-out set was locked, the configuration was tuned on val only, and the held-out evaluation ran
 **once** on 2026-10-17 (`results/final_run_log.jsonl` has one line). This document interprets the
 results. The tables are in `docs/RESULTS.md`, which `python -m sightline report` generates from the
-files under `results/`. Every number here comes from one of those files, and each is named next to the
-claim. The MOT17 **val** sections further down predate the lock and are kept as history.
+files under `results/`. Every number here comes from a file under `results/`. Each section names its source
+files, and counts marked "counted from per-clip results" were counted from `results/per_clip/bytetrack/*.json`.
+The numbers in this file were **copied by hand** from those files and checked against them on 2026-10-18;
+`docs/RESULTS.md` is the generated copy. The MOT17 **val** sections further down predate the lock and are
+kept as history.
 
 ## Verdict against the bar
 Source: `results/bar_check.json`, `results/final_metrics.json`.
@@ -18,14 +21,17 @@ Source: `results/bar_check.json`, `results/final_metrics.json`.
 | Event precision and recall >= 0.85 | P 0.840, R 0.787 (63 TP, 12 FP, 17 FN) | **fail** |
 | <= 1 false event per 5 min of negative footage | 0 false events in 218 s | **pass**, but on 3.6 min only |
 | Median event latency <= 5 frames | 0 frames (63 matched events) | **pass** |
-| Degraded/unavailable on invalid video, stalls, low quality or performance | tested; on the held-out clips health was DEGRADED on 31 MOT17-10 frames and OK elsewhere | **pass** (by tests) |
+| Degraded/unavailable on invalid video, stalls, low quality or performance | tested; on the held-out clips health was DEGRADED on 31 MOT17-10 frames and OK elsewhere | met **in tests** (not a held-out measurement) |
 | Throughput >= 10 fps at the declared resolution | recorded check: 3.14 fps (run 1, one 549 s stall); median of 3 offline runs 14.79 fps | recorded **fail**; see Runtime |
-| Reproducible from frozen config; tests pass | `results/frozen_config.yaml` with provenance; all tests pass locally and in CI | **pass** |
+| Reproducible from frozen config; tests pass | `results/frozen_config.yaml` with provenance; all tests pass locally and in CI | **pass** for the tests and the frozen config; a full rerun from a clean clone was not done |
 
 **In short.** Detection meets the bar on the primary set. The tracker clearly beats its baseline, but
 IDF1 over all boxes does not reach 0.65. Events miss both 0.85 bars. Most event errors come from two
-sources, described below, and both are visible in the error analysis. Throughput meets 10 fps in the
-median of three runs, but the run the bar check used has a stall, and the check is left as recorded.
+sources, described below, and both are visible in the error analysis.
+
+**Throughput fails as recorded.** The median of three offline timing runs is above 10 fps. But two of those
+runs were made after the evaluation, as separate timing checks. The check the evaluation recorded is a fail,
+and it stays a fail.
 
 ## What was done, in order
 1. **Held-out set fixed** before any output existed on it: MOT17-09 and 10 (2026-10-12) and the 12
@@ -46,10 +52,12 @@ Sources: `docs/RESULTS.md` "Detection"; `results/final_metrics.json`.
   tall-enough people is missed. Because IndoorCrowd has no visibility field, "in scope" there includes
   occluded people (A6.4). The crowded group (crowding, in scope) is the weakest: P 0.768, R 0.793.
 - **MOT17 in scope: P 0.827, R 0.957.** Reported, not judged (A1).
-- **All boxes: P 0.856, R 0.550.** Most misses are small or partly visible people, many of them MOT17
-  people cut off by the image edge. MOT17 labels the full body even off-frame, so a correct box on the
-  visible part scores IoU < 0.5. All four MOT17-09 detection failures in the error analysis are this
-  case (`results/error_analysis/heldout/INDEX.md` #1-#4).
+- **All boxes: P 0.856, R 0.550.** Of the 4,226 all-box misses, 526 are in-scope people
+  (`docs/RESULTS.md`, "Detection"). So roughly 3,700 are people outside the in-scope rule: shorter than 10% of
+  the frame, or visibility below 0.65. How many of those are cut off by the image edge was not counted.
+  - **The edge effect.** MOT17 labels the full body even off-frame, so a correct box on the visible part
+    scores IoU < 0.5. All four MOT17-09 detection failures in the error analysis are this case
+    (`results/error_analysis/heldout/INDEX.md` #1-#4).
 
 ## Tracking
 Sources: `docs/RESULTS.md` "Tracking" and "Ablation"; `results/ablation/ablation_heldout.json`.
@@ -61,8 +69,8 @@ Sources: `docs/RESULTS.md` "Tracking" and "Ablation"; `results/ablation/ablation
   - Without Kalman prediction, IDF1 falls to 0.438 with 423 switches, the baseline's level.
   - Without the low-score second stage, it is 0.500 with 229 switches, and the event metrics do not
     change.
-  - At k = 3 the tracker predicts two frames out of three, so a motion model matters more than any
-    other part.
+  - At k = 3 the tracker predicts two frames out of three. That is a likely reason the motion model
+    matters more than the low-score stage, the only other part ablated.
 - **ID switches** in the error analysis happen inside tight groups standing shoulder to shoulder (#5,
   #6). Geometry alone cannot tell overlapping neighbours apart.
 
@@ -72,18 +80,22 @@ Sources: `docs/RESULTS.md` "Events" and "Sensitivity"; `results/per_clip/bytetra
   and 9 negative entries. The IoU baseline: P 0.811, R 0.750.
 - **Where the 12 false events come from.**
   - 10 are on ACS-EG, the ground-level corridor, and 9 of them on one clip (`clip_00011_00093`: 15
-    predicted events for 6 GT events).
-  - People there walk close to the camera. At 5 fps with the detector every 3rd frame (one detection
-    every 0.6 s), they move too far between detections for the predicted box to match the next one, so
-    tracks fragment. With `min_hits` 1, each new track counts at once, and a new event opens on almost
-    every detector frame (#9, #10).
-  - 18 of the 24 UNRESOLVED events are on ACS-EG for the same reason.
+    predicted events for 6 GT events). Counted from per-clip results.
+  - **The pattern:** at the end of that clip a new track and a new event start on almost every detector
+    frame (#9, #10; `sightline timeline`).
+  - **The likely explanation (not measured):** people walk close to the camera there. At 5 fps with the
+    detector every 3rd frame (one detection every 0.6 s), they move too far between detections for the
+    predicted box to match the next one, so tracks fragment. With `min_hits` 1, each new track counts
+    at once.
+  - 18 of the 24 UNRESOLVED events are also on ACS-EG (counted from per-clip results). Whether they have
+    the same cause was not checked one by one.
 - **Where the 17 misses come from.**
   - 10 are on the two ACS-EC lounge-view recordings, whose corridor was drawn on another camera view
-    (PLAN.md A7.1).
+    (PLAN.md A7.1; counted from per-clip results).
   - Without those two recordings, recall would be 0.891 and precision 0.826. That is a post-hoc
     sensitivity check, not a result.
-- **Latency.** Median 0 frames over the 63 matches. MOT17-09 (30 fps): median 4, with 5 of 14 events
+- **Latency.** Median 0 frames over the 63 matches. The split by clip below is counted from per-clip results.
+  MOT17-09 (30 fps): median 4, with 5 of 14 events
   later than 5 frames, the worst 66 frames (2.2 s), inside a dense group (#7). IndoorCrowd (5 fps):
   median 0, with 10 of 49 negative, because the system's foot point entered before the ground truth's.
   The open debounce is one frame at 5 fps. Latency is the frame the event opened, not the backdated
@@ -100,9 +112,11 @@ Sources: `results/final_metrics.json` "safety"; `results/safety/false_clear_by_c
   was OK on all of them, so the system did not know it was wrong.
 - **56 of the 78 are on the two ACS-EC lounge-view recordings** (46 of 82 and 10 of 40). The other 22
   are spread over 8 clips (at most 9 on one clip).
-- In the frozen system, CLEAR means "no track inside", not "nobody inside". A person the detector
-  misses, or whose track has not been confirmed, leaves the corridor CLEAR. This is the most important
-  limit of the advisory output, and the health checks do not cover it.
+- **What CLEAR means.** In the frozen system, CLEAR means three things together: health is OK, no track is in
+  a candidate, active or closing phase, and no observed tentative track is inside (`sightline/pipeline.py`,
+  `_corridor_status`). It does not mean "nobody inside". A person with no
+  track whose reference point is inside leaves the corridor CLEAR, for example someone the detector missed.
+  This is the most important limit of the advisory output, and the health checks do not cover it.
 
 ## Degraded state
 - **Pinned by tests.** Invalid video, invalid config, corrupt frames, stalled streams, low fps, low
@@ -127,7 +141,8 @@ Sources: `results/runtime_report.json`, `results/runtime/heldout_offline/`,
 - **Paced in real time, synchronous.**
   - On the 5 fps IndoorCrowd clips the pipeline kept up: 38 of 1,305 frames dropped.
   - On the 25-30 fps MOT17 clips it did not: 888 of 1,179 frames dropped.
-  - Real-time 30 fps input needs the async worker (whose accuracy is not measured) or a faster machine.
+  - Real-time 30 fps input would need the async worker (whose accuracy is not measured) or a faster
+    machine.
 - **Run-to-run variation is large on this laptop.** The A4 runs on 17 Oct were about half as fast as
   the 14 Oct runs of the same code.
 
@@ -154,7 +169,8 @@ Each item addresses a named risk.
     moves every box between frames.
   - **Event recall hardly moves** (0.75-0.81 at every level, against 0.787 clean). With 80 GT events,
     one event is 1.25 points, so these differences are within a few events.
-  - **False CLEAR rises** from 8.8% to 13.5% at JPEG quality 5, and to 10-12% at the strongest shake.
+  - **False CLEAR rises** from 8.8% to 13.5% at JPEG quality 5, and to 10-12% at the two strongest shake
+    levels.
   - **Known limit of the suite:** only the detector sees the degraded frames. The pipeline replay that
     computes tracking, events and health reads the clean frames (`sightline/stress.py` passes
     degraded detections to `evaluate_clip`, which reads the original source). So the stress rows show
