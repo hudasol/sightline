@@ -257,6 +257,19 @@ def cmd_timeline(a) -> int:
     return 0
 
 
+def cmd_report_html(a) -> int:
+    from sightline.report_html import build_html
+
+    try:
+        page = build_html(Path(a.results), a.clip, a.event)
+    except FileNotFoundError as exc:
+        return _unavailable(None, f"report-html: {exc}")
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(a.out).write_text(page, encoding="utf-8", newline="\n")
+    _p(f"wrote {a.out} from the files under {a.results}; open it by double-clicking")
+    return 0
+
+
 def cmd_replay(a) -> int:
     try:
         cfg = load_config(a.config)
@@ -799,6 +812,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--lock", default="results/heldout_manifest.json")
     sp.add_argument("--results", default="results")
     sp.add_argument("--root", default=".")
+
+    sp = add("report-html", cmd_report_html, "one static HTML page of the held-out results, from saved files only")
+    sp.add_argument("--results", default="results")
+    sp.add_argument("--out", default="results/report/index.html")
+    sp.add_argument("--clip", default="IC-acs_eg-clip_00001_00061", help="the event walkthrough's clip")
+    sp.add_argument("--event", type=int, default=1, help="the event walkthrough's event id")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")
