@@ -55,7 +55,38 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Model weights download on first use (torchvision, COCO). They are git ignored.
+On Windows, keep the clone in a short path (for example `C:\work\sightline`). In a very deep folder, creating
+the venv or installing can fail on Windows' 260 character path limit.
+
+**What a fresh clone runs with no data.** Checked on a clean clone on 2026-10-18 (Windows, Python 3.13,
+`pip install -e ".[dev]"`, about 8 minutes because torch is large):
+- `python -m pytest -q` passes. The tests generate a synthetic clip and need no data.
+- `python -m sightline report` and `python -m sightline report-html` work from the committed `results/`.
+  - On a fresh clone the report page's event walkthrough leaves out the two lines that say when the track was
+    first and last reported. They come from `results/tracks/`, which is git ignored.
+  - The committed `results/report/index.html` has them, and it is the reference.
+- Everything else needs files that are not in git:
+  - `data/`: MOT17 and IndoorCrowd, steps under Data preparation.
+  - The YOLOX weights, below.
+  - `results/detections/`: cached detections, rebuilt by running the detector on the clips.
+  - `results/tracks/`: written only by `evaluate`, which is not rerun on the locked set.
+- `python -m sightline timeline` reads the clip's frame rate from the clip in `data/`. Without the data it
+  stops with "source not found".
+- `python -m sightline verify-lock` hashes the held out clips in `data/`. Without the data it reports each
+  missing clip as changed.
+
+**Detector weights.** The torchvision candidates download their COCO weights on first use. The shipped detector,
+YOLOX-s, needs ONNX Runtime and a weight file:
+
+```bash
+pip install -e ".[onnx]"
+```
+
+Then download `yolox_s.onnx` from the YOLOX 0.1.1rc0 release into `weights/yolox/`:
+- `yolox_s.onnx`: https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_s.onnx
+- `yolox_tiny.onnx` and `yolox_nano.onnx`, the other candidates: same address with their own file names.
+
+YOLOX is Apache-2.0. Check each file's SHA-256 against `docs/MODEL_CARD.md`. Weights are git ignored.
 
 ### OpenCV with a GUI (for `draw-corridor` and `label-events`)
 
@@ -118,14 +149,24 @@ configs/
   manifests/{val.json,test.json}
 ```
 
-**MOT17.** Download `https://motchallenge.net/data/MOT17.zip` and extract only
+**MOT17.** Download `https://motchallenge.net/data/MOT17.zip` (5,860,214,001 bytes on 2026-10-12) and extract only
 `train/MOT17-{02,04,05,09,10,11,13}-FRCNN/{img1,gt,seqinfo.ini}` into `data/mot17/` (DATA_CARD).
+- **Licence:** MOTChallenge data for non-commercial research. The commonly cited licence is CC BY-NC-SA 3.0, and
+  it was not re-verified from a primary source (`docs/DATA_CARD.md`).
+- **Faces:** do not publish its frames; they show faces.
 
-**IndoorCrowd** is gated. Accept its terms on Hugging Face under your own account and read
-`docs/licences/INDOORCROWD_LICENSE.txt` first. Download the `tracking` config only:
+**IndoorCrowd** is gated:
+1. Read `docs/licences/INDOORCROWD_LICENSE.txt`: non-commercial computer vision research only, no
+   surveillance, no re-identification.
+2. Sign in at https://huggingface.co/datasets/sebnae/IndoorCrowd and accept its terms. Access is granted to
+   your own account.
+3. Create a read token in your Hugging Face settings for `hf auth login`. Never commit it.
+4. Download the `tracking` config only. The `hf` command comes from `huggingface_hub`, which no extra of this
+   project installs:
 
 ```bash
 pip install -e ".[indoorcrowd]"
+pip install -U huggingface_hub
 hf auth login
 hf download sebnae/IndoorCrowd --repo-type dataset --revision 87049647f27c4419dcba051474dcfc0fcecad8e0 --include "tracking/*" --local-dir data/indoorcrowd/raw
 python -m sightline import-indoorcrowd --revision 87049647f27c4419dcba051474dcfc0fcecad8e0
