@@ -20,9 +20,10 @@
   views, so on two of its recordings the corridor covers the counter area (A7.1). Those two recordings
   hold 10 of the 17 missed events and 56 of the 78 false-CLEAR frames.
 - **The detection interval was chosen at one frame rate and used at another.** A4 picked k = 3 because
-  it reached 10 fps on 30 fps val video. At 5 fps that means one detection every 0.6 s. People close to
-  the camera move too far in that time, so tracks fragment. One ACS-EG clip produced 15 events for 6
-  people, and ACS-EG accounts for 10 of the 12 false events.
+  it reached 10 fps on 30 fps val video. At 5 fps that means one detection every 0.6 s. The likely result
+  (inferred from the event pattern, not measured) is that people close to the camera move too far between
+  detections and their tracks fragment. One ACS-EG clip produced 15 predicted events for 6 GT events, and
+  ACS-EG accounts for 10 of the 12 false events.
 
 ## Bad assumptions
 - "One fixed camera per site." It was not checked against every recording's first frame until after the
@@ -31,10 +32,11 @@
   rate together. The interval should have been chosen in seconds (or as a detection rate) and checked on
   the frame-rate-matched val copies, not in frames on 30 fps video.
 - "Timing on this laptop is stable." The same code ran 13.08 fps on 14 Oct and 7.30 fps on 17 Oct at
-  k = 2. One held-out run had a 549 s stall. A single timing run is not evidence.
+  k = 2. One held-out run had a 549 s stall, during which the laptop was in Modern Standby (A9). A single
+  timing run is not evidence.
 - "MOT17 all-box detection numbers measure the detector." All four MOT17-09 detection failures in the
   error analysis are people cut by the image edge whose ground truth extends off-frame. The in-scope view
-  (A1) excludes them, which is part of why A1 was right.
+  (A1) excludes them, which supports judging the detection bar in scope.
 
 ## Redesigns along the way
 - Frame skipping became a detection interval: every frame is processed and tracks are predicted in
@@ -47,9 +49,10 @@
   detections per source for the same reason.
 
 ## Technical lessons
-- **The motion model is the tracker.** The ablation shows the Kalman prediction carries nearly all of
+- **The motion model carries the gain.** The ablation shows the Kalman prediction carries nearly all of
   ByteTrack's gain (IDF1 0.438 without it against 0.512, and 423 ID switches against 235). The low-score
-  stage adds little here. With the detector on one frame in three, prediction is doing most of the work.
+  stage adds little here. A likely reason: with the detector on one frame in three, prediction carries
+  two frames out of three.
 - **CLEAR means "no track inside", not "nobody inside".** 8.8% of occupied frames were reported CLEAR
   with health OK. The health checks look at the input and the pipeline, not at missed people. An advisory
   "clear" needs its own evidence, for example a minimum detector recall on the zone, or an "unknown"
