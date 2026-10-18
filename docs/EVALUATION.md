@@ -324,7 +324,7 @@ What this does and does not show:
     - false detections, missed people, ID switches;
     - late crossings, false events, duplicate tracks.
   - The "why" for each was written after looking at the frame and checking the saved boxes, tracks and
-    timelines. It was drafted by Claude for Huda to review.
+    timelines. It was drafted with AI assistance and has not yet been reviewed by the author.
   - Three causes cover most of them:
     1. MOT17 labels the off-frame part of people cut by the image edge (#1-#4).
     2. Geometry-only association inside tight groups (#5, #6, #7, #11, #12).

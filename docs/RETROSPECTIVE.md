@@ -1,6 +1,6 @@
 # Retrospective
 
-> **Draft, 2026-10-17.** Written by Claude from the project record (PLAN amendments, PROCESS_LOG, commit
+> **Draft, 2026-10-17.** Drafted with AI assistance from the project record (PLAN amendments, PROCESS_LOG, commit
 > history and `results/`) after the held-out evaluation, for Huda to rewrite in her own words. Every
 > number is from a file under `results/`.
 
