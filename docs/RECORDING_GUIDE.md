@@ -2,7 +2,7 @@
 
 > **Optional (PLAN.md A8).** The reported evaluation uses sourced data only (MOT17 and IndoorCrowd). No own footage was recorded, and none was required. Use this guide only if you want to evaluate on your own corridor later; it needs a fresh lock.
 
-What to film so the own clips can carry the protocol: the held-out bar (PLAN.md
+What to film so the own clips can carry the protocol: the held out bar (PLAN.md
 section 3, amendment A1) and the detector choice (amendment A4). Read this
 before the first session. Nothing here may be decided after looking at results.
 Filming only yourself? See the short [SOLO_RECORDING_GUIDE.md](SOLO_RECORDING_GUIDE.md).
@@ -11,8 +11,8 @@ Filming only yourself? See the short [SOLO_RECORDING_GUIDE.md](SOLO_RECORDING_GU
 
 | Need | Why | Where it goes |
 |---|---|---|
-| >= 10 held-out (test) clips | the bar is 12 held-out clips, and MOT17 supplies 2 | `test.json` |
-| Hard conditions **for events** in test: occlusion/crowding, low light, blur | MOT17-10 is moving-camera, so it counts for detection and tracking only | `test.json` |
+| >= 10 held out (test) clips | the bar is 12 held out clips, and MOT17 supplies 2 | `test.json` |
+| Hard conditions **for events** in test: occlusion/crowding, low light, blur | MOT17-10 is moving camera, so it counts for detection and tracking only | `test.json` |
 | At least one negative test clip | false events per 5 min is measured on negatives only | `test.json` |
 | Own **val** clips, from other sessions | amendment A4 picks the detector and interval on own val clips (for v1.0, with no own clips, it was applied on MOT17 val: A6.8) | `val.json` |
 
@@ -32,7 +32,7 @@ write it down.
   overfit. If there is only one corridor, vary the camera position between sessions.
 - **Camera:** on a tripod, at the height the robot's camera will be, pointing
   along or across the corridor the way the robot would see it. Keep it still. A
-  moving camera makes the image-space corridor meaningless, so the clip counts for
+  moving camera makes the image space corridor meaningless, so the clip counts for
   detection and tracking only.
 - **Phone settings:** landscape, 1080p, 30 fps. Turn off stabilisation, which can
   shift the frame, and any "action" or HDR mode. Lock focus and exposure when the
@@ -68,7 +68,7 @@ Tag each clip's `conditions` in the manifest from what is actually in it.
   repo. Put its reference in the manifest `license` field (the template shows how).
 - **Bystanders:** film where and when people who have not consented are unlikely
   to pass. If someone passes anyway, cut that part out or delete the clip.
-- **No faces published, anywhere.** Raw clips stay in `data/` (git-ignored) and are
+- **No faces published, anywhere.** Raw clips stay in `data/` (git ignored) and are
   never uploaded, pushed or shared. Any frame shown outside your machine must have
   faces blurred first. That includes report figures, slides, the demo video and
   the error-analysis renders written by `sightline errors`, which are real frames.
@@ -89,5 +89,5 @@ Tag each clip's `conditions` in the manifest from what is actually in it.
    test, then run `split-check`.
 6. Record what you filmed in `docs/DATA_CARD.md` (counts table).
 
-Lock the held-out manifest (`lock-manifest`) only once the test set is complete.
+Lock the held out manifest (`lock-manifest`) only once the test set is complete.
 `tune` refuses a draft lock.

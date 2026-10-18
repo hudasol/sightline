@@ -7,8 +7,8 @@ Each step answers one item of the brief's acceptance demo. Every number shown co
 - **Never a MOT17 or IndoorCrowd frame.** No overlay window, no error-analysis image, no video of them. Their
   licences and the project's privacy rule do not allow it (`docs/DATA_CARD.md`,
   `docs/licences/INDOORCROWD_LICENSE.txt`).
-- **Held-out clips appear only as text:** the terminal output of a run, the saved JSON, the plots, and the
-  report page (`results/report/index.html`, which has no frames). Run held-out replays **without** `--overlay`.
+- **Held out clips appear only as text:** the terminal output of a run, the saved JSON, the plots, and the
+  report page (`results/report/index.html`, which has no frames). Run held out replays **without** `--overlay`.
 - **Moving pictures come only from the approved Pexels clip** (`docs/licences/DEMO_FOOTAGE.md`).
   - **Pending: no clip is approved yet.** Until one is, skip step 3b.
   - The clip has no ground truth, so it shows the system working, never an accuracy number.
@@ -34,7 +34,7 @@ meet: say so plainly and do not move on quickly.
 | 5 | 1:50 | Report page: the ablation table | The tracker beats its baseline, and the motion model is what carries that gain. That is still short of the IDF1 bar. | 25 s |
 | 6 | 2:15 | Terminal: `python -m sightline timeline IC-ie_central-clip_00001_00061 --event 3` | One event from approach to close: when the track appears, when the feet are first inside, when the event opens and its latency, and how it closes. | 30 s |
 | 7 | 2:45 | Approved clip: the step 3b replay with `--overlay`. Until a clip is approved, run step 3a instead (text only) | Boxes, anonymous ids, the corridor, an event and the health state. This clip has no ground truth, so no accuracy number. | 30 s |
-| 8 | 3:15 | `results/error_analysis/heldout/INDEX.md` (text only, no images) | Three failures and why: a person cut off by the image edge, an ID switch in a tight group, and false events from tracks breaking up at 5 fps with the detector on every third frame. **MISSED BAR** context: the clip behind the false events holds most of the false events in the whole set. | 40 s |
+| 8 | 3:15 | `results/error_analysis/heldout/INDEX.md` (text only, no images) | Three failures and why: a person cut off by the image edge, an ID switch in a tight group, and false events from tracks breaking up at 5 fps with the detector on every third frame. **MISSED BAR** context: the clip these false events come from holds most of the false events in the held out set. | 40 s |
 | 9 | 3:55 | `README.md`, "Known limitations": the ACS-EC item | The ACS-EC corridor was drawn on one camera view and lands on the cafe counter on two recordings. It was not redrawn after the evaluation. **MISSED BAR** context: those recordings hold most of the missed events. | 20 s |
 | 10 | 4:15 | Terminal: the two commands in step 8 below | Bad input ends UNAVAILABLE with exit code 2, never CLEAR. | 30 s |
 | 11 | 4:45 | `results/plots/stress_curves.png`, then `results/plots/reliability_heldout.png` | Tracking gets worse under blur, compression, low light and shake. Confidence did not predict recall on held out data. | 25 s |
@@ -65,13 +65,13 @@ git log --format="%h %ad %s" --date=iso -- results/heldout_manifest.json results
 ```
 This shows the lock was committed before the frozen config.
 
-## 2. The held-out results at a glance (30 s)
+## 2. The held out results at a glance (30 s)
 Open `results/report/index.html` by double-clicking it. Show:
 - the bar table, pass or fail per bar;
 - the stress plot and the ablation;
 - the event walkthrough.
 
-## 3a. One ordinary held-out clip, as text (45 s)
+## 3a. One ordinary held out clip, as text (45 s)
 ```bash
 python -m sightline replay data/indoorcrowd/acs_eg/clip_00001_00061 --corridor configs/corridors/IC-acs_eg.yaml --config results/frozen_config.yaml --out outputs/demo/acs_eg
 ```
@@ -87,7 +87,7 @@ Show the overlay video: boxes, anonymous track ids, the corridor, events and the
 - The corridor is drawn once with `draw-corridor` after approval.
 - There is no ground truth for this clip, so say so and show no accuracy number.
 
-## 4. One difficult held-out clip: crowding and occlusion, as text (45 s)
+## 4. One difficult held out clip: crowding and occlusion, as text (45 s)
 ```bash
 python -m sightline replay data/indoorcrowd/acs_ec/clip_00026_00091 --corridor configs/corridors/IC-acs_ec.yaml --config results/frozen_config.yaml --out outputs/demo/acs_ec
 ```
@@ -96,7 +96,7 @@ recording is on the ACS-EC view the corridor was not drawn for (README, Known li
 
 ## 5. Baseline against the chosen tracker (30 s)
 From `results/final_metrics.json`, compare `tracking.iou.ALL` with `tracking.bytetrack.ALL` (IDF1, ID switches).
-The per-clip rows are in `results/per_clip/{iou,bytetrack}/<clip>.json`. The ablation
+The per clip rows are in `results/per_clip/{iou,bytetrack}/<clip>.json`. The ablation
 (`results/ablation/ablation_heldout.json`) shows that the motion model carries the gain.
 
 ## 6. Three failures, and why (60 s)
@@ -110,7 +110,7 @@ python -m sightline timeline IC-ie_central-clip_00001_00061 --event 3  # one eve
 ```
 This prints, from the saved results only (`results/per_clip/` and the saved tracks):
 - when the track was first reported;
-- the GT first-inside frame;
+- the GT first inside frame;
 - the open frame, and its latency in frames and seconds;
 - the evidence while the event was active;
 - how the event ended: closed, or UNRESOLVED when the track was lost.

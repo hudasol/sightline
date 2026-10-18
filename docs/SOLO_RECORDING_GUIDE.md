@@ -34,7 +34,7 @@ Write down which clip is which as you go. It saves guessing later.
 ## Things to know
 
 - **Faces:** your face is in these clips. Raw clips stay in `data/`
-  (git-ignored). Blur faces in any frame you show anywhere else, including
+  (git ignored). Blur faces in any frame you show anywhere else, including
   the strips written by `sightline errors`.
 - **No crowding:** one person cannot film occlusion or crowding. Those
   conditions still need other people, with their written consent.

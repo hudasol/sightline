@@ -54,7 +54,7 @@ Huda mentioned a Pexels hallway clip she had found; its URL is not in the reposi
 the same check before any decision.
 
 ## After approval (not done yet)
-1. Download the approved clip by hand from its page to `data/demo/` (git-ignored). Record its file name, size and
+1. Download the approved clip by hand from its page to `data/demo/` (git ignored). Record its file name, size and
    SHA-256 here.
 2. Draw its corridor once with `sightline draw-corridor` and save it as `configs/corridors/demo.yaml`.
 3. Credit the creator in the demo video's description and in `docs/DEMO.md`.
