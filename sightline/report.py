@@ -101,14 +101,14 @@ def _events(final: dict) -> list[str]:
                      e["latency_frames_median"], e["latency_frames_p95"], e["events_unresolved"],
                      e["negative_clip_false_events"], e["n_clips"]])
     base = final["events"]["iou"].get("ALL", {})
-    out = ["## Events (per event, one-to-one matching on [first inside, last inside])", ""] + \
+    out = ["## Events (per event, one to one matching on [first inside, last inside])", ""] + \
         _table(["Group", "Precision", "Recall", "TP", "FP", "FN", "Median latency (frames)", "p95 latency",
                 "Unresolved", "False events on negatives", "Entries"], rows)
     out += ["", f"IoU baseline, ALL: precision {_f(base.get('event_precision'))}, recall {_f(base.get('event_recall'))}, "
                 f"median latency {_f(base.get('latency_frames_median'), 1)} frames.", ""]
     s = final.get("safety", {}).get("ALL")
     if s:
-        out += [f"Safety, ALL: {s['false_clear_frames']} false-CLEAR frames of {s['occupied_frames']} occupied frames "
+        out += [f"Safety, ALL: {s['false_clear_frames']} false CLEAR frames of {s['occupied_frames']} occupied frames "
                 f"(rate {_f(s['false_clear_rate'], 4)}); non-OK frame fraction {_f(s['non_ok_frame_fraction'])}.", ""]
     return out
 
@@ -121,7 +121,7 @@ def _runtime(rt: dict | None, label: str, path: str) -> list[str]:
     return [f"## Runtime: {label} (`{path}`)", "",
             f"Machine: {m.get('processor')} ({m.get('cpu_count_logical')} logical CPUs), {m.get('platform')}, Python "
             f"{m.get('python')}. Commit {(rt.get('code') or {}).get('git_commit')}. Detector {rt.get('detector', {}).get('detector')} "
-            f"@{rt.get('detector_input_size')}, k = {rt.get('detect_every')}, real-time pacing: {_f(rt.get('realtime_emulation'))}, "
+            f"@{rt.get('detector_input_size')}, k = {rt.get('detect_every')}, real time pacing: {_f(rt.get('realtime_emulation'))}, "
             f"async: {_f(rt.get('async_detection'))}.", ""] + \
         _table(["Frames", "Throughput fps", "p50 latency ms", "p95 latency ms (worst clip)", "p50 inference ms",
                 "p95 inference ms", "Dropped (lagging)", "Skipped by policy", "Late (>100 ms)"],
@@ -140,7 +140,7 @@ def _repeats(summ: dict | None, path: str) -> list[str]:
                          r["latency_ms_max"], r["frames_dropped"]])
         t = g["throughput_fps"]
         rows.append([f"{name} median (min-max)", "", f"{t['median']:.2f} ({t['min']:.2f}-{t['max']:.2f})", "", "", ""])
-    return [f"## Runtime: repeated offline runs on the held-out clips (`{path}`)", "",
+    return [f"## Runtime: repeated offline runs on the held out clips (`{path}`)", "",
             "The first run is `results/runtime_report.json`, which `evaluate` read for its throughput check.", ""] +         _table(["Run", "Frames", "Throughput fps", "Worst clip p95 ms", "Max latency ms", "Dropped"], rows) + [""]
 
 
@@ -156,7 +156,7 @@ def _sensitivity(rd: Path, final: dict | None) -> list[str]:
     scored = set(final["scope"]["events"])
     rows = []
     for label, keep in (("all event entries (the reported result)", lambda c: True),
-                        ("without the two ACS-EC lounge-view recordings and their -neg entries",
+                        ("without the two ACS-EC lounge view recordings and their -neg entries",
                          lambda c: c.removesuffix("-neg") not in OTHER_VIEW)):
         tp = fp = fn = n = 0
         for f in sorted(pc.glob("*.json")):
@@ -166,7 +166,7 @@ def _sensitivity(rd: Path, final: dict | None) -> list[str]:
             n += 1
             tp, fp, fn = tp + len(d["event_pairs"]), fp + len(d["false_events"]), fn + len(d["missed_events"])
         rows.append([label, n, tp, fp, fn, tp / (tp + fp) if tp + fp else None, tp / (tp + fn) if tp + fn else None])
-    return ["## Sensitivity: the ACS-EC camera-view erratum (post hoc, from `results/per_clip/bytetrack/`)", "",
+    return ["## Sensitivity: the ACS-EC camera view erratum (post hoc, from `results/per_clip/bytetrack/`)", "",
             "Not a replacement for the reported result: it shows how much the two recordings whose corridor was drawn "
             "on another camera view move the event metrics.", ""] +         _table(["Event entries", "Entries", "TP", "FP", "FN", "Precision", "Recall"], rows) + [""]
 
@@ -182,9 +182,9 @@ def _a4(a4: dict | None) -> list[str]:
     return ["## Detector and interval choice, PLAN A4 on MOT17 val (`results/detector_selection/a4_choice.json`)", "",
             f"Rule: {a4['rule']}. Verdict: {a4['verdict']}. Choice: "
             + (f"{c['detector']} k = {c['k']} (operating threshold from val: {a4['operating_threshold']})." if c else "none."),
-            "Only measured pairs are listed; an unmeasured pair has a lower in-scope F1 and cannot change the choice "
+            "Only measured pairs are listed; an unmeasured pair has a lower in scope F1 and cannot change the choice "
             f"(unmeasured pairs that could: {a4['unmeasured_pairs_that_could_change_the_choice'] or 'none'}).", ""] + \
-        _table(["Detector", "k", "In-scope F1 (val)", "Median fps (3 runs)", "Range", "Worst p95 ms (median)",
+        _table(["Detector", "k", "In scope F1 (val)", "Median fps (3 runs)", "Range", "Worst p95 ms (median)",
                 "Max ms (median)", "Qualifies (>= 10 fps)"], rows) + [""]
 
 
@@ -193,7 +193,7 @@ def _ablation(ab: dict | None) -> list[str]:
         return []
     rows = [[n, v["idf1"], v["id_switches"], v["idf1_in_scope"], v["event_precision"], v["event_recall"],
              v["latency_frames_median"], v["events_unresolved"], v["negative_clip_false_events"]] for n, v in ab["variants"].items()]
-    return ["## Ablation on the held-out set (`results/ablation/ablation_heldout.json`; analysis only)", ""] + \
+    return ["## Ablation on the held out set (`results/ablation/ablation_heldout.json`; analysis only)", ""] + \
         _table(["Variant", "IDF1", "ID switches", "IDF1 in scope", "Event precision", "Event recall",
                 "Median latency", "Unresolved", "False events on negatives"], rows) + [""]
 
@@ -220,7 +220,7 @@ def _stress(rows: list | None) -> list[str]:
           r["event_recall"], r["latency_frames_median"], r["false_clear_rate"], r["non_ok_frame_fraction"]] for r in rows]
     return ["## Stress suite, frozen system (`results/stress/stress_results.json`; nothing retuned)", ""] + \
         _table(["Degradation", "Level", "Det P", "Det R", "IDF1", "Event P", "Event R", "Median latency",
-                "False-CLEAR rate", "Non-OK fraction"], t) + [""]
+                "False CLEAR rate", "Non-OK fraction"], t) + [""]
 
 
 def build(results_dir: Path) -> str:
@@ -232,9 +232,9 @@ def build(results_dir: Path) -> str:
     out += _a4(_load(rd / "detector_selection" / "a4_choice.json"))
     if final:
         out += _bar(final) + _detection(final) + _tracking(final) + _events(final) + _sensitivity(rd, final)
-    out += _runtime(_load(rd / "runtime_report.json"), "held-out clips, offline, every frame processed", "results/runtime_report.json")
+    out += _runtime(_load(rd / "runtime_report.json"), "held out clips, offline, every frame processed", "results/runtime_report.json")
     out += _repeats(_load(rd / "runtime" / "heldout_offline" / "summary.json"), "results/runtime/heldout_offline/summary.json")
-    out += _runtime(_load(rd / "runtime" / "heldout_realtime.json"), "held-out clips paced in real time",
+    out += _runtime(_load(rd / "runtime" / "heldout_realtime.json"), "held out clips paced in real time",
                     "results/runtime/heldout_realtime.json")
     out += _ablation(_load(rd / "ablation" / "ablation_heldout.json"))
     out += _calibration(_load(rd / "calibration" / "heldout.json"), "results/calibration/heldout.json")

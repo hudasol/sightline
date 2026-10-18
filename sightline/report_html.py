@@ -79,13 +79,13 @@ def build_html(results_dir: Path, clip: str = DEFAULT_CLIP, event: int = DEFAULT
     rd = Path(results_dir)
     final = _load(rd / "final_metrics.json")
     if final is None:
-        raise FileNotFoundError(f"{rd / 'final_metrics.json'} is missing: run the held-out evaluation first")
+        raise FileNotFoundError(f"{rd / 'final_metrics.json'} is missing: run the held out evaluation first")
     runs = _load(rd / "runtime" / "heldout_offline" / "summary.json")
     note = "recorded check used results/runtime_report.json"
     if runs:
         t = next(iter(runs.values()))["throughput_fps"]
         note += f"; separate timing checks: median of 3 runs {t['median']:.2f} fps (range {t['min']:.2f}-{t['max']:.2f})"
-    parts = [f"<h2>The held-out bar</h2><p class='muted'>From <code>results/final_metrics.json</code> "
+    parts = [f"<h2>The held out bar</h2><p class='muted'>From <code>results/final_metrics.json</code> "
              f"(its <code>bar</code> block, also <code>results/bar_check.json</code>). Detection judged on: "
              f"{_e(final['bar']['detection_judged_on'])}. Detector <code>{_e(final['detector']['name'])}</code> at "
              f"threshold {_e(final['detector']['score_threshold'])}, detection interval k = {_e(final['detect_every'])}. "
@@ -106,13 +106,13 @@ def build_html(results_dir: Path, clip: str = DEFAULT_CLIP, event: int = DEFAULT
                      "degraded frames; the replay computing tracking, events and health reads the clean frames, so "
                      "this does not show whether health flags degraded video.</p>")
         parts.append("<div class='card'>" + _table(["Degradation", "Level", "Detection recall", "IDF1", "Event recall",
-                                                    "False-CLEAR rate"], rows) + "</div>")
+                                                    "False CLEAR rate"], rows) + "</div>")
 
     ab = _load(rd / "ablation" / "ablation_heldout.json")
     if ab:
         rows = [[n, _f(v["idf1"]), _f(v["id_switches"]), _f(v["event_precision"]), _f(v["event_recall"]),
                  _f(v["events_unresolved"])] for n, v in ab["variants"].items()]
-        parts.append("<h2>Tracker ablation (held-out, cached detections, analysis only)</h2>"
+        parts.append("<h2>Tracker ablation (held out, cached detections, analysis only)</h2>"
                      "<p class='muted'>From <code>results/ablation/ablation_heldout.json</code>.</p>"
                      "<div class='card'>" + _table(["Variant", "IDF1", "ID switches", "Event precision", "Event recall",
                                                     "Unresolved"], rows) + "</div>")
@@ -120,7 +120,7 @@ def build_html(results_dir: Path, clip: str = DEFAULT_CLIP, event: int = DEFAULT
     try:
         lines = timeline(rd, clip, event, _clip_fps(rd, clip))
         parts.append(f"<h2>One corridor event, from approach to close</h2><p class='muted'>Clip <code>{_e(clip)}</code>, "
-                     f"event {event}: a matched, closed crossing on a clear held-out clip whose track is reported before it "
+                     f"event {event}: a matched, closed crossing on a clear held out clip whose track is reported before it "
                      "enters, so the approach is visible. Built from <code>results/per_clip/bytetrack/</code> and the saved "
                      "tracks by the same code as <code>python -m sightline timeline</code>. No frame is shown. "
                      "The approach and last-reported lines need <code>results/tracks/</code>, which is git-ignored; "
@@ -130,7 +130,7 @@ def build_html(results_dir: Path, clip: str = DEFAULT_CLIP, event: int = DEFAULT
         parts.append(f"<h2>One corridor event</h2><p class='muted'>Not available: {_e(exc)}</p>")
 
     code = final.get("code") or {}
-    head = (f"<h1>Sightline: held-out results</h1><p class='lead'>Advisory corridor perception. The held-out set "
+    head = (f"<h1>Sightline: held out results</h1><p class='lead'>Advisory corridor perception. The held out set "
             f"(lock <code>{_e(final.get('locked_manifest_sha256', '')[:12])}</code>) was evaluated once with the "
             f"config tuned on val only (<code>{_e(final.get('frozen_config_sha256', '')[:12])}</code>), at commit "
             f"<code>{_e((code.get('git_commit') or 'n/a')[:10])}</code>. Every value below is read from a saved "
@@ -140,7 +140,7 @@ def build_html(results_dir: Path, clip: str = DEFAULT_CLIP, event: int = DEFAULT
             "<code>docs/RESULTS.md</code>.</footer>")
     return ("<!doctype html><html lang='en'><head><meta charset='utf-8'>"
             "<meta name='viewport' content='width=device-width, initial-scale=1'>"
-            f"<title>Sightline held-out report</title><style>{CSS}</style></head><body><main>"
+            f"<title>Sightline held out report</title><style>{CSS}</style></head><body><main>"
             + head + "".join(parts) + foot + "</main></body></html>\n")
 
 
