@@ -29,7 +29,8 @@ def _table(header: list[str], rows: list[list]) -> list[str]:
            ["| " + " | ".join(_f(c) if not isinstance(c, str) else c for c in r) + " |" for r in rows]
 
 
-def _bar(final: dict) -> list[str]:
+def bar_rows(final: dict, runtime_note: str = "see the runtime section") -> list[list[str]]:
+    """[check, measured, PASS/FAIL/not measured] for every bar check, from final_metrics.json only."""
     b = final["bar"]
     det = final.get("detection_in_scope_by_dataset", {}).get("indoorcrowd", {})
     trk, base = final["tracking"]["bytetrack"].get("ALL", {}), final["tracking"]["iou"].get("ALL", {})
@@ -47,9 +48,14 @@ def _bar(final: dict) -> list[str]:
         "event_recall>=0.85": _f(ev.get("event_recall")),
         "false_events_per_5min_negative<=1": f"{_f(ev.get('false_events_per_5min_negative'), 2)} ({ev.get('negative_clip_false_events')} false events in {_f(ev.get('negative_clip_seconds'), 1)} s)",
         "median_event_latency<=5_frames": _f(ev.get("latency_frames_median"), 1),
-        "throughput>=10fps": "see the runtime section",
+        "throughput>=10fps": runtime_note,
     }
-    rows = [[k, measured.get(k, ""), "PASS" if v else ("not measured" if v is None else "FAIL")] for k, v in b["checks"].items()]
+    return [[k, measured.get(k, ""), "PASS" if v else ("not measured" if v is None else "FAIL")] for k, v in b["checks"].items()]
+
+
+def _bar(final: dict) -> list[str]:
+    b = final["bar"]
+    rows = bar_rows(final)
     return ["## The bar (`results/bar_check.json`, `results/final_metrics.json`)", "",
             f"Detection judged on: {b['detection_judged_on']}. Detector `{final['detector']['name']}` at threshold "
             f"{final['detector']['score_threshold']}, detection interval k = {final['detect_every']}.", ""] + \
