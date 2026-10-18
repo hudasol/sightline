@@ -12,7 +12,7 @@ Every number in the docs comes from a file here. Each file's provenance (command
 | `final_metrics.json`, `bar_check.json`, `final_run_log.jsonl` | The single held-out evaluation, its mechanical bar check, and the run log (one line = one run) |
 | `per_clip/{bytetrack,iou}/` | Per held-out entry: detections, ID switches, predicted and GT events, matches, health |
 | `runtime_report.json` | Offline runtime on the held-out clips that `evaluate` read (run 1, with a 549 s stall while the laptop was in Modern Standby, PLAN A7.2, A9; `runtime/heldout_offline/STALL.md`) |
-| `runtime/heldout_offline/` | Runs 1-3 of the same measurement and their median |
+| `runtime/heldout_offline/` | Runs 1-3 of the same measurement and their median; `STALL.md` and the exported Windows power log explain run 1's 549 s frame |
 | `runtime/heldout_realtime.json` | The same clips paced in real time (synchronous) |
 | `runtime/a4_selection/` | The A4 throughput runs on val (3 per k) and their summary |
 | `detector_selection/a4_choice.json` | The A4 choice built from them by `select-detector` |
@@ -20,6 +20,7 @@ Every number in the docs comes from a file here. Each file's provenance (command
 | `stress/` | The frozen system on degraded held-out clips (nothing retuned) |
 | `error_analysis/heldout/` | The 12 held-out failures with their "why" |
 | `plots/` | Every plot, from `sightline plots` |
+| `report/index.html` | One static page (bar table, stress plot, ablation, one event walkthrough), from `sightline report-html`; open it by double-clicking |
 | `ingest/indoorcrowd_import.json`, `ingest/val_5fps_decimation.json` | The IndoorCrowd import and the about-5 fps val copies |
 
 ## Before the lock (MOT17 val and synthetic data)

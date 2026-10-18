@@ -229,6 +229,8 @@ python -m sightline errors                                              # failur
 python -m sightline stress                                              # blur/compression/low light/shake, frozen, no retuning
 python -m sightline plots                                               # all plots from saved results
 python -m sightline report                                              # docs/RESULTS.md, tables from saved results only
+python -m sightline report-html                                         # results/report/index.html: one static page, opens by double-click
+python -m sightline timeline <clip> --event <N>                         # one corridor event from approach to close, from saved results
 ```
 
 The A4 throughput measurement was three synchronous offline runs per k. One of them looks like this:
