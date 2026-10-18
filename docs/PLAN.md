@@ -526,3 +526,27 @@ which was not rerun. They are recorded so that the results can be read correctly
      (`results/runtime/heldout_offline/`). The median of the three is 14.79 fps.
    - The cause of the stall was not identified. The bar check is left as recorded. The repeated runs are
      reported next to it, as A4 does for the detector choice.
+
+### A8 (2026-10-18): the evaluation uses sourced data only
+
+**What was known.** The held-out evaluation had run once (A6, A7), on sourced public data only. Huda's
+mentor confirmed that the task required sourcing data and never required filming any.
+
+1. **Data.** The evaluation used **sourced data only**: MOT17 (val and part of held-out) and IndoorCrowd
+   (held-out, A6). **No own footage was recorded**, and none is part of v1.0.
+2. **What this supersedes.** Every place in this plan that makes own corridor clips a requirement is
+   superseded:
+   - section 2 (self-recorded clips as a source);
+   - section 3 ("the remaining held-out clips must come from my own recordings");
+   - section 13 (filming on days 1-2);
+   - section 14 risk 1;
+   - A1.1 (the detection bar on own clips; A6.1 already moved it to IndoorCrowd);
+   - A4 (choice on own val clips; A6.8 already applied it on MOT17 val).
+
+   The original text is not edited, as for every amendment.
+3. **The own-footage tools stay, as optional.** `draw-corridor`, `label-events`, `check-clip`,
+   `import-cvat`, `docs/RECORDING_GUIDE.md` and `docs/SOLO_RECORDING_GUIDE.md` stay in the repository.
+   They are optional, for anyone who later wants to evaluate on their own corridor, and are not part of
+   this evaluation.
+4. **Nothing in the evaluation changes.** No held-out number, setting, polygon or threshold changes
+   with this amendment.
