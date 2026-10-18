@@ -21,9 +21,10 @@ from pathlib import Path
 from sightline.report import bar_rows
 from sightline.timeline import timeline
 
-# the walkthrough event, fixed in advance: the first matched event of the ordinary held-out clip in docs/DEMO.md
-DEFAULT_CLIP = "IC-acs_eg-clip_00001_00061"
-DEFAULT_EVENT = 1
+# the walkthrough event: a matched, CLOSED crossing on a clear held-out clip whose track is reported before
+# it enters, so the walkthrough shows an approach (the demo clip's events all start inside at frame 1)
+DEFAULT_CLIP = "IC-ie_central-clip_00001_00061"
+DEFAULT_EVENT = 3
 
 CSS = """
 :root { --bg:#fbfbfa; --fg:#151515; --muted:#5d5c58; --line:#dedcd6; --pass:#16794a; --fail:#b3261e; --card:#ffffff; }
@@ -119,8 +120,8 @@ def build_html(results_dir: Path, clip: str = DEFAULT_CLIP, event: int = DEFAULT
     try:
         lines = timeline(rd, clip, event, _clip_fps(rd, clip))
         parts.append(f"<h2>One corridor event, from approach to close</h2><p class='muted'>Clip <code>{_e(clip)}</code>, "
-                     f"event {event}, chosen in advance (the first matched event of the ordinary clip in "
-                     "<code>docs/DEMO.md</code>). Built from <code>results/per_clip/bytetrack/</code> and the saved "
+                     f"event {event}: a matched, closed crossing on a clear held-out clip whose track is reported before it "
+                     "enters, so the approach is visible. Built from <code>results/per_clip/bytetrack/</code> and the saved "
                      "tracks by the same code as <code>python -m sightline timeline</code>. No frame is shown. "
                      "The approach and last-reported lines need <code>results/tracks/</code>, which is git-ignored; "
                      "without it they are omitted.</p>"

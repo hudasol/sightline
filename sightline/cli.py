@@ -816,8 +816,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp = add("report-html", cmd_report_html, "one static HTML page of the held-out results, from saved files only")
     sp.add_argument("--results", default="results")
     sp.add_argument("--out", default="results/report/index.html")
-    sp.add_argument("--clip", default="IC-acs_eg-clip_00001_00061", help="the event walkthrough's clip")
-    sp.add_argument("--event", type=int, default=1, help="the event walkthrough's event id")
+    sp.add_argument("--clip", default="IC-ie_central-clip_00001_00061", help="the event walkthrough's clip")
+    sp.add_argument("--event", type=int, default=3, help="the event walkthrough's event id")
 
     sp = add("replay", cmd_replay, "run one clip end to end")
     sp.add_argument("source")

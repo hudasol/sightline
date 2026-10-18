@@ -76,7 +76,7 @@ duplicate track, each with its "why". Read the text only; do not show the images
 ## 7. One corridor event end to end (30 s)
 ```bash
 python -m sightline timeline IC-acs_eg-clip_00001_00061             # lists the clip's events and latencies
-python -m sightline timeline IC-acs_eg-clip_00001_00061 --event <N>  # one event, approach to close or loss
+python -m sightline timeline IC-ie_central-clip_00001_00061 --event 3  # one event, approach to close (the report page's walkthrough)
 ```
 This prints, from the saved results only (`results/per_clip/` and the saved tracks):
 - when the track was first reported;
