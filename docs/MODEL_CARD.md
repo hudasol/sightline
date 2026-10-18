@@ -47,12 +47,12 @@ None of these weights is in git (`weights/` and `*.onnx`/`*.pth` are ignored). E
 Advisory perception for a human or downstream system: "someone entered / crossed this region". **Not** a safety certificate.
 
 ## Output contract
-Corridor status is `CLEAR` only when health is OK and no person is inside, a candidate, or a tentative track. Otherwise `UNKNOWN` (or `OCCUPIED`). A track lost mid-event yields an `UNRESOLVED` event, not a guess. Exit code 2 = UNAVAILABLE.
+Corridor status is `CLEAR` only when health is OK, no track is in a candidate, active or closing phase, and no observed tentative track is inside (`sightline/pipeline.py`). It is not evidence that nobody is inside: 78 of 890 occupied held-out frames were reported CLEAR (`results/final_metrics.json`, `safety`). Otherwise `UNKNOWN` (or `OCCUPIED`). A track lost mid-event yields an `UNRESOLVED` event, not a guess. Exit code 2 = UNAVAILABLE.
 
 ## Not supported / known failure modes
 - No person re-identification: a person who leaves and returns after the track expires gets a new id.
 - Heavy occlusion/crowds: ids switch and events may merge or split.
-- Extreme low light, blur, shake: expected to degrade; health should flag it. Camera shake moves the corridor relative to the image (no stabilisation).
+- Extreme low light, blur, shake: tracking degrades (stress suite, `results/stress/`). Health is designed to flag dark and blurry frames, and tests pin that. Whether it flags degraded held-out video was **not** measured: the stress replay reads clean frames (EVALUATION, stress suite). Camera shake moves the corridor relative to the image (no stabilisation).
 - Pose: only the bottom-centre of the box is used; a person leaning in without feet crossing counts as outside.
 - Detection interval k = 3 at a 5 fps source: a person can move far between detections, and the tracker
   predicts across the gap. Events opened or closed on a predicted box are marked in each event's evidence.
@@ -67,7 +67,7 @@ The runtime report on the demo machine (`results/runtime_report.json`, offline, 
 `results/runtime/heldout_realtime.json`, paced in real time) gives throughput, p50 and p95 latency,
 inference time and dropped or skipped frames, with the machine and the commit. The tables are in
 `docs/RESULTS.md`. The machine is a Windows 11 laptop with an AMD Family 25 Model 80 CPU (16 logical
-cores), no GPU, Python 3.13, ONNX Runtime 1.31.0. Throughput on it varied between sessions: the same code
+cores), CPU only (the runtime reports `cuda_available: false`), Python 3.13, ONNX Runtime 1.31.0. Throughput on it varied between sessions: the same code
 path ran 13.08 fps on 2026-10-14 and 7.30 fps on 2026-10-17 at k = 2 (`results/runtime/a4_selection/README.md`).
 
 ## Evaluation
