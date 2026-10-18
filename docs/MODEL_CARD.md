@@ -59,6 +59,7 @@ Corridor status is `CLEAR` only when health is OK and no person is inside, a can
 - IndoorCrowd is the only indoor footage, and it is not robot footage. Its cameras are fixed, and three of
   the four look down from an elevated or overhead position; only ACS-EG is at ground level. No own
   robot-height footage was evaluated.
+- **ACS-EC corridor drawn on one camera view (found after the evaluation, PLAN.md A7.1).** IndoorCrowd's ACS-EC site has two camera views. The ACS-EC corridor was drawn on one view (`clip_00001_00051`). On the other two recordings (`clip_00001_00082`, `clip_00026_00091`) it lands on the cafe counter. These two recordings account for **10 of the 17 missed events** (`results/per_clip/bytetrack/`) and **56 of the 78 false-CLEAR frames** (`results/safety/false_clear_by_clip.json`). The corridor was **not** redrawn for the reported result, and the held-out evaluation was not rerun. A post-hoc sensitivity table without these two recordings is in `docs/RESULTS.md`; it is not a held-out result.
 - Unvalidated beyond the clips in the manifest.
 
 ## Hardware benchmark
