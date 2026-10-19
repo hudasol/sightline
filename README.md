@@ -94,6 +94,10 @@ Then download `yolox_s.onnx` from the YOLOX 0.1.1rc0 release into `weights/yolox
 
 YOLOX is Apache-2.0. Check each file's SHA-256 against `docs/MODEL_CARD.md`. Weights are git ignored.
 
+Check the download (PowerShell): `(Get-FileHash weights\yolox\yolox_s.onnx -Algorithm SHA256).Hash`. On macOS or Linux: `sha256sum weights/yolox/yolox_s.onnx`.
+The expected value for `yolox_s.onnx` is `c5c2d13e59ae883e6af3b45daea64af4833a4951c92d116ec270d9ddbe998063` (comparing is case insensitive).
+The run records the weight hash in its runtime report (`sightline/detector.py`), so a wrong file shows up in `results/`.
+
 ### OpenCV with a GUI (for `draw-corridor` and `label-events`)
 
 The default install uses `opencv-python-headless`, which has no window support.
@@ -327,7 +331,8 @@ runtime report to `--out`. Use `--tracker iou` to run the baseline on the same
 clip. Once a frozen config exists, pass `--config results/frozen_config.yaml`.
 
 Exit code 2 means UNAVAILABLE (bad config, unreadable video, no detector). The
-system says so instead of reporting a clear corridor.
+system says so instead of reporting a clear corridor. A mistyped command or missing
+argument exits with 1, so a script can tell the two apart.
 
 ## Break it on purpose
 
@@ -397,6 +402,11 @@ Each item is measured or recorded in the named file; `docs/EVALUATION.md` has th
   (`results/final_metrics.json`, `safety`).
 - **Short negative set.** 218 s of negative footage (3.6 min) with 0 false events: it cannot show a rate below 1 per
   5 minutes.
+- **Test coverage is uneven.** Measured with coverage.py on 2026-10-19: 72% of the package overall. The decision logic is well
+  covered (`events` 98%, `health` 98%, `pipeline` 98%, `geometry` 96%, `tracking` 91% to 100%). The code that ran the
+  evaluation and the plots is covered least: `tune` 18%, `indoorcrowd` 22%, `plots` 36%, `calibration` 38%, `cli` 41%.
+  Their outputs are checked through saved results and `tests/test_docs_numbers.py`, not by unit tests.
+  CI runs pyflakes rules only; a type checker is not enforced and `mypy` still reports errors.
 - **Sourced data only, not robot footage** (PLAN.md A8). Three of IndoorCrowd's four views look down from above.
 
 ## Status (2026-10-19)
