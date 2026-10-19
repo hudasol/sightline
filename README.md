@@ -399,21 +399,24 @@ Each item is measured or recorded in the named file; `docs/EVALUATION.md` has th
   5 minutes.
 - **Sourced data only, not robot footage** (PLAN.md A8). Three of IndoorCrowd's four views look down from above.
 
-## Status (2026-10-17)
+## Status (2026-10-19)
 
 | Item | State |
 |---|---|
-| `docs/PLAN.md`, amendments A1-A7 | done; A7 records two errata found after the evaluation |
-| Data: MOT17 (7 scenes) and IndoorCrowd (12 recordings, 4 sites) | done (`docs/DATA_CARD.md`); own robot height footage not recorded (sourced data only, none required: PLAN.md A8) |
+| `docs/PLAN.md`, amendments A1-A9 | done. A7 and A9 record what was found after the evaluation; A8 records sourced data only |
+| Data: MOT17 (7 scenes) and IndoorCrowd (12 recordings, 4 sites) | done (`docs/DATA_CARD.md`). Sourced data only; no own footage was recorded or required (PLAN.md A8) |
 | Detector and interval (A4 on MOT17 val) | YOLOX-s @640, k = 3 (`results/detector_selection/a4_choice.json`) |
 | Held out manifest | locked FINAL before tuning (`results/heldout_manifest.json`) |
 | Tuning (val only) | done (`results/frozen_config.yaml`) |
-| Held out evaluation | run once (`results/final_metrics.json`; tables in `docs/RESULTS.md`) |
-| Bar | detection, clip count, conditions, negatives, latency and "beats the baseline" pass; IDF1 and event precision/recall fail; throughput recorded as fail on a stalled run, median of 3 runs 14.79 fps (`docs/EVALUATION.md`) |
-| Ablation, calibration, error analysis, stress | done (`results/`) |
+| Held out evaluation | run once (`results/final_metrics.json`; tables in `docs/RESULTS.md`; one-page view in `results/report/index.html`) |
+| Bars met | detection on IndoorCrowd in scope, clip count, difficult conditions, negative set, false events on negatives, median latency, and the tracker beating its baseline (`results/bar_check.json`) |
+| **Bars missed** | **IDF1** 0.512 (bar 0.65); **event precision** 0.840 and **event recall** 0.787 (bar 0.85 each) (`results/bar_check.json`) |
+| **Throughput** | **recorded as fail**: the run the evaluation read had a 549 s stall while the laptop was in Modern Standby (PLAN.md A7.2, A9). Two later timing checks give a median of 14.79 fps over three runs; they are separate checks, not a replacement (`results/runtime/heldout_offline/`) |
+| **ACS-EC limitation** | the ACS-EC corridor was drawn on one camera view and lands on the cafe counter on two recordings. They account for 10 of the 17 missed events and 56 of the 78 false CLEAR frames. Not redrawn for the reported result (PLAN.md A7.1, Known limitations) |
+| Ablation, calibration, error analysis, stress | done (`results/`). The held out "why" column is partly reviewed by the author; unreviewed entries are marked as drafts |
 | Tests | all pass locally and in CI (`.github/workflows/tests.yml`) |
-| Demo video | script in `docs/DEMO.md`; recording is Huda's |
-| Retrospective | drafted from the record; Huda to finish |
+| Demo video | with the author. Script and acceptance demo map in `docs/DEMO.md` |
+| Retrospective | with the author (`docs/RETROSPECTIVE.md`) |
 
 ## Licences
 
