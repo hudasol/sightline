@@ -198,7 +198,7 @@ class EventEngine:
             ph.first_inside_point = (x, y)
             ph.last_inside_point = (run[0][0], run[0][1])
 
-    def _observe(self, tid: int, ph: _TrackPhase, inside: bool, point, frame: int, ts: float,
+    def _observe(self, tid: int, ph: _TrackPhase, inside: bool, point: tuple[float, float], frame: int, ts: float,
                  predicted: bool = False) -> list[EventRecord]:
         cfg = self.cfg
         out: list[EventRecord] = []
