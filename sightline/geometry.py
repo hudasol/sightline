@@ -8,11 +8,15 @@ camera that moves a lot relative to the corridor, and it makes no metric claims.
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 import numpy as np
 
 from sightline.types import Box
+
+
+Point = Sequence[float]  # an (x, y) pair
 
 
 class GeometryError(ValueError):
@@ -42,13 +46,13 @@ def iou_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.where(union > 0, inter / np.maximum(union, 1e-12), 0.0)
 
 
-def _segments_intersect(p1, p2, p3, p4) -> bool:
+def _segments_intersect(p1: Point, p2: Point, p3: Point, p4: Point) -> bool:
     """Proper or touching intersection of segments p1p2 and p3p4."""
 
-    def orient(a, b, c) -> float:
+    def orient(a: Point, b: Point, c: Point) -> float:
         return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
 
-    def on_seg(a, b, c) -> bool:
+    def on_seg(a: Point, b: Point, c: Point) -> bool:
         return min(a[0], b[0]) <= c[0] <= max(a[0], b[0]) and min(a[1], b[1]) <= c[1] <= max(a[1], b[1])
 
     o1, o2 = orient(p1, p2, p3), orient(p1, p2, p4)
@@ -71,7 +75,7 @@ class Polygon:
     vertices: tuple[tuple[float, float], ...]
 
     @staticmethod
-    def create(vertices, frame_size: tuple[int, int] | None = None) -> "Polygon":
+    def create(vertices: Iterable[Sequence[float]], frame_size: tuple[int, int] | None = None) -> "Polygon":
         """Validate and build. frame_size is (width, height) if known."""
         try:
             pts = tuple((float(x), float(y)) for x, y in vertices)
@@ -143,14 +147,14 @@ class Polygon:
         return best
 
 
-def _point_on_segment(p, a, b, eps: float = 1e-9) -> bool:
+def _point_on_segment(p: Point, a: Point, b: Point, eps: float = 1e-9) -> bool:
     cross = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
     if abs(cross) > eps * max(1.0, abs(b[0] - a[0]) + abs(b[1] - a[1])):
         return False
     return min(a[0], b[0]) - eps <= p[0] <= max(a[0], b[0]) + eps and min(a[1], b[1]) - eps <= p[1] <= max(a[1], b[1]) + eps
 
 
-def _dist_to_segment(p, a, b) -> float:
+def _dist_to_segment(p: Point, a: Point, b: Point) -> float:
     ax, ay = a
     bx, by = b
     dx, dy = bx - ax, by - ay
