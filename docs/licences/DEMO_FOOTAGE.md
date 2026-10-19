@@ -1,9 +1,9 @@
 # Demo footage: candidate clips and their licence
 
-**Status: candidates only. Nothing has been downloaded or used. A clip is used only after Huda approves it.**
+**Status: optional and unused (2026-10-19). Nothing was downloaded or used. The demo uses the private cut instead (`docs/DEMO.md`). A clip would be used only after the author approves it.**
 
-The demo video must not show MOT17 or IndoorCrowd frames (DATA_CARD: no frames published; IndoorCrowd's licence
-prohibits redistribution and surveillance use). It needs footage that may be shown on screen, has no identifiable
+The public cut of the demo video must not show MOT17 or IndoorCrowd frames (DATA_CARD: no frames published;
+IndoorCrowd's licence prohibits redistribution and surveillance use). It would need footage that may be shown on screen, has no identifiable
 faces, and has nothing to do with police or security. Checked on 2026-10-18.
 
 ## The licence: Pexels License
