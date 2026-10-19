@@ -67,7 +67,7 @@ def summarize(accs: dict[str, mm.MOTAccumulator], with_overall: bool = True) -> 
     return out
 
 
-def _num(v):
+def _num(v: object) -> int | float | None:
     try:
         f = float(v)
     except (TypeError, ValueError):
