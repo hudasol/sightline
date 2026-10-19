@@ -12,6 +12,7 @@ This is analysis after the fact: no setting is chosen from it.
 from __future__ import annotations
 
 import copy
+from collections.abc import Callable
 from pathlib import Path
 
 from sightline.config import Config
@@ -41,7 +42,7 @@ def _row(agg: dict, kind: str) -> dict:
 
 
 def run_ablation(manifest_path: Path, cfg: Config, eval_cfg: dict, root: Path, cache_dir: Path,
-                 progress=print) -> dict:
+                 progress: Callable[[str], object] = print) -> dict:
     man = load_manifest(manifest_path)
     cds = [prepare_clip(c, root, eval_cfg) for c in man.clips]
     by_source: dict[str, dict] = {}  # cached only, never a model; entries sharing footage share detections
