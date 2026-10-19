@@ -81,7 +81,7 @@ def build_table(results: Path, tags: list[str], bar_p: float, bar_r: float, min_
 
 
 def to_markdown(t: dict) -> str:
-    def f(v, nd=3):
+    def f(v: float | None, nd: int = 3) -> str:
         return "n/a" if v is None else f"{v:.{nd}f}"
 
     out = []
