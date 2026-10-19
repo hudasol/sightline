@@ -77,6 +77,10 @@
   was visible in its maximum latency (548,939 ms).
 - **A timing test that passes on an idle machine can fail under load.** The async latency test failed
   once in three while the stress suite ran. It is a test of the machine as much as of the code.
+- **Test coverage is uneven, and the least tested code is the code that produced the headline numbers.**
+  Measured with coverage.py on 2026-10-19: 72% overall, and the decision logic (events, health, pipeline,
+  geometry, tracking) is at 91% to 100%. But `tune` is at 18%, `indoorcrowd` at 22%, `plots` at 36%,
+  `calibration` at 38% and `cli` at 41%. Their outputs were checked against saved results, not by unit tests.
 
 ## What I would refuse to claim from these results
 - That the system works on a robot. No robot height footage was evaluated.
@@ -96,3 +100,8 @@
    (The async worker is a third option once its accuracy is measured.)
 3. Add a "zone not observed" state, so CLEAR needs recent detector evidence on the zone itself.
 4. Redraw each IndoorCrowd corridor per view, on a new lock. Never on this one.
+5. Raise the unit test coverage of `tune`, `indoorcrowd`, `plots`, `calibration` and `cli`, add a type checker
+   to CI (`mypy` still reports errors) and split `cli.py`, which holds 30 commands in about 980 lines.
+6. Make the output usable by a robot (`docs/INTERFACE.md`): add a schema version, a sequence number and a
+   heartbeat to every record, a live camera source, and a ROS 2 node that publishes health, corridor and events.
+   Measure latency on the target hardware, not only on this laptop.
