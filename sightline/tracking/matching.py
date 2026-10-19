@@ -9,7 +9,8 @@ from sightline.geometry import iou_matrix
 from sightline.types import Box
 
 
-def associate(track_boxes: list[Box], det_boxes: list[Box], min_iou: float):
+def associate(track_boxes: list[Box], det_boxes: list[Box],
+              min_iou: float) -> tuple[list[tuple[int, int]], list[int], list[int]]:
     """Hungarian assignment on 1 - IoU, rejecting pairs below min_iou.
 
     Returns (matches, unmatched_track_idx, unmatched_det_idx).
