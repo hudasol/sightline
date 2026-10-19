@@ -4,7 +4,8 @@
 > Report page: [results/report/index.html](results/report/index.html) (download it and double-click; no server needed).  
 > Run the tests: `python -m pytest -q`  
 > Regenerate the report page: `python -m sightline report-html`  
-> Limitations: [Known limitations](#known-limitations), including the bars that were missed.
+> Limitations: [Known limitations](#known-limitations), including the bars that were missed.  
+> What a downstream system receives, and what it must not assume: [docs/INTERFACE.md](docs/INTERFACE.md).
 
 Advisory video perception for an indoor inspection robot. It detects people,
 tracks them with anonymous ids through motion and short occlusion, turns tracks into
