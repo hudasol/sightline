@@ -23,10 +23,14 @@ import threading
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import cv2
 
 from sightline.types import FrameData
+
+if TYPE_CHECKING:
+    import numpy as np
 
 VIDEO_EXTS = {".mp4", ".avi", ".mov", ".mkv", ".m4v"}
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp"}
@@ -203,7 +207,7 @@ def prefetch(frames: Iterable[FrameData], depth: int = 4) -> Iterator[FrameData]
     q: queue.Queue = queue.Queue(maxsize=depth)
     stop = threading.Event()
 
-    def put(item) -> bool:
+    def put(item: object) -> bool:
         while not stop.is_set():
             try:
                 q.put(item, timeout=0.1)
@@ -310,7 +314,7 @@ def discover_sources(path: str | Path) -> list[Path]:
     return found
 
 
-def read_frame(path: str | Path, index: int, info: SourceInfo | None = None, fps_override: float | None = None):
+def read_frame(path: str | Path, index: int, info: SourceInfo | None = None, fps_override: float | None = None) -> np.ndarray | None:
     """Random access to one frame (1-based), for error-analysis renders. None if unreadable."""
     info = info or probe(path, fps_override)
     p = Path(path)
