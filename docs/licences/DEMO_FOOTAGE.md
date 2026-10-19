@@ -50,8 +50,9 @@ overlay draws anonymous boxes only.
 Rejected without further checks: airport and terminal clips (a security context).
 
 ## The clip Huda found
-Huda mentioned a Pexels hallway clip she had found; its URL is not in the repository. Send the URL and it gets
-the same check before any decision.
+Huda found a Pexels hallway clip; its URL is not in the repository. The clip is optional and unused: the demo
+uses the private cut instead (`docs/DEMO.md`). It would be used only after the author watches it in full, checks
+its licence and credits its creator.
 
 ## After approval (not done yet)
 1. Download the approved clip by hand from its page to `data/demo/` (git ignored). Record its file name, size and
