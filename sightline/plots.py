@@ -9,11 +9,16 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 SURFACE, INK, MUTED, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e3e2de"
@@ -21,7 +26,7 @@ TRACKER_COLOR = {"iou": ORANGE, "bytetrack": BLUE}
 TRACKER_LABEL = {"iou": "IoU baseline", "bytetrack": "ByteTrack-style"}
 
 
-def _style(ax, title: str, xlabel: str = "", ylabel: str = "") -> None:
+def _style(ax: Axes, title: str, xlabel: str = "", ylabel: str = "") -> None:
     ax.set_facecolor(SURFACE)
     ax.set_title(title, loc="left", fontsize=11, color=INK, fontweight="bold")
     ax.set_xlabel(xlabel, color=MUTED, fontsize=9)
@@ -35,13 +40,13 @@ def _style(ax, title: str, xlabel: str = "", ylabel: str = "") -> None:
         ax.spines[s].set_color(GRID)
 
 
-def _fig(w=7.0, h=3.6):
+def _fig(w: float = 7.0, h: float = 3.6) -> tuple[Figure, Axes]:
     fig, ax = plt.subplots(figsize=(w, h), dpi=150)
     fig.patch.set_facecolor(SURFACE)
     return fig, ax
 
 
-def _load(path: Path):
+def _load(path: Path) -> Any:
     return json.loads(path.read_text()) if path.is_file() else None
 
 
@@ -65,7 +70,7 @@ def plot_detector_sweep(tuning_dir: Path, out: Path) -> Path | None:
     return out
 
 
-def _grouped(metrics: dict, section: str, key: str, title: str, ylabel: str, out: Path, trackers=("iou", "bytetrack")) -> Path | None:
+def _grouped(metrics: dict, section: str, key: str, title: str, ylabel: str, out: Path, trackers: tuple[str, ...] = ("iou", "bytetrack")) -> Path | None:
     groups = list(metrics[section][trackers[0]])
     if not groups:
         return None
