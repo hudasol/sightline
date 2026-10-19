@@ -13,7 +13,7 @@ import sys
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 import yaml
 
@@ -751,8 +751,16 @@ def cmd_plots(a: argparse.Namespace) -> int:
 
 # -- parser ------------------------------------------------------------------------------------------
 
+class _Parser(argparse.ArgumentParser):
+    """argparse exits with 2 on a usage error. Exit code 2 is reserved for UNAVAILABLE, so a typo exits with 1."""
+
+    def error(self, message: str) -> NoReturn:
+        self.print_usage(sys.stderr)
+        self.exit(1, f"{self.prog}: error: {message}\n")
+
+
 def build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="sightline", description="Advisory video perception: detect, track, corridor events.")
+    ap = _Parser(prog="sightline", description="Advisory video perception: detect, track, corridor events.")
     ap.add_argument("--version", action="version", version=f"sightline {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
