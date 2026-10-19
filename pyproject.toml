@@ -35,6 +35,14 @@ gui = ["opencv-python>=4.9"]
 [tool.setuptools.packages.find]
 include = ["sightline*"]
 
+[tool.ruff]
+target-version = "py312"
+line-length = 160
+
+[tool.ruff.lint]
+# Pyflakes only: unused imports, undefined names and similar real mistakes. Style rules are not enforced.
+select = ["F"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
