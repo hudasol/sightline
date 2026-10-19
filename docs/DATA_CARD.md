@@ -105,5 +105,18 @@ Per entry:
 | held out | IC-r_central-clip_00001_00134-neg | indoorcrowd | 5.0 | 134 | 26.8 | 1147 | 0 | events | yes | occlusion_crowding |
 | held out | IC-r_central-clip_00001_00156-neg | indoorcrowd | 5.0 | 156 | 31.2 | 872 | 0 | events | yes | occlusion_crowding |
 
+## Licence assumptions
+
+- **Noncommercial research use is assumed for the task.** Both datasets are licensed for noncommercial research
+  (MOT17 is commonly cited as CC BY-NC-SA 3.0, not re verified; IndoorCrowd is under the FAIR Noncommercial Research
+  License, `docs/licences/INDOORCROWD_LICENSE.txt`). Whether an internship task counts as noncommercial research was
+  not confirmed with the mentor.
+- **Surveillance wording.** The IndoorCrowd licence file has no surveillance wording, while its paper says
+  surveillance and re identification are prohibited. The stricter reading is followed.
+- **What Sightline is.** It is advisory, uses anonymous track ids, and does no re identification, face recognition
+  or biometric processing.
+- **No redistribution.** No frame, video or label of either dataset is in this repository. A demo video that shows
+  held out frames is private to the task reviewer (`docs/DEMO.md`).
+
 ## Known biases / limitations
 MOT17 is mostly outdoor street/mall footage with different camera heights than a corridor; indoor clips are from one or few locations and will not cover all lighting, clothing or crowd types. Results do not generalise beyond the conditions listed in the manifest.
