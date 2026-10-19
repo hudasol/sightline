@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import cv2
 
@@ -18,8 +19,12 @@ from sightline.evaluation.gt import load_mot_gt
 from sightline.ingest import probe, read_frame
 from sightline.manifest import load_manifest
 
+if TYPE_CHECKING:
+    from sightline.config import Config
+    from sightline.evaluation.gt import GTFrames
 
-def _duplicate_frames(gt, tracks_txt: Path, iou_thr: float = 0.5) -> list[dict]:
+
+def _duplicate_frames(gt: GTFrames, tracks_txt: Path, iou_thr: float = 0.5) -> list[dict]:
     """Frames where two different track ids both overlap one ground-truth person."""
     import numpy as np
 
@@ -150,7 +155,7 @@ UNRESOLVED_RULE = ("UNRESOLVED events whose track was lost while the event was o
                    "open_frame), ties broken by clip id then frame. Fixed before any strip was looked at.")
 
 
-def collect_details(manifest_path: Path, cfg, eval_cfg: dict, root: Path, cache_dir: Path, results_dir: Path) -> list[str]:
+def collect_details(manifest_path: Path, cfg: Config, eval_cfg: dict, root: Path, cache_dir: Path, results_dir: Path) -> list[str]:
     """Per-clip details and track files for a manifest's event clips, from CACHED detections only
     (a missing cache is an error: this never runs a detector). Nothing is tuned or changed."""
     from sightline.evaluation.run import evaluate_clip, get_detections, per_clip_details, prepare_clip, write_json
