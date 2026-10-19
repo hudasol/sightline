@@ -337,6 +337,7 @@ What this does and does not show:
   - 10 were requested and 6 met the rule (track lost while the event was open).
     These are the same 6 `track_lost` events behind the interval run's 11
     unresolved.
-  - The "why" column is still TODO for a human.
+  - The "why" entries are drafts written with AI assistance from the saved frames and data. The author has not yet
+    reviewed them.
   - No setting was changed from these strips. The frame images stay out of git
     because they show faces.

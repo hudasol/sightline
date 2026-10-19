@@ -7,7 +7,7 @@ Run: configs/manifests/val.json | detector yolox_s @[640, 640] | detect_every 2 
 Requested 10; 6 event(s) met the selection rule.
 
 Legend: green polygon = corridor, green boxes = ground truth, grey = detections >= threshold, light blue = reported tracks, red = the event's track. These frames are not to be published (they show faces).
-The **Why it happened** column is for a human who has looked at the strip. No setting was changed from it.
+The **Why it happened** entries are drafts written with AI assistance from the saved strips and data. The author has not yet reviewed them. No setting was changed from them.
 
 | # | Clip | Event | Open frames before loss | Opened / last inside / unresolved | Why it happened |
 |---|---|---|---|---|---|
