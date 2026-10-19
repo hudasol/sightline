@@ -44,7 +44,7 @@ class CvUI:
         except cv2.error as exc:
             raise GuiUnavailable(GUI_HELP) from exc
 
-    def _mouse(self, event, x, y, _flags, _param) -> None:
+    def _mouse(self, event: int, x: int, y: int, _flags: int, _param: object) -> None:
         if event == cv2.EVENT_LBUTTONDOWN and self._on_click is not None:
             self._on_click(int(round(x / self.scale)), int(round(y / self.scale)))
 
@@ -65,7 +65,7 @@ class CvUI:
         cv2.destroyWindow(self.title)
 
 
-def _text(img: np.ndarray, lines: list[str], color=(255, 255, 255)) -> None:
+def _text(img: np.ndarray, lines: list[str], color: tuple[int, int, int] = (255, 255, 255)) -> None:
     scale = max(0.5, img.shape[0] / 1080 * 0.9)
     y = int(28 * scale)
     for line in lines:
@@ -86,7 +86,7 @@ def corridor_yaml(name: str, frame_size: tuple[int, int], vertices: list[tuple[i
             f"name: {name}\nframe_size: [{w}, {h}]\npolygon: [{pts}]\n")
 
 
-def draw_corridor(source: str | Path, out: str | Path, name: str | None = None, ui=None) -> dict | None:
+def draw_corridor(source: str | Path, out: str | Path, name: str | None = None, ui: CvUI | None = None) -> dict | None:
     """Click vertices on frame 1; Backspace/z undo, Enter/s save, Esc/q cancel. Returns None if cancelled."""
     try:
         info = probe(source)
@@ -165,7 +165,7 @@ class FrameReader:
             self._cap.release()
 
 
-def label_events(source: str | Path, corridor_path: str | Path, out: str | Path, ui=None) -> dict | None:
+def label_events(source: str | Path, corridor_path: str | Path, out: str | Path, ui: CvUI | None = None) -> dict | None:
     """Step through the clip with the corridor drawn and mark each event's first-inside and left frames.
 
     "i" marks the first frame on which the person's feet are inside the polygon. "l" marks the
