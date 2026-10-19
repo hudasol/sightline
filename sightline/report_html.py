@@ -17,6 +17,7 @@ import base64
 import html
 import json
 from pathlib import Path
+from typing import Any
 
 from sightline.report import bar_rows
 from sightline.timeline import timeline
@@ -48,11 +49,11 @@ footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
 """
 
 
-def _e(v) -> str:
+def _e(v: object) -> str:
     return html.escape(str(v))
 
 
-def _f(v, nd=3) -> str:
+def _f(v: object, nd: int = 3) -> str:
     if v is None:
         return "n/a"
     return f"{v:.{nd}f}" if isinstance(v, float) else str(v)
@@ -71,7 +72,7 @@ def _table(header: list[str], rows: list[list], cls_col: int | None = None) -> s
     return "".join(out) + "</tbody></table>"
 
 
-def _load(p: Path):
+def _load(p: Path) -> Any:
     return json.loads(p.read_text()) if p.is_file() else None
 
 
