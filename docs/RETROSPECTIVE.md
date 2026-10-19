@@ -3,6 +3,8 @@
 > **Draft, 2026-10-17.** Drafted with AI assistance from the project record (PLAN amendments, PROCESS_LOG, commit
 > history and `results/`) after the held out evaluation, for Huda to rewrite in her own words. Every
 > number is from a file under `results/`.
+>
+> TODO(author): confirm. Replace this line with a statement that the author reads and owns this retrospective as of the submission date.
 
 ## What went wrong
 - **Own footage never happened.** The plan put filming on days 1-2 and depended on it for most held out
