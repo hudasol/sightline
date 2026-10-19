@@ -1,3 +1,4 @@
+from sightline.config import TrackerConfig
 from sightline.tracking.bytetrack import ByteTracker
 from sightline.tracking.iou_tracker import IoUTracker
 from sightline.tracking.state import Track
@@ -5,7 +6,7 @@ from sightline.tracking.state import Track
 __all__ = ["ByteTracker", "IoUTracker", "Track", "make_tracker"]
 
 
-def make_tracker(cfg, high_thresh: float, low_thresh: float):
+def make_tracker(cfg: TrackerConfig, high_thresh: float, low_thresh: float) -> ByteTracker | IoUTracker:
     """Build the tracker named in a TrackerConfig.
 
     high_thresh is the detector's frozen operating threshold; low_thresh is its floor.
