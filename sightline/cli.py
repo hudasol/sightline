@@ -11,7 +11,9 @@ import hashlib
 import json
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
@@ -21,6 +23,9 @@ from sightline.detector import DetectorUnavailable, make_detector, read_detectio
 from sightline.ingest import IngestError, discover_sources, ingest, probe
 from sightline.manifest import ManifestError, coverage_check, load_manifest, lock_manifest, split_check, verify_lock
 from sightline.runner import run_clip
+
+if TYPE_CHECKING:
+    from sightline.detector import Detector
 
 
 def _p(msg: str) -> None:
@@ -38,7 +43,7 @@ def _unavailable(out: str | None, reason: str) -> int:
     return 2
 
 
-def _load_cfg(a) -> Config:
+def _load_cfg(a: argparse.Namespace) -> Config:
     """Load --config, then apply --detector / --input-size overrides (candidate comparison)."""
     cfg = load_config(a.config)
     if getattr(a, "detector", None):
@@ -52,20 +57,20 @@ def _load_cfg(a) -> Config:
     return cfg.validate()
 
 
-def _add_detector_overrides(sp) -> None:
+def _add_detector_overrides(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("--detector", help="override detector.name (e.g. fasterrcnn_resnet50_fpn_v2)")
     sp.add_argument("--input-size", type=int, nargs=2, metavar=("W", "H"), help="override detector.input_size")
 
 
-def _detector_factory(cfg: Config):
-    def make():
+def _detector_factory(cfg: Config) -> Callable[[], Detector]:
+    def make() -> Detector:
         return make_detector(cfg.detector)
     return make
 
 
 # -- commands --------------------------------------------------------------------------------------
 
-def cmd_ingest(a) -> int:
+def cmd_ingest(a: argparse.Namespace) -> int:
     try:
         sources = discover_sources(a.path)
         for s in sources:
@@ -78,7 +83,7 @@ def cmd_ingest(a) -> int:
         return _unavailable(None, f"ingest: {exc}")
 
 
-def cmd_draw_corridor(a) -> int:
+def cmd_draw_corridor(a: argparse.Namespace) -> int:
     from sightline.footage import GuiUnavailable, draw_corridor
 
     try:
@@ -92,7 +97,7 @@ def cmd_draw_corridor(a) -> int:
     return 0
 
 
-def cmd_label_events(a) -> int:
+def cmd_label_events(a: argparse.Namespace) -> int:
     from sightline.config import ConfigError
     from sightline.footage import GuiUnavailable, label_events
 
@@ -108,7 +113,7 @@ def cmd_label_events(a) -> int:
     return 0
 
 
-def cmd_check_clip(a) -> int:
+def cmd_check_clip(a: argparse.Namespace) -> int:
     from sightline.footage import check_clip
 
     try:
@@ -132,7 +137,7 @@ def cmd_check_clip(a) -> int:
     return 0 if r["ok"] else 1
 
 
-def cmd_import_cvat(a) -> int:
+def cmd_import_cvat(a: argparse.Namespace) -> int:
     from sightline.annotations import AnnotationError, import_cvat_mot
 
     try:
@@ -147,7 +152,7 @@ def cmd_import_cvat(a) -> int:
     return 0
 
 
-def cmd_import_indoorcrowd(a) -> int:
+def cmd_import_indoorcrowd(a: argparse.Namespace) -> int:
     from sightline.evaluation.run import write_json
     from sightline.indoorcrowd import IndoorCrowdError, import_tracking
 
@@ -162,7 +167,7 @@ def cmd_import_indoorcrowd(a) -> int:
     return 0
 
 
-def cmd_decimate(a) -> int:
+def cmd_decimate(a: argparse.Namespace) -> int:
     from sightline.decimate import decimate_cache, decimate_sequence
     from sightline.evaluation.run import write_json
 
@@ -188,7 +193,7 @@ def cmd_decimate(a) -> int:
     return 0
 
 
-def cmd_select_detector(a) -> int:
+def cmd_select_detector(a: argparse.Namespace) -> int:
     from sightline.evaluation.run import load_eval_config, write_json
     from sightline.selection import select_a4
 
@@ -201,7 +206,7 @@ def cmd_select_detector(a) -> int:
     return 0 if c and out["verdict"] == "valid" else 1
 
 
-def cmd_ablate(a) -> int:
+def cmd_ablate(a: argparse.Namespace) -> int:
     from sightline.ablation import run_ablation
     from sightline.evaluation.run import load_eval_config, write_json
 
@@ -216,7 +221,7 @@ def cmd_ablate(a) -> int:
     return 0
 
 
-def cmd_calibration(a) -> int:
+def cmd_calibration(a: argparse.Namespace) -> int:
     from sightline.calibration import calibration_report
     from sightline.evaluation.run import load_eval_config, write_json
 
@@ -231,7 +236,7 @@ def cmd_calibration(a) -> int:
     return 0
 
 
-def cmd_report(a) -> int:
+def cmd_report(a: argparse.Namespace) -> int:
     from sightline.report import build
 
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
@@ -240,7 +245,7 @@ def cmd_report(a) -> int:
     return 0
 
 
-def cmd_timeline(a) -> int:
+def cmd_timeline(a: argparse.Namespace) -> int:
     from sightline.timeline import list_events, timeline
 
     try:
@@ -257,7 +262,7 @@ def cmd_timeline(a) -> int:
     return 0
 
 
-def cmd_report_html(a) -> int:
+def cmd_report_html(a: argparse.Namespace) -> int:
     from sightline.report_html import build_html
 
     try:
@@ -270,7 +275,7 @@ def cmd_report_html(a) -> int:
     return 0
 
 
-def cmd_compare_trackers(a) -> int:
+def cmd_compare_trackers(a: argparse.Namespace) -> int:
     """Baseline against chosen tracker on one held out clip, from saved results only."""
     rd = Path(a.results)
     try:
@@ -288,7 +293,7 @@ def cmd_compare_trackers(a) -> int:
     return 0
 
 
-def cmd_replay(a) -> int:
+def cmd_replay(a: argparse.Namespace) -> int:
     try:
         cfg = load_config(a.config)
         if a.tracker:
@@ -325,7 +330,7 @@ def cmd_replay(a) -> int:
     return 0
 
 
-def cmd_demo(a) -> int:
+def cmd_demo(a: argparse.Namespace) -> int:
     """No downloads, no model: a generated clip through both trackers. NOT evidence of real performance."""
     from sightline.synth import make_synthetic_clip
 
@@ -343,7 +348,7 @@ def cmd_demo(a) -> int:
     return 0
 
 
-def cmd_split_check(a) -> int:
+def cmd_split_check(a: argparse.Namespace) -> int:
     try:
         val, test = load_manifest(a.val), load_manifest(a.test)
     except ManifestError as exc:
@@ -368,7 +373,7 @@ def cmd_split_check(a) -> int:
     return 0
 
 
-def cmd_lock(a) -> int:
+def cmd_lock(a: argparse.Namespace) -> int:
     try:
         man = load_manifest(a.manifest)
         cov = coverage_check(man)
@@ -383,7 +388,7 @@ def cmd_lock(a) -> int:
     return 0
 
 
-def cmd_verify_lock(a) -> int:
+def cmd_verify_lock(a: argparse.Namespace) -> int:
     try:
         problems = verify_lock(a.lock, a.root)
     except ManifestError as exc:
@@ -394,7 +399,7 @@ def cmd_verify_lock(a) -> int:
     return 1 if problems else 0
 
 
-def cmd_detect_eval(a) -> int:
+def cmd_detect_eval(a: argparse.Namespace) -> int:
     from sightline.evaluation.detection import sweep_thresholds
     from sightline.evaluation.run import get_detections, in_scope_view, load_eval_config, prepare_clip, write_json
 
@@ -440,7 +445,7 @@ def cmd_detect_eval(a) -> int:
 
 
 
-def cmd_interval_eval(a) -> int:
+def cmd_interval_eval(a: argparse.Namespace) -> int:
     from sightline.evaluation.run import load_eval_config, write_json
     from sightline.evaluation.interval import interval_sweep
 
@@ -457,7 +462,7 @@ def cmd_interval_eval(a) -> int:
     return 0
 
 
-def cmd_tune(a) -> int:
+def cmd_tune(a: argparse.Namespace) -> int:
     from sightline.evaluation.run import load_eval_config
     from sightline.tune import tune
 
@@ -469,7 +474,7 @@ def cmd_tune(a) -> int:
     return 0
 
 
-def cmd_evaluate(a) -> int:
+def cmd_evaluate(a: argparse.Namespace) -> int:
     from sightline.evaluation.run import (aggregate, bar_check, evaluate_clip, get_detections, load_eval_config,
                                           per_clip_details, prepare_clip, write_json)
     from sightline.runtime import code_version
@@ -543,7 +548,7 @@ def cmd_evaluate(a) -> int:
     return 0
 
 
-def cmd_benchmark(a) -> int:
+def cmd_benchmark(a: argparse.Namespace) -> int:
     from sightline.runtime import code_version, machine_info
 
     try:
@@ -594,7 +599,7 @@ def cmd_benchmark(a) -> int:
     return 0
 
 
-def cmd_threads(a) -> int:
+def cmd_threads(a: argparse.Namespace) -> int:
     """Time detect() at several torch thread counts on real frames. Evidence for detector.torch_threads."""
     import statistics
     from itertools import islice
@@ -639,7 +644,7 @@ def cmd_threads(a) -> int:
     return 0
 
 
-def cmd_detector_summary(a) -> int:
+def cmd_detector_summary(a: argparse.Namespace) -> int:
     from sightline.evaluation.run import load_eval_config, write_json
     from sightline.selection import build_table, to_markdown
 
@@ -655,7 +660,7 @@ def cmd_detector_summary(a) -> int:
     return 0
 
 
-def cmd_runtime_summary(a) -> int:
+def cmd_runtime_summary(a: argparse.Namespace) -> int:
     from sightline.runtime import summarize_runs
 
     s = summarize_runs(Path(a.parent))
@@ -674,13 +679,13 @@ def cmd_runtime_summary(a) -> int:
     return 0
 
 
-def _wavg(summaries: list[dict], key: str):
+def _wavg(summaries: list[dict], key: str) -> float | None:
     w = [(s[key], s["frames_processed"]) for s in summaries if s.get(key) is not None]
     tot = sum(n for _v, n in w)
     return sum(v * n for v, n in w) / tot if tot else None
 
 
-def cmd_stress(a) -> int:
+def cmd_stress(a: argparse.Namespace) -> int:
     from sightline.evaluation.run import load_eval_config, prepare_clip, write_json
     from sightline.stress import LEVELS, run_stress
 
@@ -702,7 +707,7 @@ def cmd_stress(a) -> int:
     return 0
 
 
-def cmd_errors(a) -> int:
+def cmd_errors(a: argparse.Namespace) -> int:
     from sightline.errors import analyze
     from sightline.evaluation.run import detector_tag
 
@@ -733,7 +738,7 @@ def cmd_errors(a) -> int:
     return 0
 
 
-def cmd_plots(a) -> int:
+def cmd_plots(a: argparse.Namespace) -> int:
     from sightline.plots import make_all
 
     made = make_all(a.results)
@@ -751,7 +756,7 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--version", action="version", version=f"sightline {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    def add(name, fn, help_):
+    def add(name: str, fn: Callable[[argparse.Namespace], int], help_: str) -> argparse.ArgumentParser:
         sp = sub.add_parser(name, help=help_)
         sp.set_defaults(fn=fn)
         return sp
