@@ -209,7 +209,7 @@ def timing_summary(cfg: "Config") -> dict:
             "detect_every": cfg.pipeline.detect_every}
 
 
-def _build(cls, data: Any, path: str):
+def _build[T](cls: type[T], data: Any, path: str) -> T:
     if data is None:
         data = {}
     if not isinstance(data, dict):
