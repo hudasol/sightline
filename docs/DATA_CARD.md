@@ -18,7 +18,7 @@
 - **Labels** were made by the dataset authors: foundation model auto-labelling, then human correction of false positives, missing boxes and identity switches, with linear interpolation of gaps (dataset card). Interpolated boxes are not marked, so a box can be interpolated rather than seen.
 - **Faces** are blurred in the source by the dataset authors. Sightline still publishes no IndoorCrowd frame.
 - **Licence:** `docs/licences/INDOORCROWD_LICENSE.txt`. The dataset declares `fair-noncommercial-research-license` and its card says it is for non-commercial computer vision research only and prohibits surveillance and any re-identification of individuals. Sightline applies the **stricter reading** of the card and the licence text together: offline evaluation only, never a live feed, monitoring or counting of real people, no re-identification (anonymous per clip ids from geometry only), no redistribution of frames or labels, no commercial use of any result.
-- **Open question for the project owner:** whether this task (an internship training task) counts as "non-commercial computer vision research" for IndoorCrowd and MOT17 is for Huda and the mentor to confirm. It is not decided here.
+- **Task use:** noncommercial research use is assumed for this training task and was not confirmed with the mentor. See Licence assumptions below.
 
 ## Sources
 | Source | Use | Licence | Notes |
