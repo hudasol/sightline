@@ -292,7 +292,7 @@ class CachedDetector:
     def detections_for(self, frame_index: int) -> list[Detection]:
         return self._frames.get(frame_index, [])
 
-    def detect(self, image):  # pragma: no cover - cached detectors are queried by index
+    def detect(self, image: np.ndarray) -> list[Detection]:  # pragma: no cover - cached detectors are queried by index
         raise RuntimeError("CachedDetector is queried by frame index via detections_for()")
 
     def info(self) -> dict:
