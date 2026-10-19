@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 
 import cv2
-import numpy as np
 
 from sightline.cli import main
 from sightline.runner import run_clip

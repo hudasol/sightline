@@ -25,7 +25,7 @@ while no detector frame has seen the person inside.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 from sightline.config import EventConfig

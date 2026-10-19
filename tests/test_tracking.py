@@ -1,4 +1,3 @@
-import numpy as np
 
 from sightline.config import TrackerConfig
 from sightline.tracking import ByteTracker, IoUTracker

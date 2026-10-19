@@ -15,7 +15,6 @@ from __future__ import annotations
 import copy
 import hashlib
 import itertools
-import json
 import subprocess
 import time
 from pathlib import Path
@@ -28,7 +27,7 @@ from sightline.config import Config
 from sightline.detector import Detector
 from sightline.evaluation import detection as det_eval
 from sightline.evaluation import tracking as trk_eval
-from sightline.evaluation.events import event_metrics, match_events
+from sightline.evaluation.events import event_metrics
 from sightline.evaluation.run import (ClipData, ClipResult, evaluate_clip, get_detections, in_scope_view, prepare_clip,
                                       write_json)
 from sightline.ingest import iter_frames
@@ -209,8 +208,9 @@ def _quality_vs_recall(cds: list[ClipData], dets: dict, cfg: Config, root: Path)
 
 def _git_commit(root: Path) -> str | None:
     try:
-        return subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
+        return subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10, check=False).stdout.strip() or None
     except Exception:
+        # Deliberate: the commit is provenance metadata. No git, or a folder outside a repository, must not stop tuning.
         return None
 
 

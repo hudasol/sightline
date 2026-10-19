@@ -19,8 +19,9 @@ def code_version(root: str | Path = ".") -> dict:
 
     def git(*args: str) -> str | None:
         try:
-            return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, timeout=10).stdout.strip()
+            return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, timeout=10, check=False).stdout.strip()
         except Exception:
+            # Deliberate: provenance only. Without git the report records null instead of failing the measurement.
             return None
 
     commit = git("rev-parse", "HEAD") or None
@@ -41,6 +42,7 @@ def machine_info() -> dict:
 
         info["opencv"] = cv2.__version__
     except Exception:  # pragma: no cover
+        # Deliberate: the opencv version is optional context in the report. Its absence is simply not recorded.
         pass
     try:
         import torch

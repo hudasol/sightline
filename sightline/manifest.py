@@ -166,8 +166,9 @@ def hash_path(path: Path) -> str:
 
 def _git_commit(root: Path) -> str | None:
     try:
-        return subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
+        return subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10, check=False).stdout.strip() or None
     except Exception:
+        # Deliberate: the commit is provenance metadata. No git, or a folder outside a repository, must not stop a run.
         return None
 
 
