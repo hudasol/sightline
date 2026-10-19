@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from sightline.config import TrackerConfig
 from sightline.tracking.state import Track
-from sightline.types import Detection, TrackState
+from sightline.types import Box, Detection, TrackState
 
 
 @dataclass
@@ -42,7 +42,7 @@ class BaseTracker:
             t.box_predicted = True
         return TrackerOutput(tracks=list(self.tracks), expired=[])
 
-    def _predicted_box(self, t: Track):
+    def _predicted_box(self, t: Track) -> Box:
         return t.box  # no motion model: hold the last box
 
     # -- helpers -------------------------------------------------------------
