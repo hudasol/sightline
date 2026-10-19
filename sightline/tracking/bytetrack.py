@@ -17,7 +17,8 @@ from sightline.config import TrackerConfig
 from sightline.tracking.base import BaseTracker, TrackerOutput
 from sightline.tracking.kalman import KalmanBoxFilter, mean_to_box
 from sightline.tracking.matching import associate
-from sightline.types import Detection, TrackState
+from sightline.tracking.state import Track
+from sightline.types import Box, Detection, TrackState
 
 
 class ByteTracker(BaseTracker):
@@ -80,14 +81,14 @@ class ByteTracker(BaseTracker):
         self.tracks = [t for t in self.tracks if t.id not in dropped]
         return self._retire()
 
-    def _predicted_box(self, t):
+    def _predicted_box(self, t: Track) -> Box:
         if not self.cfg.use_motion:
             return t.box  # ablation: no motion model, hold the last box
         assert t.mean is not None and t.cov is not None
         t.mean, t.cov = self.kf.predict(t.mean, t.cov)
         return mean_to_box(t.mean)
 
-    def _apply(self, track, det: Detection, frame_index: int, timestamp: float) -> None:
+    def _apply(self, track: Track, det: Detection, frame_index: int, timestamp: float) -> None:
         assert track.mean is not None and track.cov is not None
         track.mean, track.cov = self.kf.update(track.mean, track.cov, det.box)
         track.box = det.box
