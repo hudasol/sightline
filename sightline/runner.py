@@ -14,6 +14,7 @@ from collections.abc import Callable, Iterable
 from itertools import islice
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TextIO
 
 from sightline.config import Config, CorridorConfig, timing_summary
 from sightline.detector import Detector
@@ -196,7 +197,8 @@ def run_clip(
     return run
 
 
-def _log(res: FrameResult, health_log, events_log, tracks_log) -> None:
+def _log(res: FrameResult, health_log: TextIO | None, events_log: TextIO | None,
+         tracks_log: TextIO | None) -> None:
     if health_log:
         health_log.write(json.dumps({"frame": res.frame_index, "ts": round(res.timestamp, 4),
                                      "state": res.health.state.value, "reasons": res.health.reasons,
