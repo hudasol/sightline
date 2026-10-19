@@ -20,7 +20,7 @@ Honest running record. Add entries as work happens; do not reconstruct afterward
 | 2026-10-18 | The mentor confirmed the task required sourcing data, not filming it. PLAN amendment A8: the evaluation uses sourced data only (MOT17, IndoorCrowd); own footage optional | Docs only; no held out number or setting changed |
 | 2026-10-19 | No written day 4 mid point check-in was sent, although the brief asked for one. Two questions were sent to the mentor during the task; they were not the check-in | Recorded here, not reconstructed afterwards |
 | 2026-10-19 | Demo cut: the private cut (held out frames shown, restricted link to the task reviewer only) is the primary one and the public cut is the fallback | Chosen by the author under noncommercial research use, not confirmed with the mentor (`docs/DEMO.md`, `docs/DATA_CARD.md`); the Pexels candidate is unused |
-| 2026-10-19 | Submission is after the stated due date of 2026-10-18, 11:59 pm UAE time, inside the three day buffer | Stated in the submission note |
+| 2026-10-19 | Submission is after the due date of 2026-10-18, 11:59 pm UAE time. The brief gives 10 days from 2026-10-09 (7 planned plus 3 buffer), so the buffer is already inside that date | Late by the brief; stated in the submission note |
 | | Own corridor clips: recording and annotation | not recorded; a later version adds them with a fresh lock (A6.1) | Optional (A8) |
 
 The rows dated 2026-10-12 and 2026-10-14 were added on 2026-10-14 from the git history and commit messages, not written as the work happened. That work was done with AI assistance.
