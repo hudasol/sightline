@@ -18,7 +18,9 @@ Analysis only: no threshold is chosen from it.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -26,10 +28,15 @@ from sightline.evaluation.run import get_detections, in_scope_view, prepare_clip
 from sightline.geometry import iou_matrix
 from sightline.manifest import load_manifest
 
+if TYPE_CHECKING:
+    from sightline.config import Config
+    from sightline.types import Box, Detection
+
 EDGES = [round(0.1 * i, 1) for i in range(1, 11)]  # 0.1 .. 1.0
 
 
-def _classify(gt_boxes, ignore_boxes, dets, iou_thr):
+def _classify(gt_boxes: Sequence[Box], ignore_boxes: Sequence[Box], dets: Sequence[Detection],
+              iou_thr: float) -> tuple[list[tuple[float, int]], int, int]:
     """Return [(score, label)] with label 1 = hit, 0 = false positive; detections on ignore regions dropped."""
     out = []
     dets = sorted(dets, key=lambda d: -d.score)
@@ -52,7 +59,7 @@ def _classify(gt_boxes, ignore_boxes, dets, iou_thr):
     return out, int(used.sum()), len(g)
 
 
-def calibration_report(manifest_path: Path, cfg, eval_cfg: dict, root: Path, cache_dir: Path) -> dict:
+def calibration_report(manifest_path: Path, cfg: Config, eval_cfg: dict, root: Path, cache_dir: Path) -> dict:
     man = load_manifest(manifest_path)
     iou_thr = eval_cfg["detection"]["iou"]
     thr = cfg.detector.score_threshold
