@@ -368,7 +368,7 @@ The tests cover:
 CI runs the same suite on Python 3.12 and 3.13 for every push (`.github/workflows/tests.yml`; runs at
 https://github.com/hudasol/sightline/actions/workflows/tests.yml).
 
-Last local run (2026-10-18, the demo laptop, Python 3.13): `python -m pytest -q` -> **194 passed** in 58 s.
+Last local run (2026-10-19, the demo laptop, Python 3.13): `python -m pytest -q` -> **196 passed** in 45 s.
 The async tests no longer depend on wall clock speed: the detector is blocked on a gate the test controls
 (`tests/test_async_detect.py`), so they pass on a busy or battery-powered machine too.
 
