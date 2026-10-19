@@ -139,11 +139,11 @@ def analyze(results_dir: Path, root: Path, lock_path: Path, cache_dir: Path, det
     (out_dir / "index.json").write_text(json.dumps(rows, indent=1, default=str))
     md = ["# Error analysis index (auto-selected, worst first)", "",
           "Legend: green = ground truth, grey = detections, light blue = tracks with ids, red = the failure.",
-          "The **Why it happened** column is for a human who has looked at the frame.", "",
+          "The **Why it happened** column stays marked unreviewed until the author has looked at the frame.", "",
           "| # | Type | Clip | Frame | Measured | Why it happened |", "|---|---|---|---|---|---|"]
     for n, r in enumerate(rows, start=1):
         measured = ", ".join(f"{k}={v}" for k, v in r.items() if k in ("score", "latency_frames", "gt_id", "track_id", "track_ids", "gt_first_inside"))
-        md.append(f"| {n} | {r['type']} | {r['clip']} | {r['frame']} | {measured} | TODO(human): look at `{r['image']}` |")
+        md.append(f"| {n} | {r['type']} | {r['clip']} | {r['frame']} | {measured} | Not yet reviewed: look at `{r['image']}` |")
     (out_dir / "INDEX.md").write_text("\n".join(md) + "\n")
     return out_dir
 
@@ -277,7 +277,7 @@ def analyze_unresolved(results_dir: Path, root: Path, manifest_path: Path, cache
         gt = (f"{r['matched_gt_event']} (frames {r['matched_gt_frames'][0]}-{r['matched_gt_frames'][1]})"
               if r.get("matched_gt_event") is not None else "none")
         md.append(f"| {k} | {r['clip']} | {r['event_id']} (track #{r['track_id']}) | {r['open_frames_before_loss']} | "
-                  f"{r['open_frame']} / {r['last_inside_frame']} / {r['frame']} | {gt} | TODO(human): look at `{r['image']}` |")
+                  f"{r['open_frame']} / {r['last_inside_frame']} / {r['frame']} | {gt} | Not yet reviewed: look at `{r['image']}` |")
     (out_dir / "INDEX.md").write_text("\n".join(md) + "\n")
     return out_dir
 
@@ -347,6 +347,6 @@ def analyze_false_events(results_dir: Path, root: Path, manifest_path: Path, cac
                        for o in r["overlapping_gt_events"]) or "none"
         md.append(f"| {k} | {r['clip']} | {r['event_id']} (track #{r['track_id']}) | {r['open_frames']} | "
                   f"{r['first_inside_frame']} / {r['open_frame']} / {r['close_frame']} ({r['status']}, {r['close_reason']}) | "
-                  f"{ov} | TODO(human): look at `{r['image']}` |")
+                  f"{ov} | Not yet reviewed: look at `{r['image']}` |")
     (out_dir / "INDEX.md").write_text("\n".join(md) + "\n")
     return out_dir
