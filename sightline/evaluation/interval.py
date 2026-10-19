@@ -27,7 +27,7 @@ def _summary(values: list[float]) -> dict:
 
 def interval_sweep(man: Manifest, cfg: Config, eval_cfg: dict, root: Path, cache_dir: Path,
                    detector_factory: Callable[[], Detector] | None, intervals: list[int],
-                   tracker: str = "bytetrack", progress=print) -> dict:
+                   tracker: str = "bytetrack", progress: Callable[[str], object] = print) -> dict:
     clips = [c for c in man.clips if c.scored_on("events")]
     cds = [prepare_clip(c, root, eval_cfg) for c in clips]
     dets = {cd.clip.id: get_detections(cd, cfg, root, cache_dir, detector_factory) for cd in cds}
@@ -75,5 +75,5 @@ def interval_sweep(man: Manifest, cfg: Config, eval_cfg: dict, root: Path, cache
     }
 
 
-def _fmt(v, decimals: int) -> str:
+def _fmt(v: float | None, decimals: int) -> str:
     return "n/a" if v is None else f"{v:.{decimals}f}"
