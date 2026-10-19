@@ -1,10 +1,9 @@
 # Retrospective
 
-> **Draft, 2026-10-17.** Drafted with AI assistance from the project record (PLAN amendments, PROCESS_LOG, commit
-> history and `results/`) after the held out evaluation, for Huda to rewrite in her own words. Every
-> number is from a file under `results/`.
->
-> The author, Huda Mueen, reads and owns this retrospective as of the submission date.
+> **Final, 2026-10-19.** I have read this retrospective in full and I own it as of the submission date. It was
+> first drafted with AI assistance from the project record (PLAN amendments, PROCESS_LOG, commit history and
+> `results/`) after the held out evaluation, and I reviewed and corrected it. Every number is from a file under
+> `results/`, except the coverage figures, which I measured with coverage.py on 2026-10-19.
 
 ## What went wrong
 - **Own footage never happened.** The plan put filming on days 1-2 and depended on it for most held out
