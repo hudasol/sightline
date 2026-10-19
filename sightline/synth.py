@@ -9,6 +9,7 @@ so the tracker's low-confidence stage has something real to do.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -39,7 +40,7 @@ def _person_box(cx: float, foot_y: float) -> tuple[float, float, float, float]:
     return (cx - PERSON_W / 2, foot_y - PERSON_H, cx + PERSON_W / 2, foot_y)
 
 
-def _overlap_fraction(box, rect) -> float:
+def _overlap_fraction(box: Sequence[float], rect: Sequence[float]) -> float:
     x1, y1 = max(box[0], rect[0]), max(box[1], rect[1])
     x2, y2 = min(box[2], rect[2]), min(box[3], rect[3])
     inter = max(0.0, x2 - x1) * max(0.0, y2 - y1)
