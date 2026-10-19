@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import copy
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -51,7 +52,7 @@ class ClipData:
     ignore_in: IgnoreFrames | None = None
     annotated: set[int] | None = None  # frames that were annotated; None = every frame
 
-    def scored(self, frames) -> list[int]:
+    def scored(self, frames: Iterable[int]) -> list[int]:
         """Only annotated frames are scored: an unannotated frame is unknown, not empty."""
         return [f for f in frames if self.annotated is None or f in self.annotated]
 
@@ -275,7 +276,7 @@ def bar_check(agg: dict, coverage: dict, eval_cfg: dict, tracker: str = "bytetra
     beats = ((idf1 is not None and base_idf1 is not None and idf1 > base_idf1)
              or (idsw is not None and base_idsw is not None and idsw < base_idsw))
 
-    def ge(v, t):
+    def ge(v: float | None, t: float) -> bool:
         return v is not None and v >= t
 
     checks = {
@@ -306,7 +307,7 @@ def bar_check(agg: dict, coverage: dict, eval_cfg: dict, tracker: str = "bytetra
                     "reproducibility and visual error analysis are reviewed separately."}
 
 
-def write_json(path: str | Path, obj) -> None:
+def write_json(path: str | Path, obj: Any) -> None:
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(obj, indent=1, default=str))
