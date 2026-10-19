@@ -22,6 +22,8 @@ from pathlib import Path
 
 import yaml
 
+from collections.abc import Callable
+
 from sightline.config import Config
 from sightline.detector import Detector
 from sightline.evaluation import detection as det_eval
@@ -49,7 +51,8 @@ def _event_f1(results: list[ClipResult], kind: str) -> tuple[float, float]:
 
 
 def tune(val_manifest: str | Path, locked_test: str | Path, base_cfg: Config, eval_cfg: dict, root: Path,
-         cache_dir: Path, detector_factory, out_path: Path, tuning_dir: Path, progress=print) -> dict:
+         cache_dir: Path, detector_factory: Callable[[], Detector] | None, out_path: Path, tuning_dir: Path,
+         progress: Callable[[str], object] = print) -> dict:
     root = Path(root)
     lock_path = Path(locked_test)
     locked = require_final_lock(lock_path, root)  # refuses a missing, draft or changed lock
