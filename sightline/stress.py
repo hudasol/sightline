@@ -11,7 +11,7 @@ unshifted world frame, so shake shows up honestly as a corridor-geometry failure
 from __future__ import annotations
 
 import copy
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import replace
 from pathlib import Path
 
@@ -22,7 +22,7 @@ from sightline.config import Config
 from sightline.detector import Detector
 from sightline.evaluation.run import ClipData, evaluate_clip
 from sightline.ingest import iter_frames
-from sightline.types import Detection, FrameData
+from sightline.types import Box, Detection, FrameData
 
 LEVELS: dict[str, list[float]] = {
     "blur": [0, 1, 2, 4, 6],  # gaussian sigma, pixels
@@ -70,7 +70,7 @@ def degraded_frames(frames: Iterable[FrameData], kind: str, level: float, offset
 
 
 def _shift_gt(cd: ClipData, offsets: dict) -> ClipData:
-    def sh(box, o):
+    def sh(box: Box, o: tuple[float, float]) -> Box:
         return (box[0] + o[0], box[1] + o[1], box[2] + o[0], box[3] + o[1])
 
     gt = {f: [(i, sh(b, offsets.get(f, (0, 0)))) for i, b in rows] for f, rows in cd.gt.items()}
@@ -95,7 +95,7 @@ def stressed_detections(cd: ClipData, cfg: Config, root: Path, detector: Detecto
 
 
 def run_stress(cds: list[ClipData], cfg: Config, eval_cfg: dict, root: Path, detector: Detector,
-               kinds: tuple[str, ...] = tuple(LEVELS), seed: int = 0, progress=print) -> list[dict]:
+               kinds: tuple[str, ...] = tuple(LEVELS), seed: int = 0, progress: Callable[[str], object] = print) -> list[dict]:
     """Frozen config in, degradation curves out. Nothing here changes cfg."""
     cfg = copy.deepcopy(cfg)
     rows = []
