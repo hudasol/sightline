@@ -4,10 +4,16 @@ Each step answers one item of the brief's acceptance demo. Every number shown co
 `results/`. Nothing changes between steps: no threshold, label or clip. Run from the repo root with the venv active.
 
 There are two cuts.
-- **The public cut** shows no dataset frame and may be shared.
-- **The private cut** shows held out frames. It is for the mentor only, and only if the mentor confirms.
+- **The private cut is the primary one.** The author chose it under noncommercial research use. The video shows
+  held out frames and is shared only with the task reviewer through a restricted link. It is never uploaded
+  publicly and never committed. This was not confirmed with the mentor.
+- **The public cut** shows no dataset frame. It is the fallback, and the only version that could be shared more widely.
 
 Both follow the map below.
+
+**Opening credit (both cuts, shown on screen and read aloud in the first ten seconds).** Data: MOT17 (MOTChallenge;
+Milan et al., 2016) and IndoorCrowd (FAIR Noncommercial Research License, `docs/licences/INDOORCROWD_LICENSE.txt`),
+used for noncommercial research only. The IndoorCrowd licence asks for acknowledgement.
 
 ## Acceptance demo map
 
@@ -57,18 +63,17 @@ the order the `errors` tool selected them, worst first.
   `docs/licences/INDOORCROWD_LICENSE.txt`).
 - **Held out clips appear only as text:** the terminal output of a run, the saved JSON, the plots, and the
   report page (`results/report/index.html`, which has no frames). Run held out replays **without** `--overlay`.
-- **Moving pictures come only from the approved Pexels clip** (`docs/licences/DEMO_FOOTAGE.md`).
-  - **Pending: no clip is approved yet.** Until one is, skip step 3b.
-  - The clip has no ground truth, so it shows the system working, never an accuracy number.
-  - Credit its creator in the video description.
+- **No moving pictures in the public cut.** The Pexels candidate in `docs/licences/DEMO_FOOTAGE.md` is optional and
+  unused: no clip was approved, so step 3b is skipped. If one is ever approved, credit its creator in the video
+  description and show no accuracy number for it.
 
 ### Shot list (about 5 min 30 s)
 
-Only four things go on screen:
+Only these go on screen:
 - the report page (`results/report/index.html`);
 - the plots (`results/plots/`);
 - the terminal;
-- the approved Pexels clip, once Huda approves one.
+- no footage in the public cut (step 3b is optional and unused).
 
 Read every number off the screen; none is typed here. Rows marked **MISSED BAR** show a bar the system did not
 meet: say so plainly and do not move on quickly.
@@ -81,14 +86,14 @@ meet: say so plainly and do not move on quickly.
 | 4 | 1:15 | Report page: the same table, the FAIL rows. **MISSED BAR** | IDF1 fails the 0.65 bar, event precision and recall fail 0.85, and the recorded throughput check fails. Read the measured values off the page. Say that the throughput run had a stall while the laptop was in standby, and that the later timing checks are separate, not a replacement. | 35 s |
 | 5 | 1:50 | Report page: the ablation table | The tracker beats its baseline, and the motion model is what carries that gain. That is still short of the IDF1 bar. | 25 s |
 | 6 | 2:15 | Terminal: `python -m sightline timeline IC-ie_central-clip_00001_00061 --event 3` | One event from approach to close: when the track appears, when the feet are first inside, when the event opens and its latency, and how it closes. | 30 s |
-| 7 | 2:45 | Approved clip: the step 3b replay with `--overlay`. Until a clip is approved, run step 3a instead (text only) | Boxes, anonymous ids, the corridor, an event and the health state. This clip has no ground truth, so no accuracy number. | 30 s |
+| 7 | 2:45 | Terminal: step 3a again, the first lines of `tracks.jsonl` and `health.jsonl` (text only; step 3b is unused) | Stable anonymous ids, the events and the health state, read from the saved files. | 30 s |
 | 8 | 3:15 | `results/error_analysis/heldout/INDEX.md` (text only, no images) | Three failures and why: a person cut off by the image edge, an ID switch in a tight group, and false events from tracks breaking up at 5 fps with the detector on every third frame. **MISSED BAR** context: the clip these false events come from holds most of the false events in the held out set. | 40 s |
 | 9 | 3:55 | `README.md`, "Known limitations": the ACS-EC item | The ACS-EC corridor was drawn on one camera view and lands on the cafe counter on two recordings. It was not redrawn after the evaluation. **MISSED BAR** context: those recordings hold most of the missed events. | 20 s |
 | 10 | 4:15 | Terminal: the two commands in step 8 below | Bad input ends UNAVAILABLE with exit code 2, never CLEAR. | 30 s |
 | 11 | 4:45 | `results/plots/stress_curves.png`, then `results/plots/reliability_heldout.png` | Tracking gets worse under blur, compression, low light and shake. Confidence did not predict recall on held out data. | 25 s |
 | 12 | 5:10 | Terminal: `python -m pytest -q` | The tests that pin events, geometry, expiry and failure behaviour. | 20 s |
 
-Without an approved clip, row 7 shows text only and the timing stays the same.
+In the private cut, row 7 plays the overlay video from step 3a instead of showing text.
 
 The steps below give the full commands for each row.
 
@@ -127,7 +132,7 @@ No `--overlay`. Show the terminal summary, then `outputs/demo/clean/events.jsonl
 `tracks.jsonl` (stable ids). Compare them with the clip's saved row,
 `results/per_clip/bytetrack/MOT17-09-FRCNN.json`. The clip was chosen by the map's rule.
 
-### 3b. The system on footage that may be shown (45 s, only once a clip is approved)
+### 3b. Optional and unused: the system on footage that may be shown (only if a clip is ever approved)
 ```bash
 python -m sightline replay data/demo/<approved clip>.mp4 --corridor configs/corridors/demo.yaml --config results/frozen_config.yaml --out outputs/demo/pexels --overlay
 ```
@@ -191,15 +196,17 @@ Show:
 python -m pytest -q tests/test_events.py tests/test_geometry.py tests/test_tracking.py tests/test_health.py tests/test_e2e.py
 ```
 
-## Private cut (held out frames shown, shared only with the mentor, never uploaded publicly; use only if the mentor confirms)
+## Private cut (primary: held out frames shown, shared only with the task reviewer through a restricted link)
 
-Use this cut only after the mentor confirms, in writing, that they want to see held out frames.
+The author chose this cut under noncommercial research use. It was not confirmed with the mentor. If the mentor
+objects, use the public cut instead.
 - **Why it is restricted.**
   - MOT17 frames show unblurred faces.
-  - IndoorCrowd's licence is for non-commercial research only and forbids redistribution
+  - IndoorCrowd's licence is for noncommercial research only and forbids redistribution
     (`docs/licences/INDOORCROWD_LICENSE.txt`).
-  - So this recording is never uploaded, never published and never linked publicly.
-  - Keep it on this machine, share it with the mentor only, and delete it when the review is done.
+  - So this recording is never published and never linked publicly. Share it only with the task reviewer,
+    through a link whose access is restricted to that person.
+  - Never commit it. Delete the local files under `outputs/` when the review is done.
 - **What changes from the public cut:**
   - Add `--overlay` to the three replays in the map. The overlay video lands in `outputs/demo/<name>/overlay.mp4`,
     which is git ignored. Play it, and delete it after recording.
