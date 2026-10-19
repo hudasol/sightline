@@ -26,6 +26,8 @@
   (inferred from the event pattern, not measured) is that people close to the camera move too far between
   detections and their tracks fragment. One ACS-EG clip produced 15 predicted events for 6 GT events, and
   ACS-EG accounts for 10 of the 12 false events.
+- **No mid point check-in was sent.** The brief asked for one on day 4, and none was sent. Two questions
+  went to the mentor during the task, but they were not the check-in.
 
 ## Bad assumptions
 - "One fixed camera per site." It was not checked against every recording's first frame until after the
