@@ -18,6 +18,9 @@ Honest running record. Add entries as work happens; do not reconstruct afterward
 | 2026-10-17 | Held out manifest locked (FINAL, 23 entries, 14 clips) at fabd2d3, then tuned on val only in a worktree pinned at f07eb40 (99 min) | `results/heldout_manifest.json`, `results/frozen_config.yaml`, `results/tuning/` |
 | 2026-10-17 | Held out runtime report, then the single held out evaluation, then ablation, calibration, error analysis and stress on the frozen system | `results/`; nothing was retuned after the evaluation |
 | 2026-10-18 | The mentor confirmed the task required sourcing data, not filming it. PLAN amendment A8: the evaluation uses sourced data only (MOT17, IndoorCrowd); own footage optional | Docs only; no held out number or setting changed |
+| 2026-10-19 | No written day 4 mid point check-in was sent, although the brief asked for one. Two questions were sent to the mentor during the task; they were not the check-in | Recorded here, not reconstructed afterwards |
+| 2026-10-19 | Demo cut: the private cut (held out frames shown, restricted link to the task reviewer only) is the primary one and the public cut is the fallback | Chosen by the author under noncommercial research use, not confirmed with the mentor (`docs/DEMO.md`, `docs/DATA_CARD.md`); the Pexels candidate is unused |
+| 2026-10-19 | Submission is after the stated due date of 2026-10-18, 11:59 pm UAE time, inside the three day buffer | Stated in the submission note |
 | | Own corridor clips: recording and annotation | not recorded; a later version adds them with a fresh lock (A6.1) | Optional (A8) |
 
 The rows dated 2026-10-12 and 2026-10-14 were added on 2026-10-14 from the git history and commit messages, not written as the work happened. That work was done with AI assistance.
