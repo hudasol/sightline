@@ -40,7 +40,7 @@ def timeline(results: Path, clip: str, event_id: int, fps: float, tracker: str =
     g = next((x for x in d.get("events_gt", []) if x["id"] == gid), None)
     frames = _track_frames(results / "tracks" / tracker / clip / "tracks.txt", e["track_id"])
 
-    def t(f):
+    def t(f: int) -> str:
         return f"frame {f:>5} ({(f - 1) / fps:6.2f} s)"
 
     ev = e.get("evidence") or {}
