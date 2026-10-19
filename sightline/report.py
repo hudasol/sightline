@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 
-def _load(p: Path):
+def _load(p: Path) -> Any:
     return json.loads(p.read_text()) if p.is_file() else None
 
 
-def _f(v, nd: int = 3) -> str:
+def _f(v: object, nd: int = 3) -> str:
     if v is None:
         return "n/a"
     if isinstance(v, bool):
